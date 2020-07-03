@@ -1,9 +1,16 @@
+"""
+HELP
+
+Handles help commands.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config
 
 
-class React(Cog):
+class Help(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -14,4 +21,4 @@ class React(Cog):
 
 
 def setup(bot):
-    bot.add_cog(React(bot))
+    bot.add_cog(Help(bot))

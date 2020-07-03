@@ -12,4 +12,4 @@ class Ready:
 
     @property
     def all(self):
-        return self.bot and all([getattr(self, cog) for cog in self.bot.cogs])
+        return self.booted and all([getattr(self, cog) for cog in self.bot.cogs])

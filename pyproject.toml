@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carberretta"
-version = "0.1.0"
+version = "0.1.1"
 description = "Discord bot designed to handle specific tasks in the Carberra Tutorials server."
 authors = ["Ethan Henderson <parafoxia@carberra.xyz>", "Max Shaughnessy <max@mshaugh.com>"]
 license = "BSD-3-Clause"

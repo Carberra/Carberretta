@@ -1,3 +1,15 @@
+"""
+MOD
+
+Handles automatic mod systems:
+    Profanity filter;
+    Mention-spam preventer;
+    Modmail system.
+
+**Manual moderation is handled by S4, and thus is not included.**
+"""
+
+
 from discord.ext.commands import Cog
 
 

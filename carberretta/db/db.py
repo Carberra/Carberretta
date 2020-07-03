@@ -1,15 +1,22 @@
+from os.path import isdir
+
 from aiosqlite import connect
 
 
 class Database:
     def __init__(self, bot):
         self.bot = bot
-        self.path = "./carberretta/data/dynamic/database.db3"
-        self.build_path = "./carberretta/data/static/build.sql"
+        self.path = f"{self.bot._dynamic}/database.db3"
+        self.build_path = f"{self.bot._static}/build.sql"
 
     async def connect(self):
+        if not isdir(self.bot._dynamic):
+            # If cloned, this dir likely won't exist, so make it.
+            from os import makedirs
+            makedirs(self.bot._dynamic)
+
         self.cxn = await connect(self.path)
-        await self.cxn.execute("pragma journal_mode=wal")
+        await self.execute("pragma journal_mode=wal")
         await self.executescript(self.build_path)
         await self.sync()
         await self.commit()
@@ -18,6 +25,7 @@ class Database:
         await self.cxn.commit()
 
     async def close(self):
+        await self.commit()
         await self.cxn.close()
 
     async def sync(self):

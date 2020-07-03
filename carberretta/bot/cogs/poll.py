@@ -1,3 +1,10 @@
+"""
+POLL
+
+Handles polls.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config

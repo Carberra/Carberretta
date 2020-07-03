@@ -1,14 +1,18 @@
 """
-MEDIA
+ROLE
 
-Handles media content such as Carberra video announcements.
-Might extend to more.
+Handles role based operations:
+    Colour reactions;
+    Opt-in and -out commands.
 """
+
 
 from discord.ext.commands import Cog
 
+from carberretta import Config
 
-class Media(Cog):
+
+class Role(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -19,4 +23,4 @@ class Media(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Media(bot))
+    bot.add_cog(Role(bot))

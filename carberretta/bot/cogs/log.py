@@ -1,9 +1,19 @@
+"""
+LOG
+
+Handles event logging:
+    Member updates;
+    Message edits;
+    Message deletions.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config
 
 
-class Reactroles(Cog):
+class Log(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -14,4 +24,4 @@ class Reactroles(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Reactroles(bot))
+    bot.add_cog(Log(bot))

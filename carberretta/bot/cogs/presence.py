@@ -1,3 +1,10 @@
+"""
+PRESENCE
+
+Handles presence updates.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config

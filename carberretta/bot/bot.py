@@ -1,6 +1,5 @@
 from asyncio import sleep
 from pathlib import Path
-from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord import Status
@@ -15,6 +14,9 @@ class Bot(BotBase):
     def __init__(self, version):
         self.version = version
         self._cogs = [p.stem for p in Path(".").glob("./carberretta/bot/cogs/*.py")]
+        self._dynamic = "./carberretta/data/dynamic"
+        self._static = "./carberretta/data/static"
+
         self.ready = Ready(self)
         self.scheduler = AsyncIOScheduler()
         self.db = Database(self)

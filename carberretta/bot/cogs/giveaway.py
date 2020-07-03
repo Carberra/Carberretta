@@ -1,3 +1,10 @@
+"""
+GIVEAWAY
+
+Handles giveaways.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config

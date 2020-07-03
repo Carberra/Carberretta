@@ -1,7 +1,8 @@
 """
 SUPPORT
 
-Handles support channels, and provides tag and message archiving funcionalities.
+Handles support channels.
+Provides tag and message archiving funcionalities.
 """
 
 from discord.ext.commands import Cog

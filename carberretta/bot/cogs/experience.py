@@ -1,9 +1,19 @@
+"""
+EXPERIENCE
+
+Handles user experience stats:
+    Experience attribution;
+    Level rewarding;
+    Opt-in and -out commands.
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config
 
 
-class Reactrole(Cog):
+class Experience(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -14,4 +24,4 @@ class Reactrole(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Reactrole(bot))
+    bot.add_cog(Experience(bot))

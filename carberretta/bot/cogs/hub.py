@@ -1,3 +1,12 @@
+"""
+HUB
+
+Handles hub operations.
+
+**On cloned / forked versions, use root/.env to set alternative hub channels.**
+"""
+
+
 from discord.ext.commands import Cog
 
 from carberretta import Config
