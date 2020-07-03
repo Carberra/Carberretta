@@ -1,0 +1,28 @@
+{
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+
+    "[json]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+
+    "[python]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "python.pythonPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "${workspaceFolder}\\venv\\Scripts\\black.exe",
+    "python.linting.pylintEnabled": false,
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyPath": "${workspaceFolder}\\venv\\Scripts\\mypy.exe",
+
+    "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    }
+}

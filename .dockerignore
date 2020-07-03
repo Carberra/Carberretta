@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# git
+.git/
+.gitignore
+
+# secrets
+secrets/
+
+# editorconfig
+.editorconfig
+
+# Documentation
+LICENSE
+README.md

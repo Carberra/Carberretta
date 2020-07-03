@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  bot:
+    build: .
+
+    volumes:
+      - data:/app/data/dynamic
+
+    environment:
+      TOKEN: /run/secrets/token
+      GUILD_ID: 626608699942764544
+      HUB_GUILD_ID: 530249508177575952
+      HUB_STDOUT_ID: 657562932413988873
+      HUB_RELAY_ID: 657612250768736271
+      HUB_COMMANDS_ID: 657611609094619146
+
+    secrets:
+      - token
+
+secrets:
+  token:
+    file: ./secrets/token
+
+volumes:
+  data:
