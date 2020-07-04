@@ -1,16 +1,15 @@
 """
-HELP
+BRIDGE
 
-Handles help commands.
+Handles bridge:
+    Feedback;
+    Video requets.
 """
-
 
 from discord.ext.commands import Cog
 
-from carberretta import Config
 
-
-class Help(Cog):
+class Bridge(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -21,4 +20,4 @@ class Help(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Help(bot))
+    bot.add_cog(Bridge(bot))

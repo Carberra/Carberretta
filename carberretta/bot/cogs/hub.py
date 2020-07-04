@@ -31,7 +31,7 @@ class Hub(Cog):
     async def on_message(self, message):
         if not message.author.bot and (self.bot.user in message.mentions or "all" in message.content):
             if message.channel == self.commands:
-                if message.content.startwith("shutdown"):
+                if message.content.startswith("shutdown"):
                     await self.bot.shutdown()
 
             elif message.channel == self.relay:

@@ -4,6 +4,7 @@ from pathlib import Path
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord import Status
 from discord.ext.commands import Bot as BotBase, Context
+from discord.ext.commands import when_mentioned_or
 
 from carberretta import Config
 from carberretta.db import Database
@@ -21,7 +22,7 @@ class Bot(BotBase):
         self.scheduler = AsyncIOScheduler()
         self.db = Database(self)
 
-        super().__init__(command_prefix=Config.PREFIX, case_insensitive=True, owner_ids=Config.OWNER_IDS, status=Status.dnd)
+        super().__init__(command_prefix=self.command_prefix, case_insensitive=True, owner_ids=Config.OWNER_IDS, status=Status.dnd)
 
     def setup(self):
         print("running setup...")
@@ -45,15 +46,17 @@ class Bot(BotBase):
     async def shutdown(self):
         print("shutting down...")
         self.scheduler.shutdown()
-        await self.db.commit()
         await self.db.close()
 
         hub = self.get_cog("Hub")
         await hub.stdout.send(f"Carberretta is shutting down. (Version {self.version})")
         await super().close()
 
-    async def process_comamnds(self, msg):
-        ctx = await self.get_context(msg, cls=Context)
+    async def command_prefix(self, bot, message):
+        return when_mentioned_or(Config.PREFIX)(bot, message)
+
+    async def process_comamnds(self, message):
+        ctx = await self.get_context(message, cls=Context)
 
         if ctx.command is not None:
             if self.ready.bot:
@@ -75,7 +78,7 @@ class Bot(BotBase):
 
         if not self.ready.booted:
             await self.db.connect()
-            print(" connected to and synced database")
+            print(" connected to and built database")
 
     async def on_disconnect(self):
         print(" bot disconnected")
@@ -86,19 +89,18 @@ class Bot(BotBase):
             print(f" scheduler started ({len(self.scheduler.get_jobs()):,} job(s) scheduled)")
 
             self.guild = self.get_guild(Config.GUILD_ID)
+            await self.db.sync()
+            print(" synced database")
 
-            # This ensures the cogs boot properly while allowing cogs to
-            #  ready themselves in their own time
-            await sleep(0.1)
             self.ready.booted = True
             print(" bot booted")
 
         else:
             print(f" bot reconnected (DWSP latency: {self.latency*1000:,.0f})")
 
-        # presence = self.get_cog("Presence")
-        # await presence.set()
+        presence = self.get_cog("Presence")
+        await presence.set()
 
-    async def on_message(self, msg):
-        if not msg.author.bot:
-            await self.process_comamnds(msg)
+    async def on_message(self, message):
+        if not message.author.bot:
+            await self.process_comamnds(message)
