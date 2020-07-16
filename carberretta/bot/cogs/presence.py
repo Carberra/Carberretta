@@ -19,10 +19,13 @@ class Presence(Cog):
 
         self._name = "+help • {}"
         self._type = "watching"
-        self._messages = deque((
-            "A placeholder message",
-            "Another placeholder message",
-        ))
+        self._messages = deque(
+            (
+                "You can also mention the bot to invoke commands",
+                "DM the bot to relay a message to the moderators",
+                "Use the +source command to get the source code",
+            )
+        )
 
     @property
     def name(self):

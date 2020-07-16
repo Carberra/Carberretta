@@ -17,6 +17,7 @@ class Database:
         if not isdir(self.bot._dynamic):
             # If cloned, this dir likely won't exist, so make it.
             from os import makedirs
+
             makedirs(self.bot._dynamic)
 
         self.cxn = await connect(self.path)

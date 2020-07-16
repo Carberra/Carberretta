@@ -2,7 +2,7 @@ from asyncio import sleep
 from pathlib import Path
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from discord import Status
+from discord import Status, DMChannel
 from discord.ext.commands import Bot as BotBase, Context
 from discord.ext.commands import when_mentioned_or
 
@@ -22,7 +22,9 @@ class Bot(BotBase):
         self.scheduler = AsyncIOScheduler()
         self.db = Database(self)
 
-        super().__init__(command_prefix=self.command_prefix, case_insensitive=True, owner_ids=Config.OWNER_IDS, status=Status.dnd)
+        super().__init__(
+            command_prefix=self.command_prefix, case_insensitive=True, owner_ids=Config.OWNER_IDS, status=Status.dnd,
+        )
 
     def setup(self):
         print("running setup...")
@@ -64,7 +66,7 @@ class Bot(BotBase):
 
             else:
                 await ctx.send(
-                    "Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5
+                    "Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5,
                 )
 
     # async def on_error(self, err, *args, **kwargs):
@@ -102,5 +104,5 @@ class Bot(BotBase):
         await presence.set()
 
     async def on_message(self, message):
-        if not message.author.bot:
+        if not message.author.bot and not isinstance(message.channel, DMChannel):
             await self.process_comamnds(message)

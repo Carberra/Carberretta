@@ -25,6 +25,7 @@ class Config:
     STDOUT_ID: Final = int(getenv("STDOUT_ID", ""))
     COMMANDS_ID: Final = int(getenv("COMMANDS_ID", ""))
     RELAY_ID: Final = int(getenv("RELAY_ID", ""))
+    MODMAIL_ID: Final = int(getenv("MODMAIL_ID", ""))
 
     HUB_GUILD_ID: Final = int(getenv("HUB_GUILD_ID", GUILD_ID))
     HUB_STDOUT_ID: Final = int(getenv("HUB_STDOUT_ID", STDOUT_ID))
