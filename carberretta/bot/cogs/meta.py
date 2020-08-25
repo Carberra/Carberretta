@@ -87,19 +87,17 @@ class Meta(commands.Cog):
             mem_of_total = proc.memory_percent()
             mem_usage = mem_total * (mem_of_total / 100)
 
-        if platform == "win32":
-            loc = check_output(
+        loc = {
+            "win32": check_output(
                 [
                     "powershell.exe",
                     f"(Get-ChildItem -Path \"{ROOT_DIR / 'carberretta'}\" | Get-ChildItem -Filter '*.py' -Recurse | Get-Content | Measure-Object -line).lines",
                 ]
-            )
-        elif platform == "linux":
-            loc = check_output(
+            ),
+            "linux": check_output(
                 f"find {ROOT_DIR / 'carberretta'} -type f -name \"*.py\" -print0 | wc -l --files0-from=-"
-            )
-        else:
-            loc = None
+            ),
+        }.get(platform, 0)
 
         fields = (
             ("Bot Version", self.bot.version, True),
