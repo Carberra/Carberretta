@@ -14,7 +14,6 @@ import discord
 from discord.ext import commands
 
 from carberretta import Config
-from carberretta.utils.embed import build_embed
 
 
 class Mod(commands.Cog):
@@ -28,21 +27,17 @@ class Mod(commands.Cog):
         else:
             member = self.bot.guild.get_member(message.author.id)
 
-            fields = (
-                ("Member", member.mention, False),
-                ("Message", message.content, False),
-            )
-
-            embed = build_embed(
-                title="Modmail",
-                colour=member.colour,
-                thumbnail=member.avatar_url,
-                footer=f"ID: {message.id}",
-                image=att[0].url if len((att := message.attachments)) else None,
-                fields=fields,
-            )
-
-            await self.modmail_channel.send(embed=embed)
+            await self.modmail_channel.send(embed=discord.Embed.from_dict({
+                "title": "Modmail",
+                "colour": member.colour,
+                "thumbnail": { "url": f"{member.avatar_url}" },
+                "footer": { "text": f"ID: {message.id}" },
+                "image": { "url": att[0].url if len((att := message.attachments)) else None },
+                "fields": [
+                    { "name": "Member", "value": member.mention, "inline": False },
+                    { "name": "Message", "value": message.content, "inline": False }
+                ]
+            }))
             await message.channel.send("Message sent. If needed, a moderator will DM you regarding this issue.")
 
     @commands.Cog.listener()

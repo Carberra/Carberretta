@@ -25,7 +25,6 @@ from carberretta import Config
 from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR
 from carberretta.utils.chron import short_delta
 from carberretta.utils.converters import Command
-from carberretta.utils.embed import build_embed
 
 
 class Meta(commands.Cog):
@@ -39,23 +38,25 @@ class Meta(commands.Cog):
         if not self.bot.ready.booted:
             self.bot.ready.up(self)
 
-    @command(name="about")
-    async def command_about(self, ctx):
-        fields = (
-            ("Authors", "\n".join(f"<@{id_}>" for id_ in Config.OWNER_IDS), False),
-            ("Source", "Click [here](https://github.com/Carberra/Carberretta)", False),
-            ("License", "[BSD 3-Clause](https://github.com/Carberra/Carberretta/blob/master/LICENSE)", False),
-        )
-
-        embed = build_embed(
-            ctx=ctx,
-            title="About Carberretta",
-            description="Type `+info` for bot stats.",
-            thumbnail=self.bot.user.avatar_url,
-            fields=fields,
-        )
-
-        await ctx.send(embed=embed)
+    @commands.command(name="about")
+    async def command_about(self, ctx: commands.Context) -> None:
+        await ctx.send(embed=discord.Embed.from_dict({
+            "title": "About Carberretta",
+            "description": "Type `+info` for bot stats.",
+            "colour": DEFAULT_EMBED_COLOUR,
+            "timestamp": datetime.utcnow(),
+            "thumbnail": self.bot.user.avatar_url,
+            "author": { "name": "Carberretta" },
+            "footer": {
+                "text": f"Requested by {ctx.author.display_name}",
+                "icon_url": ctx.author.avatar_url
+            },
+            "fields": [
+                { "name": "Authors", "value": "\n".join(f"<@{id_}>" for id_ in Config.OWNER_IDS), "inline": False },
+                { "name": "Source", "value": "Click [here](https://github.com/Carberra/Carberretta)", "inline": False },
+                { "name": "License", "value": "[BSD 3-Clause](https://github.com/Carberra/Carberretta/blob/master/LICENSE)", "inline": False }
+            ]
+        }))
 
     @commands.command(name="help")
     async def command_help(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
@@ -65,17 +66,20 @@ class Meta(commands.Cog):
         else:
             syntax = "{} {}".format("|".join([str(command), *command.aliases]), command.signature)
 
-            fields = (("Syntax", f"```+{syntax}```", False),)
-
-            embed = build_embed(
-                ctx=ctx,
-                title=f"Help with `{command.name}`",
-                description=command.help or "Not available.",
-                colour=DEFAULT_EMBED_COLOUR,
-                fields=fields,
-            )
-
-            await ctx.send(embed=embed)
+            await ctx.send(embed=discord.Embed.from_dict({
+                "title": f"Help with `{command.name}`",
+                "description": command.help or "Not available.",
+                "colour": DEFAULT_EMBED_COLOUR,
+                "timestamp": datetime.utcnow(),
+                "author": { "name": "Carberretta" },
+                "footer": {
+                    "text": f"Requested by {ctx.author.display_name}",
+                    "icon_url": ctx.author.avatar_url
+                },
+                "fields": [
+                    { "name": "Syntax", "value": f"```+{syntax}```", "inline": False }
+                ]
+            }))
 
     @commands.command(name="botinfo", aliases=("bi", "info"))
     async def command_bot_info(self, ctx: commands.Context) -> None:
@@ -99,27 +103,28 @@ class Meta(commands.Cog):
             ),
         }.get(platform, 0)
 
-        fields = (
-            ("Bot Version", self.bot.version, True),
-            ("Python Version", python_version(), True),
-            ("discord.py Version", discord_version, True),
-            ("Uptime", uptime, True),
-            ("CPU Time", cpu_time, True),
-            ("Memory Usage", f"{mem_usage:,.3f} / {mem_total:,.0f} MiB ({mem_of_total:,.0f}%)", True),
-            ("Users", self.bot.guild.member_count, True),
-            ("Lines of Code", f"{int(loc):,}", True),
-            ("Database Calls", f"{self.bot.db._calls:,}", True),
-        )
-
-        embed = build_embed(
-            ctx=ctx,
-            title="Carberretta Information",
-            colour=DEFAULT_EMBED_COLOUR,
-            thumbnail=self.bot.user.avatar_url,
-            fields=fields,
-        )
-
-        await ctx.send(embed=embed)
+        await ctx.send(embed=discord.Embed.from_dict({
+            "title": "Carberretta Information",
+            "colour": DEFAULT_EMBED_COLOUR,
+            "thumbnail": self.bot.user.avatar_url,
+            "timestamp": datetime.utcnow(),
+            "author": { "name": "Carberretta" },
+            "footer": {
+                "text": f"Requested by {ctx.author.display_name}",
+                "icon_url": ctx.author.avatar_url
+            },
+            "fields": [
+                { "name": "Bot Version", "value": self.bot.version, "inline": True },
+                { "name": "Python Version", "value": python_version(), "inline": True },
+                { "name": "discord.py Version", "value": discord.__version__, "inline": True },
+                { "name": "Uptime", "value": uptime, "inline": True },
+                { "name": "CPU Time", "value": cpu_time, "inline": True },
+                { "name": "Memory Usage", "value": f"{mem_usage:,.3f} / {mem_total:,.0f} MiB ({mem_of_total:,.0f}%)", "inline": True },
+                { "name": "Users", "value": self.bot.guild.member_count, "inline": True },
+                { "name": "Lines of Code", "value": f"{int(loc):,}", "inline": True },
+                { "name": "Database Calls", "value": f"{self.bot.db._calls:,}", "inline": True }
+            ]
+        }))
 
     @commands.command(name="source")
     async def command_source(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
