@@ -15,12 +15,10 @@
         "editor.insertSpaces": true,
         "editor.tabSize": 4
     },
-    "python.pythonPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
     "python.formatting.provider": "black",
     "python.formatting.blackPath": "${workspaceFolder}\\.venv\\Scripts\\black.exe",
     "python.formatting.blackArgs": [
-        "--line-length 119",
-        "--target py38"
+        "--line-length 119"
     ],
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
