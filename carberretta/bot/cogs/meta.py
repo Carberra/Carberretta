@@ -8,6 +8,7 @@ Self:
     Source.
 """
 
+import typing
 from datetime import datetime, timedelta
 from inspect import getsourcelines
 from os.path import relpath
@@ -15,11 +16,9 @@ from platform import python_version
 from subprocess import check_output
 from sys import platform
 from time import time
-from typing import Optional
 
-from discord import Embed
-from discord import __version__ as discord_version
-from discord.ext.commands import Cog, Command, command
+import discord
+from discord.ext import commands
 from psutil import Process, virtual_memory
 
 from carberretta import Config
@@ -29,14 +28,14 @@ from carberretta.utils.converters import Command
 from carberretta.utils.embed import build_embed
 
 
-class Meta(Cog):
-    def __init__(self, bot):
+class Meta(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
         self.bot.remove_command("help")
 
-    @Cog.listener()
-    async def on_ready(self):
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
         if not self.bot.ready.booted:
             self.bot.ready.up(self)
 
@@ -58,8 +57,8 @@ class Meta(Cog):
 
         await ctx.send(embed=embed)
 
-    @command(name="help")
-    async def command_help(self, ctx, command: Optional[Command]):
+    @commands.command(name="help")
+    async def command_help(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
         """This command. Invoke without any arguments for full help."""
         if command is None:
             pass
@@ -78,8 +77,8 @@ class Meta(Cog):
 
             await ctx.send(embed=embed)
 
-    @command(name="botinfo", aliases=("bi", "info"))
-    async def command_bot_info(self, ctx):
+    @commands.command(name="botinfo", aliases=("bi", "info"))
+    async def command_bot_info(self, ctx: commands.Context) -> None:
         proc = Process()
         with proc.oneshot():
             uptime = short_delta(timedelta(seconds=time() - proc.create_time()))
@@ -124,8 +123,8 @@ class Meta(Cog):
 
         await ctx.send(embed=embed)
 
-    @command(name="source")
-    async def command_source(self, ctx, command: Optional[Command]):
+    @commands.command(name="source")
+    async def command_source(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
         source_url = "https://github.com/Carberra/Carberretta"
 
         if command is None:
@@ -145,5 +144,5 @@ class Meta(Cog):
             await ctx.send(f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>")
 
 
-def setup(bot):
+def setup(bot: commands.Bot) -> None:
     bot.add_cog(Meta(bot))

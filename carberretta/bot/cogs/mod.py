@@ -9,19 +9,19 @@ Handles automatic mod systems:
 **Manual moderation is handled by S4, and thus is not included.**
 """
 
-from discord import Embed, DMChannel
 
-from discord.ext.commands import Cog
+import discord
+from discord.ext import commands
 
 from carberretta import Config
 from carberretta.utils.embed import build_embed
 
 
-class Mod(Cog):
-    def __init__(self, bot):
+class Mod(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    async def modmail(self, message):
+    async def modmail(self, message: discord.Message) -> None:
         if not 50 <= len(message.content) <= 1000:
             await message.channel.send("Your message should be between 50 and 1,000 characters long.")
 
@@ -45,18 +45,18 @@ class Mod(Cog):
             await self.modmail_channel.send(embed=embed)
             await message.channel.send("Message sent. If needed, a moderator will DM you regarding this issue.")
 
-    @Cog.listener()
-    async def on_ready(self):
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
         if not self.bot.ready.booted:
             self.modmail_channel = self.bot.get_channel(Config.MODMAIL_ID)
             self.bot.ready.up(self)
 
-    @Cog.listener()
-    async def on_message(self, message):
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
         if not message.author.bot:
-            if isinstance(message.channel, DMChannel):
+            if isinstance(message.channel, discord.DMChannel):
                 await self.modmail(message)
 
 
-def setup(bot):
+def setup(bot: commands.Bot) -> None:
     bot.add_cog(Mod(bot))
