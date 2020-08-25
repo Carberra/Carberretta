@@ -11,5 +11,5 @@ class Ready:
         print(f" {qn} cog ready")
 
     @property
-    def all(self):
-        return self.booted and all([getattr(self, cog) for cog in self.bot.cogs])
+    def ok(self):
+        return self.booted and all([getattr(self, cog) for cog in self.bot._cogs])
