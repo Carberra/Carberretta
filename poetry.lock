@@ -142,17 +142,6 @@ voice = ["PyNaCl (1.3.0)"]
 
 [[package]]
 category = "main"
-description = "Emoji for Python"
-name = "emoji"
-optional = false
-python-versions = "*"
-version = "0.6.0"
-
-[package.extras]
-dev = ["pytest", "coverage", "coveralls"]
-
-[[package]]
-category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
 name = "idna"
 optional = false
@@ -293,7 +282,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "5363f5e4d66fe94d3f6b06125d876dc2a04c62977d9e13e5680c2491a7a076c5"
+content-hash = "b69b7f698805ce7bae8f9aaf3f06ba07560528aa43d13db7b60e9c5519a40d6a"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -350,9 +339,6 @@ click = [
 "discord.py" = [
     {file = "discord.py-1.4.1-py3-none-any.whl", hash = "sha256:98ea3096a3585c9c379209926f530808f5fcf4930928d8cfb579d2562d119570"},
     {file = "discord.py-1.4.1.tar.gz", hash = "sha256:f9decb3bfa94613d922376288617e6a6f969260923643e2897f4540c34793442"},
-]
-emoji = [
-    {file = "emoji-0.6.0.tar.gz", hash = "sha256:e42da4f8d648f8ef10691bc246f682a1ec6b18373abfd9be10ec0b398823bd11"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
