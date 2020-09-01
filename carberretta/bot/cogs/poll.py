@@ -28,22 +28,39 @@ class Poll(commands.Cog):
         if len(options) > 20:
             raise commands.TooManyArguments
 
-        message = discord.utils.get(self.bot.cached_messages, id=(await ctx.send(embed=discord.Embed.from_dict({
-            "title": "Poll",
-            "fields": [
-                { "name": "Question", "value": question, "inline": False },
-                { "name": "Instructions", "value": "React to cast a vote!", "inline": False },
-                { "name": "Options", "value": "\n".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),  "inline": False }
-            ]
-        }))).id)
+        message = discord.utils.get(
+            self.bot.cached_messages,
+            id=(
+                await ctx.send(
+                    embed=discord.Embed.from_dict(
+                        {
+                            "title": "Poll",
+                            "fields": [
+                                {"name": "Question", "value": question, "inline": False},
+                                {"name": "Instructions", "value": "React to cast a vote!", "inline": False},
+                                {
+                                    "name": "Options",
+                                    "value": "\n".join(
+                                        [f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]
+                                    ),
+                                    "inline": False,
+                                },
+                            ],
+                        }
+                    )
+                )
+            ).id,
+        )
 
         for i in range(len(options)):
-            await message.add_reaction(chr(0x1f1e6 + i))
+            await message.add_reaction(chr(0x1F1E6 + i))
 
         if not stack:
             self._cache.append(message)
 
-        self.bot.scheduler.add_job(self.resolve, "date", run_date=datetime.now() + timedelta(seconds=time), args=[message])
+        self.bot.scheduler.add_job(
+            self.resolve, "date", run_date=datetime.now() + timedelta(seconds=time), args=[message]
+        )
 
     async def resolve(self, message: discord.Message) -> None:
         # TODO: Improve this mess
@@ -63,15 +80,23 @@ class Poll(commands.Cog):
             elif value == max_value:
                 most_voted.append(r.emoji)
 
-        await message.channel.send(embed=discord.Embed.from_dict({
-            "title": "Poll Result",
-            "fields": [
-                message.embeds[0].fields[0].__dict__,
-                { "name": "Original Poll", "value": f"[Jump]({message.jump_url})", "inline": False },
-                { "name": f"Winner{'s' if len(most_voted) > 1 else ''}", "value": ", ".join(most_voted), "inline": True },
-                { "name": "Count", "value": max_value-1, "inline": True },
-            ]
-        }))
+        await message.channel.send(
+            embed=discord.Embed.from_dict(
+                {
+                    "title": "Poll Result",
+                    "fields": [
+                        message.embeds[0].fields[0].__dict__,
+                        {"name": "Original Poll", "value": f"[Jump]({message.jump_url})", "inline": False},
+                        {
+                            "name": f"Winner{'s' if len(most_voted) > 1 else ''}",
+                            "value": ", ".join(most_voted),
+                            "inline": True,
+                        },
+                        {"name": "Count", "value": max_value - 1, "inline": True},
+                    ],
+                }
+            )
+        )
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -82,12 +107,13 @@ class Poll(commands.Cog):
     async def on_raw_reaction_add(self, payload) -> None:
         if not payload.member.bot:
             if message := discord.utils.get(self._cache, id=payload.message_id):
-                for emoji in (reaction.emoji for reaction in message.reactions if reaction.emoji != payload.emoji.name):
+                for emoji in (
+                    reaction.emoji for reaction in message.reactions if reaction.emoji != payload.emoji.name
+                ):
                     try:
                         await message.remove_reaction(emoji, payload.member)
                     except:
                         raise
-
 
 
 def setup(bot: commands.Bot) -> None:
