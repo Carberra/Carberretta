@@ -18,6 +18,11 @@ from discord.ext import commands
 from carberretta import Config
 
 INACTIVE_TIME: t.Final = 30  # 3600
+STATES = {
+    Config.UNAVAILABLE_SUPPORT_ID: SupportState.UNAVAILABLE,
+    Config.OCCUPIED_SUPPORT_ID: SupportState.OCCUPIED,
+    Config.AVAILABLE_SUPPORT_ID: SupportState.AVAILABLE,
+}
 
 
 class SupportState(Enum):
@@ -37,11 +42,7 @@ class SupportChannel:
 
     @property
     def state(self) -> SupportState:
-        return {
-            Config.UNAVAILABLE_SUPPORT_ID: SupportState.UNAVAILABLE,
-            Config.OCCUPIED_SUPPORT_ID: SupportState.OCCUPIED,
-            Config.AVAILABLE_SUPPORT_ID: SupportState.AVAILABLE,
-        }.get(self.channel.category.id, SupportState.UNAVAILABLE)
+        return STATES.get(self.channel.category.id, SupportState.UNAVAILABLE)
 
     @property
     def occupied_from(self) -> t.Optional[dt.datetime]:
