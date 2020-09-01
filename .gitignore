@@ -333,3 +333,6 @@ $RECYCLE.BIN/
 ### Application ###
 # secrets
 secrets/
+
+### Custom ###
+.vsls.json
