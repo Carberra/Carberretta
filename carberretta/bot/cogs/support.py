@@ -5,59 +5,257 @@ Handles support channels.
 Provides tag and message archiving funcionalities.
 """
 
-import typing
-from collections import defaultdict
-from datetime import datetime, timedelta
+import asyncio
+import datetime as dt
+import re
+import typing as t
+from enum import Enum
 
+import aiohttp
 import discord
 from discord.ext import commands
 
 from carberretta import Config
 
+INACTIVE_TIME: t.Final = 30  # 3600
 
-INACTIVE_TIME: typing.Final = 15 * 60
+
+class SupportState(Enum):
+    UNAVAILABLE = 0
+    OCCUPIED = 1
+    AVAILABLE = 2
+
+
+class SupportChannel:
+    def __init__(self, channel: discord.TextChannel):
+        # This can't take a message for now cos it won't be accurate.
+        # We ideally need to find a way to store information about channels, and
+        # then load it in.
+        self.channel = channel
+        self.message = None
+        self.get_channel = self.channel.guild.get_channel
+
+    @property
+    def state(self) -> SupportState:
+        return {
+            Config.UNAVAILABLE_SUPPORT_ID: SupportState.UNAVAILABLE,
+            Config.OCCUPIED_SUPPORT_ID: SupportState.OCCUPIED,
+            Config.AVAILABLE_SUPPORT_ID: SupportState.AVAILABLE,
+        }.get(self.channel.category.id, SupportState.UNAVAILABLE)
+
+    @property
+    def occupied_from(self) -> t.Optional[dt.datetime]:
+        return getattr(self.message, "created_at", None)
+
+    @property
+    def client(self) -> discord.Member:
+        return getattr(self.message, "author", None)
+
+    async def send_to_available(self) -> None:
+        self.message = None
+        await self.channel.edit(
+            category=self.channel.guild.get_channel(Config.AVAILABLE_SUPPORT_ID),
+            reason="Support channel is now available.",
+        )
+
+    async def send_to_occupied(self, message: discord.Message) -> None:
+        self.message = message
+        await self.channel.edit(
+            category=self.channel.guild.get_channel(Config.OCCUPIED_SUPPORT_ID),
+            reason="Support channel is now occupied.",
+        )
+        await self.channel.send(f"This channel is now occupied by {self.client.mention}.")
+
+    async def send_to_unavailable(self) -> None:
+        self.message = None
+        await self.channel.edit(
+            category=self.channel.guild.get_channel(Config.UNAVAILABLE_SUPPORT_ID),
+            reason="Support channel is now available.",
+        )
 
 
 class Support(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self._channels: t.List[SupportChannel] = []
 
-    async def move_to_available(self, channel: discord.TextChannel) -> None:
-        if await channel.history(
-            limit=1, after=datetime.utcnow() - timedelta(seconds=max(0, INACTIVE_TIME - 1))
-        ).flatten():
-            self.bot.scheduler.add_job(
-                self.move_to_available,
-                "date",
-                run_date=datetime.now() + timedelta(seconds=INACTIVE_TIME),
-                args=[channel],
-            )
-        else:
-            await channel.edit(category=self.available_category, reason="Support case became inactive.")
+    @property
+    def usable_channels(self) -> t.List[SupportChannel]:
+        return [c for c in self._channels if c.state != SupportState.UNAVAILABLE]
 
-    @commands.command(name="close", aliases=["done"])
-    async def command_close(self, ctx):
-        await ctx.channel.edit(category=self.available_category, reason="Support case was closed.")
+    @property
+    def max_channels(self) -> int:
+        return min(max(4, len(self.helper_role.members)), 20)
+
+    def idle_timeout(self, offset=0) -> dt.datetime:
+        return dt.datetime.now() + dt.timedelta(seconds=INACTIVE_TIME + offset)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
-            self.available_category = self.bot.get_channel(735284663916167332)  # Temp
-            self.in_use_category = self.bot.get_channel(735284697411616788)  # Temp
+            self.available_category = self.bot.get_channel(Config.AVAILABLE_SUPPORT_ID)
+            self.occupied_category = self.bot.get_channel(Config.OCCUPIED_SUPPORT_ID)
+            self.unavailable_category = self.bot.get_channel(Config.UNAVAILABLE_SUPPORT_ID)
+            self.redirect_channel = self.bot.get_channel(Config.REDIRECT_ID)
+            self.staff_role = self.available_category.guild.get_role(Config.STAFF_ROLE_ID)
+            self.helper_role = self.available_category.guild.get_role(Config.HELPER_ROLE_ID)
+
+            for channel in self.available_category.text_channels:
+                self._channels.append(SupportChannel(channel))
+
+            for channel in self.occupied_category.text_channels:
+                self._channels.append(sc := SupportChannel(channel))
+                last_message = (await sc.channel.history(limit=1).flatten())[0]
+                secs_since_activity = (dt.datetime.utcnow() - last_message.created_at).seconds
+                if secs_since_activity > INACTIVE_TIME:
+                    await sc.send_to_available()
+                else:
+                    await self.schedule(sc, -secs_since_activity)
+
             self.bot.ready.up(self)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
-        if self.bot.ready.ok:
-            if isinstance(message.channel, discord.TextChannel):
-                if message.channel.category == self.available_category:
-                    await message.channel.edit(category=self.in_use_category, reason="Support case initiated.")
-                    self.bot.scheduler.add_job(
-                        self.move_to_available,
-                        "date",
-                        run_date=datetime.now() + timedelta(seconds=INACTIVE_TIME),
-                        args=[message.channel],
+    async def on_message(self, message) -> None:
+        if self.bot.ready.support and not message.author.bot:
+            if (sc := self.get_support_channel(message.channel)) is None:
+                return
+
+            if sc.state == SupportState.AVAILABLE:
+                if (claimed := self.claimed_channel(message.author)) is not None and claimed is not message.channel:
+                    await claimed.send(
+                        f"{message.author.mention}, you're still occupying this channel. If you have further questions, ask them here."
                     )
+                    await message.delete()
+                else:
+                    await sc.send_to_occupied(message)
+                    await self.schedule(sc)
+                    if not self.available_category.text_channels:
+                        await self.update_available()
+            else:
+                await self.reschedule(sc)
+
+    async def schedule(self, sc, offset=0) -> None:
+        self.bot.scheduler.add_job(
+            self.close, id=f"{sc.channel.id}", next_run_time=self.idle_timeout(offset), args=[sc]
+        )
+
+    async def reschedule(self, sc, offset=0) -> None:
+        self.bot.scheduler.get_job(f"{sc.channel.id}").modify(next_run_time=self.idle_timeout(offset))
+
+    async def close(self, sc):
+        if len(self.usable_channels) > self.max_channels:
+            await sc.send_to_unavailable()
+        else:
+            await sc.send_to_available()
+
+    def get_support_channel(self, tc: discord.TextChannel) -> t.Optional[SupportChannel]:
+        for sc in self._channels:
+            if sc.channel == tc:
+                return sc
+        return None
+
+    def claimed_channel(self, member: discord.Member) -> t.Optional[discord.TextChannel]:
+        for channel in self._channels:
+            if member == channel.client:
+                return channel.channel
+        return None
+
+    async def try_get_available_channel(self) -> t.Optional[discord.TextChannel]:
+        try:
+            return self.available_category.text_channels[0]
+        except IndexError:
+            return await self.update_available()
+
+    async def update_available(self) -> t.Optional[discord.TextChannel]:
+        if len(self.usable_channels) < self.max_channels:
+            try:
+                await (tc := self.unavailable_category.text_channels[0]).edit(
+                    category=self.available_category, reason="All support channels are occupied."
+                )
+                return tc
+            except IndexError:
+                tc = await self.available_category.create_text_channel(
+                    f"support-{len(self._channels)+1}", reason="All support channels are occupied."
+                )
+                self._channels.append(SupportChannel(tc))
+                return tc
+
+        return None
+
+    @commands.command(name="close")
+    async def close_command(self, ctx):
+        if (sc := self.get_support_channel(ctx.channel)) is None:
+            await ctx.message.delete()
+            await ctx.send(f"{ctx.author.mention}, this isn't a support channel.", delete_after=10)
+        else:
+            if not (ctx.author == sc.client or self.staff_role in ctx.author.roles):
+                await ctx.send(f"{ctx.author.mention}, you can't close this support case.")
+            else:
+                if sc.client is not None:
+                    client = f"{sc.client.display_name}'{'s' if not sc.client.display_name.endswith('s') else ''}"
+                else:
+                    client = "The"
+                await sc.mark_as_available()
+                await ctx.send(f"{client} support case was closed.")
+
+    @commands.command(name="client")
+    async def client_command(self, ctx):
+        if (sc := self.get_support_channel(ctx.channel)) is None:
+            await ctx.message.delete()
+            await ctx.send(f"{ctx.author.mention}, this isn't a support channel.", delete_after=10)
+        else:
+            if sc.client is None:
+                await ctx.send("A channel client could not be identified.")
+            else:
+                await ctx.send(f"This channel is currently claimed by {sc.client.display_name}.")
+
+    @commands.command(name="redirect")
+    async def redirect_command(self, ctx, target: discord.Member) -> None:
+        if (sc := self.get_support_channel(ctx.channel)) is None:
+            await ctx.message.delete()
+            return await ctx.send(f"{ctx.author.mention}, this isn't a support channel.", delete_after=10)
+
+        if not (ctx.author == sc.client or self.staff_role in ctx.author.roles):
+            return await ctx.send(f"{ctx.author.mention}, you can't redirect that member.")
+
+        if not (purged := await ctx.channel.purge(after=sc.message, check=lambda m: m.author == target)):
+            return await ctx.send(f"{target.display_name} doesn't appear to have been here recently.")
+
+        # Redirection valid:
+        await ctx.message.delete()
+        if (channel := await self.try_get_available_channel()) and (sc := self.get_support_channel(channel)):
+            await sc.send_to_occupied(purged[0])
+            await self.schedule(sc)
+            await channel.send(
+                f"You were redirected as the channel you attempted to open a support case in is already occupied."
+            )
+
+            async def culminate(messages) -> t.List[str]:
+                big_message = "**Your previous messages:**"
+                for message in reversed(messages):
+                    content = f"`{message.created_at.strftime('%H:%M:%S')}`  {message.content}"
+                    while (match := re.search(r"```[a-z]*\n([\s\S]*?)```", content)) is not None:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.post("https://hastebin.com/documents", data=match.group(1)) as response:
+                                if response.status == 200:
+                                    data = await response.json()
+                                    content = content.replace(match.group(0), f"https://hastebin.com/{data['key']}")
+                    big_message += f"​\n{content}"
+
+                return [big_message[i : i + 2000] for i in range(0, len(big_message), 2000)]
+
+            for message in await culminate(purged):
+                await channel.send(message)
+
+        else:
+            await self.redirect_channel.send(
+                f"{target.name}, you were redirected as the channel you attempted to open a support case in is already occupied. Unfortunely, there are no available support channels, so you will need to wait for a channel to become available."
+            )
+
+    @commands.command(name="call")
+    async def call_command(Self, ctx):
+        # Calls a specified role. Useful for preventing mention spamming.
+        pass
 
 
 def setup(bot: commands.Bot) -> None:
