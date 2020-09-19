@@ -42,7 +42,7 @@ class Mod(commands.Cog):
                 embed=discord.Embed.from_dict(
                     {
                         "title": "Modmail",
-                        "colour": member.colour,
+                        "color": member.colour.value,
                         "thumbnail": {"url": f"{member.avatar_url}"},
                         "footer": {"text": f"ID: {message.id}"},
                         "image": {"url": att[0].url if len((att := message.attachments)) else None},
@@ -92,6 +92,22 @@ class Mod(commands.Cog):
                 await after.edit(
                     nick=before.nick if await self.nickname_valid(before.nick) else None, reason="Invalid nickname"
                 )
+
+    @commands.command(name="validatenicknames", aliases=["va"])
+    @commands.has_permissions(manage_nicknames=True)
+    async def validatenicknames_command(self, ctx):
+        for member in ctx.guild.members:
+            if member.nick:
+                nickname = await self.unhoist("".join(c for c in member.nick if c in self.nickname_whitelist))
+
+                if await self.nickname_valid(nickname):
+                    if nickname != member.nick:
+                        await member.edit(nick=nickname, reason="Nickname contains invalid characters")
+                else:
+                    await member.edit(
+                        nick=None, reason="Invalid nickname"
+                    )
+        await ctx.send("Done.")
 
 
 def setup(bot: commands.Bot) -> None:
