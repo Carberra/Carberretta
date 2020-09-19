@@ -79,7 +79,7 @@ class SupportChannel:
         self.message = None
         await self.channel.edit(
             category=self.channel.guild.get_channel(Config.UNAVAILABLE_SUPPORT_ID),
-            reason="Support channel is now available.",
+            reason="Support channel is now unavailable.",
         )
 
 
