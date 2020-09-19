@@ -47,6 +47,10 @@ class Bot(BotBase):
 
     async def shutdown(self):
         print("shutting down...")
+        for cog in self.cogs.values():
+            if hasattr(cog, "on_shutdown"):
+                await cog.on_shutdown()
+
         self.scheduler.shutdown()
         await self.db.close()
 

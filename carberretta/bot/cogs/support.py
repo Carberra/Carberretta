@@ -7,22 +7,22 @@ Provides tag and message archiving funcionalities.
 
 import asyncio
 import datetime as dt
+import json
+import os
 import re
 import typing as t
 from enum import Enum
+from os.path import isfile
 
+import aiofiles
+import aiofiles.os
 import aiohttp
 import discord
 from discord.ext import commands
 
 from carberretta import Config
 
-INACTIVE_TIME: t.Final = 30  # 3600
-STATES = {
-    Config.UNAVAILABLE_SUPPORT_ID: SupportState.UNAVAILABLE,
-    Config.OCCUPIED_SUPPORT_ID: SupportState.OCCUPIED,
-    Config.AVAILABLE_SUPPORT_ID: SupportState.AVAILABLE,
-}
+INACTIVE_TIME: t.Final = 3600
 
 
 class SupportState(Enum):
@@ -31,14 +31,22 @@ class SupportState(Enum):
     AVAILABLE = 2
 
 
+STATES: t.Final = {
+    Config.UNAVAILABLE_SUPPORT_ID: SupportState.UNAVAILABLE,
+    Config.OCCUPIED_SUPPORT_ID: SupportState.OCCUPIED,
+    Config.AVAILABLE_SUPPORT_ID: SupportState.AVAILABLE,
+}
+
+
 class SupportChannel:
-    def __init__(self, channel: discord.TextChannel):
-        # This can't take a message for now cos it won't be accurate.
-        # We ideally need to find a way to store information about channels, and
-        # then load it in.
+    def __init__(self, channel: discord.TextChannel, message: t.Optional[discord.Message] = None):
         self.channel = channel
-        self.message = None
+        self.message = message
         self.get_channel = self.channel.guild.get_channel
+
+    @property
+    def id(self) -> int:
+        return self.channel.id
 
     @property
     def state(self) -> SupportState:
@@ -78,6 +86,7 @@ class SupportChannel:
 class Support(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.state_path = f"{self.bot._dynamic}/support.json"
         self._channels: t.List[SupportChannel] = []
 
     @property
@@ -91,6 +100,19 @@ class Support(commands.Cog):
     def idle_timeout(self, offset=0) -> dt.datetime:
         return dt.datetime.now() + dt.timedelta(seconds=INACTIVE_TIME + offset)
 
+    async def load_states(self) -> dict:
+        if isfile(self.state_path):
+            async with aiofiles.open(f"{self.bot._dynamic}/support.json", "r", encoding="utf-8") as f:
+                data = json.loads(await f.read())
+            await aiofiles.os.remove(self.state_path)
+            return data
+        else:
+            return {}
+
+    async def save_states(self, data: dict) -> None:
+        async with aiofiles.open(f"{self.bot._dynamic}/support.json", "w", encoding="utf-8") as f:
+            await f.write(json.dumps(data, ensure_ascii=False))
+
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
@@ -101,11 +123,13 @@ class Support(commands.Cog):
             self.staff_role = self.available_category.guild.get_role(Config.STAFF_ROLE_ID)
             self.helper_role = self.available_category.guild.get_role(Config.HELPER_ROLE_ID)
 
+            data = await self.load_states()
+
             for channel in self.available_category.text_channels:
                 self._channels.append(SupportChannel(channel))
 
             for channel in self.occupied_category.text_channels:
-                self._channels.append(sc := SupportChannel(channel))
+                self._channels.append(sc := SupportChannel(channel, await channel.fetch_message(data[f"{channel.id}"])))
                 last_message = (await sc.channel.history(limit=1).flatten())[0]
                 secs_since_activity = (dt.datetime.utcnow() - last_message.created_at).seconds
                 if secs_since_activity > INACTIVE_TIME:
@@ -114,6 +138,14 @@ class Support(commands.Cog):
                     await self.schedule(sc, -secs_since_activity)
 
             self.bot.ready.up(self)
+
+    async def on_shutdown(self) -> None:
+        data = {
+            f"{sc.id}": getattr(sc.message, "id", None)
+            for sc in self._channels
+        }
+
+        await self.save_states(data)
 
     @commands.Cog.listener()
     async def on_message(self, message) -> None:
@@ -254,7 +286,8 @@ class Support(commands.Cog):
             )
 
     @commands.command(name="call")
-    async def call_command(Self, ctx):
+    @commands.cooldown(1, 21600, commands.BucketType.member)
+    async def call_command(self, ctx):
         # Calls a specified role. Useful for preventing mention spamming.
         pass
 

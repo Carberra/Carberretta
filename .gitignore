@@ -336,3 +336,4 @@ secrets/
 
 ### Custom ###
 .vsls.json
+dynamic/
