@@ -4,6 +4,7 @@ POLL
 Handles polls.
 """
 
+import random
 import typing as t
 from datetime import datetime, timedelta
 
@@ -20,32 +21,30 @@ class Poll(commands.Cog):
         self._cache: t.List[discord.Message] = []
 
     @commands.group(name="poll", aliases=["p"])
+    @commands.has_permissions(administrator=True)
     async def poll(self, ctx) -> None:
-        pass
+        await ctx.send("+poll <stack> <time> <question> [options]...")
 
     @poll.command(name="create")
+    @commands.has_permissions(administrator=True)
     async def command_create(self, ctx, stack: bool, time: int, question: str, *options) -> None:
         if len(options) > 20:
             raise commands.TooManyArguments
 
+        await ctx.message.delete()
         message = discord.utils.get(
             self.bot.cached_messages,
             id=(
                 await ctx.send(
                     embed=discord.Embed.from_dict(
                         {
-                            "title": "Poll",
-                            "fields": [
-                                {"name": "Question", "value": question, "inline": False},
-                                {"name": "Instructions", "value": "React to cast a vote!", "inline": False},
-                                {
-                                    "name": "Options",
-                                    "value": "\n".join(
-                                        [f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]
-                                    ),
-                                    "inline": False,
-                                },
-                            ],
+                            "title": question,
+                            "description": "\n".join(
+                                [f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]
+                            ),
+                            "color": random.randint(0, 0xFFFFFF),
+                            "author": {"name": "Poll"},
+                            "footer": {"text": "React to cast a vote!"},
                         }
                     )
                 )
@@ -83,10 +82,12 @@ class Poll(commands.Cog):
         await message.channel.send(
             embed=discord.Embed.from_dict(
                 {
-                    "title": "Poll Result",
+                    "title": message.embeds[0].title,
+                    "description": f"Click [here]({message.jump_url}) to see the original message.",
+                    "color": message.embeds[0].colour.value,
+                    "author": {"name": "Poll Result"},
+                    "footer": {"text": "Thanks to everyone who voted!"},
                     "fields": [
-                        message.embeds[0].fields[0].__dict__,
-                        {"name": "Original Poll", "value": f"[Jump]({message.jump_url})", "inline": False},
                         {
                             "name": f"Winner{'s' if len(most_voted) > 1 else ''}",
                             "value": ", ".join(most_voted),
@@ -110,10 +111,7 @@ class Poll(commands.Cog):
                 for emoji in (
                     reaction.emoji for reaction in message.reactions if reaction.emoji != payload.emoji.name
                 ):
-                    try:
-                        await message.remove_reaction(emoji, payload.member)
-                    except:
-                        raise
+                    await message.remove_reaction(emoji, payload.member)
 
 
 def setup(bot: commands.Bot) -> None:
