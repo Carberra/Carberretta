@@ -11,15 +11,19 @@
     },
 
     "[python]": {
+        "editor.formatOnSave": true,
         "editor.insertSpaces": true,
         "editor.tabSize": 4
     },
-    "python.pythonPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
     "python.formatting.provider": "black",
-    "python.formatting.blackPath": "${workspaceFolder}\\venv\\Scripts\\black.exe",
+    "python.formatting.blackPath": "${workspaceFolder}\\.venv\\Scripts\\black.exe",
+    "python.formatting.blackArgs": [
+        "--line-length 119"
+    ],
+    "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "${workspaceFolder}\\venv\\Scripts\\mypy.exe",
+    "python.linting.mypyPath": "${workspaceFolder}\\.venv\\Scripts\\mypy.exe",
 
     "[yaml]": {
         "editor.insertSpaces": true,

@@ -11,7 +11,7 @@
 *.db-journal
 *.db3-journal
 *.sqlite3-journal
-*.db3-shl
+*.db3-shm
 *.db3-wal
 
 ### Emacs ###
@@ -333,3 +333,7 @@ $RECYCLE.BIN/
 ### Application ###
 # secrets
 secrets/
+
+### Custom ###
+.vsls.json
+dynamic/

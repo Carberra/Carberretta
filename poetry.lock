@@ -131,11 +131,10 @@ description = "A Python wrapper for the Discord API"
 name = "discord.py"
 optional = false
 python-versions = ">=3.5.3"
-version = "1.3.3"
+version = "1.4.1"
 
 [package.dependencies]
 aiohttp = ">=3.6.0,<3.7.0"
-websockets = ">=6.0,<7.0 || >7.0,<8.0 || >8.0,<8.0.1 || >8.0.1,<9.0"
 
 [package.extras]
 docs = ["sphinx (1.8.5)", "sphinxcontrib-trio (1.1.1)", "sphinxcontrib-websupport"]
@@ -188,6 +187,36 @@ name = "pathspec"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "0.8.0"
+
+[[package]]
+category = "main"
+description = "Cross-platform lib for process and system monitoring in Python."
+name = "psutil"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "5.7.0"
+
+[package.extras]
+enum = ["enum34"]
+
+[[package]]
+category = "main"
+description = "Pygments is a syntax highlighting package written in Python."
+name = "pygments"
+optional = false
+python-versions = ">=3.5"
+version = "2.7.1"
+
+[[package]]
+category = "main"
+description = "count source lines of code (SLOC) using pygments"
+name = "pygount"
+optional = false
+python-versions = ">=3.5"
+version = "1.2.4"
+
+[package.dependencies]
+pygments = ">=2.0"
 
 [[package]]
 category = "main"
@@ -261,14 +290,6 @@ pytz = "*"
 
 [[package]]
 category = "main"
-description = "An implementation of the WebSocket Protocol (RFC 6455 & 7692)"
-name = "websockets"
-optional = false
-python-versions = ">=3.6.1"
-version = "8.1"
-
-[[package]]
-category = "main"
 description = "Yet another URL library"
 name = "yarl"
 optional = false
@@ -280,7 +301,8 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "ab3be24082d53aae6782e754f1bf56c6d7f130dfa3cd3348c8635246c8c0be61"
+content-hash = "9e2601f8c8a0507b703b609e188ba2bd29b850470ca0e6e6d7d420d8e38d7ee8"
+lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -335,8 +357,8 @@ click = [
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
 "discord.py" = [
-    {file = "discord.py-1.3.3-py3-none-any.whl", hash = "sha256:406871b06d86c3dc49fba63238519f28628dac946fef8a0e22988ff58ec05580"},
-    {file = "discord.py-1.3.3.tar.gz", hash = "sha256:ad00e34c72d2faa8db2157b651d05f3c415d7d05078e7e41dc9e8dc240051beb"},
+    {file = "discord.py-1.4.1-py3-none-any.whl", hash = "sha256:98ea3096a3585c9c379209926f530808f5fcf4930928d8cfb579d2562d119570"},
+    {file = "discord.py-1.4.1.tar.gz", hash = "sha256:f9decb3bfa94613d922376288617e6a6f969260923643e2897f4540c34793442"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
@@ -384,6 +406,26 @@ mypy-extensions = [
 pathspec = [
     {file = "pathspec-0.8.0-py2.py3-none-any.whl", hash = "sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0"},
     {file = "pathspec-0.8.0.tar.gz", hash = "sha256:da45173eb3a6f2a5a487efba21f050af2b41948be6ab52b6a1e3ff22bb8b7061"},
+]
+psutil = [
+    {file = "psutil-5.7.0-cp27-none-win32.whl", hash = "sha256:298af2f14b635c3c7118fd9183843f4e73e681bb6f01e12284d4d70d48a60953"},
+    {file = "psutil-5.7.0-cp27-none-win_amd64.whl", hash = "sha256:75e22717d4dbc7ca529ec5063000b2b294fc9a367f9c9ede1f65846c7955fd38"},
+    {file = "psutil-5.7.0-cp35-cp35m-win32.whl", hash = "sha256:f344ca230dd8e8d5eee16827596f1c22ec0876127c28e800d7ae20ed44c4b310"},
+    {file = "psutil-5.7.0-cp35-cp35m-win_amd64.whl", hash = "sha256:e2d0c5b07c6fe5a87fa27b7855017edb0d52ee73b71e6ee368fae268605cc3f5"},
+    {file = "psutil-5.7.0-cp36-cp36m-win32.whl", hash = "sha256:a02f4ac50d4a23253b68233b07e7cdb567bd025b982d5cf0ee78296990c22d9e"},
+    {file = "psutil-5.7.0-cp36-cp36m-win_amd64.whl", hash = "sha256:1413f4158eb50e110777c4f15d7c759521703bd6beb58926f1d562da40180058"},
+    {file = "psutil-5.7.0-cp37-cp37m-win32.whl", hash = "sha256:d008ddc00c6906ec80040d26dc2d3e3962109e40ad07fd8a12d0284ce5e0e4f8"},
+    {file = "psutil-5.7.0-cp37-cp37m-win_amd64.whl", hash = "sha256:73f35ab66c6c7a9ce82ba44b1e9b1050be2a80cd4dcc3352cc108656b115c74f"},
+    {file = "psutil-5.7.0-cp38-cp38-win32.whl", hash = "sha256:60b86f327c198561f101a92be1995f9ae0399736b6eced8f24af41ec64fb88d4"},
+    {file = "psutil-5.7.0-cp38-cp38-win_amd64.whl", hash = "sha256:d84029b190c8a66a946e28b4d3934d2ca1528ec94764b180f7d6ea57b0e75e26"},
+    {file = "psutil-5.7.0.tar.gz", hash = "sha256:685ec16ca14d079455892f25bd124df26ff9137664af445563c1bd36629b5e0e"},
+]
+pygments = [
+    {file = "Pygments-2.7.1-py3-none-any.whl", hash = "sha256:307543fe65c0947b126e83dd5a61bd8acbd84abec11f43caebaf5534cbc17998"},
+    {file = "Pygments-2.7.1.tar.gz", hash = "sha256:926c3f319eda178d1bd90851e4317e6d8cdb5e292a3386aac9bd75eca29cf9c7"},
+]
+pygount = [
+    {file = "pygount-1.2.4-py3-none-any.whl", hash = "sha256:8ec56e58cfcb2be8bb54f32f02e7130d33302e2543c8a37b441e606ea3b8a2c5"},
 ]
 python-dotenv = [
     {file = "python-dotenv-0.13.0.tar.gz", hash = "sha256:3b9909bc96b0edc6b01586e1eed05e71174ef4e04c71da5786370cebea53ad74"},
@@ -455,30 +497,6 @@ typing-extensions = [
 tzlocal = [
     {file = "tzlocal-2.1-py2.py3-none-any.whl", hash = "sha256:e2cb6c6b5b604af38597403e9852872d7f534962ae2954c7f35efcb1ccacf4a4"},
     {file = "tzlocal-2.1.tar.gz", hash = "sha256:643c97c5294aedc737780a49d9df30889321cbe1204eac2c2ec6134035a92e44"},
-]
-websockets = [
-    {file = "websockets-8.1-cp36-cp36m-macosx_10_6_intel.whl", hash = "sha256:3762791ab8b38948f0c4d281c8b2ddfa99b7e510e46bd8dfa942a5fff621068c"},
-    {file = "websockets-8.1-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:3db87421956f1b0779a7564915875ba774295cc86e81bc671631379371af1170"},
-    {file = "websockets-8.1-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:4f9f7d28ce1d8f1295717c2c25b732c2bc0645db3215cf757551c392177d7cb8"},
-    {file = "websockets-8.1-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:295359a2cc78736737dd88c343cd0747546b2174b5e1adc223824bcaf3e164cb"},
-    {file = "websockets-8.1-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:1d3f1bf059d04a4e0eb4985a887d49195e15ebabc42364f4eb564b1d065793f5"},
-    {file = "websockets-8.1-cp36-cp36m-win32.whl", hash = "sha256:2db62a9142e88535038a6bcfea70ef9447696ea77891aebb730a333a51ed559a"},
-    {file = "websockets-8.1-cp36-cp36m-win_amd64.whl", hash = "sha256:0e4fb4de42701340bd2353bb2eee45314651caa6ccee80dbd5f5d5978888fed5"},
-    {file = "websockets-8.1-cp37-cp37m-macosx_10_6_intel.whl", hash = "sha256:9b248ba3dd8a03b1a10b19efe7d4f7fa41d158fdaa95e2cf65af5a7b95a4f989"},
-    {file = "websockets-8.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:ce85b06a10fc65e6143518b96d3dca27b081a740bae261c2fb20375801a9d56d"},
-    {file = "websockets-8.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:965889d9f0e2a75edd81a07592d0ced54daa5b0785f57dc429c378edbcffe779"},
-    {file = "websockets-8.1-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:751a556205d8245ff94aeef23546a1113b1dd4f6e4d102ded66c39b99c2ce6c8"},
-    {file = "websockets-8.1-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:3ef56fcc7b1ff90de46ccd5a687bbd13a3180132268c4254fc0fa44ecf4fc422"},
-    {file = "websockets-8.1-cp37-cp37m-win32.whl", hash = "sha256:7ff46d441db78241f4c6c27b3868c9ae71473fe03341340d2dfdbe8d79310acc"},
-    {file = "websockets-8.1-cp37-cp37m-win_amd64.whl", hash = "sha256:20891f0dddade307ffddf593c733a3fdb6b83e6f9eef85908113e628fa5a8308"},
-    {file = "websockets-8.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:c1ec8db4fac31850286b7cd3b9c0e1b944204668b8eb721674916d4e28744092"},
-    {file = "websockets-8.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:5c01fd846263a75bc8a2b9542606927cfad57e7282965d96b93c387622487485"},
-    {file = "websockets-8.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:9bef37ee224e104a413f0780e29adb3e514a5b698aabe0d969a6ba426b8435d1"},
-    {file = "websockets-8.1-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:d705f8aeecdf3262379644e4b55107a3b55860eb812b673b28d0fbc347a60c55"},
-    {file = "websockets-8.1-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:c8a116feafdb1f84607cb3b14aa1418424ae71fee131642fc568d21423b51824"},
-    {file = "websockets-8.1-cp38-cp38-win32.whl", hash = "sha256:e898a0863421650f0bebac8ba40840fc02258ef4714cb7e1fd76b6a6354bda36"},
-    {file = "websockets-8.1-cp38-cp38-win_amd64.whl", hash = "sha256:f8a7bff6e8664afc4e6c28b983845c5bc14965030e3fb98789734d416af77c4b"},
-    {file = "websockets-8.1.tar.gz", hash = "sha256:5c65d2da8c6bce0fca2528f69f44b2f977e06954c8512a952222cea50dad430f"},
 ]
 yarl = [
     {file = "yarl-1.4.2-cp35-cp35m-macosx_10_13_x86_64.whl", hash = "sha256:3ce3d4f7c6b69c4e4f0704b32eca8123b9c58ae91af740481aa57d7857b5e41b"},
