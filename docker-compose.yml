@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  bot:
+    build: .
+
+    volumes:
+      - data:/app/data/dynamic
+
+    environment:
+      TOKEN: file:/run/secrets/token
+      OWNER_IDS: set:int:385807530913169426, int:102733198231863296
+      PREFIX: str:+
+      GUILD_ID: int:626608699942764544
+      MODMAIL_ID: int:700101707727634452
+      AVAILABLE_SUPPORT_ID: int:694833990561038417
+      OCCUPIED_SUPPORT_ID: int:757327003798995094
+      UNAVAILABLE_SUPPORT_ID: int:757327041627553892
+      REDIRECT_ID: int:663808949275066369
+      INFO_ID: int:739572184745377813
+      STAFF_ROLE_ID: int:695313975046438923
+      MODERATOR_ROLE_ID: int:626614466376630282
+      HELPER_ROLE_ID: int:680357485608960148
+      HUB_GUILD_ID: int:530249508177575952
+      HUB_STDOUT_ID: int:657562932413988873
+      HUB_RELAY_ID: int:657612250768736271
+      HUB_COMMANDS_ID: int:657611609094619146
+
+    secrets:
+      - token
+
+secrets:
+  token:
+    file: ./secrets/token
+
+volumes:
+  data:
