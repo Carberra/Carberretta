@@ -254,7 +254,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "1.15.0"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
 optional = false
@@ -301,7 +301,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "9e2601f8c8a0507b703b609e188ba2bd29b850470ca0e6e6d7d420d8e38d7ee8"
+content-hash = "295719d361b2ff75acb68c1f428c72aa24d4ea657b363df9b13078a00d3ede6c"
 lock-version = "1.0"
 python-versions = "^3.8"
 

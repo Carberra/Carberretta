@@ -21,6 +21,7 @@ apscheduler = "^3.6.3"
 psutil = "^5.7.0"
 pygount = "^1.2.4"
 python-dotenv = "^0.13.0"
+toml = "^0.10.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.782"
