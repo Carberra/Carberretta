@@ -8,7 +8,8 @@ Self:
     Source.
 """
 
-import typing
+import os
+import typing as t
 from datetime import datetime, timedelta
 from inspect import getsourcelines
 from os.path import relpath
@@ -20,6 +21,7 @@ from time import time
 import discord
 from discord.ext import commands
 from psutil import Process, virtual_memory
+from pygount import SourceAnalysis
 
 from carberretta import Config
 from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR
@@ -31,7 +33,7 @@ class Meta(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-        self.bot.remove_command("help")
+        # self.bot.remove_command("help")
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -45,11 +47,13 @@ class Meta(commands.Cog):
                 {
                     "title": "About Carberretta",
                     "description": "Type `+info` for bot stats.",
-                    "colour": DEFAULT_EMBED_COLOUR,
-                    "timestamp": datetime.utcnow(),
-                    "thumbnail": self.bot.user.avatar_url,
+                    "color": DEFAULT_EMBED_COLOUR,
+                    "thumbnail": {"url": f"{self.bot.user.avatar_url}"},
                     "author": {"name": "Carberretta"},
-                    "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": ctx.author.avatar_url},
+                    "footer": {
+                        "text": f"Requested by {ctx.author.display_name}",
+                        "icon_url": f"{ctx.author.avatar_url}",
+                    },
                     "fields": [
                         {
                             "name": "Authors",
@@ -71,30 +75,31 @@ class Meta(commands.Cog):
             )
         )
 
-    @commands.command(name="help")
-    async def command_help(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
-        """This command. Invoke without any arguments for full help."""
-        if command is None:
-            pass
-        else:
-            syntax = "{} {}".format("|".join([str(command), *command.aliases]), command.signature)
+    # @commands.command(name="help")
+    # async def command_help(self, ctx: commands.Context, command: t.Optional[commands.Command]) -> None:
+    #     """This command. Invoke without any arguments for full help."""
+    #     print(command)
+    #     if command is None:
+    #         pass
+    #     else:
+    #         syntax = "{} {}".format("|".join([str(command), *command.aliases]), command.signature)
 
-            await ctx.send(
-                embed=discord.Embed.from_dict(
-                    {
-                        "title": f"Help with `{command.name}`",
-                        "description": command.help or "Not available.",
-                        "colour": DEFAULT_EMBED_COLOUR,
-                        "timestamp": datetime.utcnow(),
-                        "author": {"name": "Carberretta"},
-                        "footer": {
-                            "text": f"Requested by {ctx.author.display_name}",
-                            "icon_url": ctx.author.avatar_url,
-                        },
-                        "fields": [{"name": "Syntax", "value": f"```+{syntax}```", "inline": False}],
-                    }
-                )
-            )
+    #         await ctx.send(
+    #             embed=discord.Embed.from_dict(
+    #                 {
+    #                     "title": f"Help with `{command.name}`",
+    #                     "description": command.help or "Not available.",
+    #                     "colour": DEFAULT_EMBED_COLOUR,
+    #                     "thumbnail": {"url": f"{ctx.guild.icon_url}"},
+    #                     "author": {"name": "Carberretta"},
+    #                     "footer": {
+    #                         "text": f"Requested by {ctx.author.display_name}",
+    #                         "icon_url": f"{ctx.author.avatar_url}",
+    #                     },
+    #                     "fields": [{"name": "Syntax", "value": f"```+{syntax}```", "inline": False}],
+    #                 }
+    #             )
+    #         )
 
     @commands.command(name="botinfo", aliases=("bi", "info"))
     async def command_bot_info(self, ctx: commands.Context) -> None:
@@ -106,27 +111,25 @@ class Meta(commands.Cog):
             mem_of_total = proc.memory_percent()
             mem_usage = mem_total * (mem_of_total / 100)
 
-        loc = {
-            "win32": check_output(
-                [
-                    "powershell.exe",
-                    f"(Get-ChildItem -Path \"{ROOT_DIR / 'carberretta'}\" | Get-ChildItem -Filter '*.py' -Recurse | Get-Content | Measure-Object -line).lines",
-                ]
-            ),
-            "linux": check_output(
-                f"find {ROOT_DIR / 'carberretta'} -type f -name \"*.py\" -print0 | wc -l --files0-from=-"
-            ),
-        }.get(platform, 0)
+        code, docs, empty = 0, 0, 0
+        for subdir, _, files in os.walk(ROOT_DIR / "carberretta"):
+            for file in (f for f in files if f.endswith(".py")):
+                analysis = SourceAnalysis.from_file(f"{subdir}/{file}", "pygount", encoding="utf-8")
+                code += analysis.code_count
+                docs += analysis.documentation_count
+                empty += analysis.empty_count
 
         await ctx.send(
             embed=discord.Embed.from_dict(
                 {
                     "title": "Carberretta Information",
-                    "colour": DEFAULT_EMBED_COLOUR,
-                    "thumbnail": self.bot.user.avatar_url,
-                    "timestamp": datetime.utcnow(),
+                    "color": DEFAULT_EMBED_COLOUR,
+                    "thumbnail": {"url": f"{self.bot.user.avatar_url}"},
                     "author": {"name": "Carberretta"},
-                    "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": ctx.author.avatar_url},
+                    "footer": {
+                        "text": f"Requested by {ctx.author.display_name}",
+                        "icon_url": f"{ctx.author.avatar_url}",
+                    },
                     "fields": [
                         {"name": "Bot Version", "value": self.bot.version, "inline": True},
                         {"name": "Python Version", "value": python_version(), "inline": True},
@@ -138,8 +141,9 @@ class Meta(commands.Cog):
                             "value": f"{mem_usage:,.3f} / {mem_total:,.0f} MiB ({mem_of_total:,.0f}%)",
                             "inline": True,
                         },
-                        {"name": "Users", "value": self.bot.guild.member_count, "inline": True},
-                        {"name": "Lines of Code", "value": f"{int(loc):,}", "inline": True},
+                        {"name": "Code Lines", "value": f"{int(code):,}", "inline": True},
+                        {"name": "Docs Lines", "value": f"{int(docs):,}", "inline": True},
+                        {"name": "Blank Lines", "value": f"{int(empty):,}", "inline": True},
                         {"name": "Database Calls", "value": f"{self.bot.db._calls:,}", "inline": True},
                     ],
                 }
@@ -147,7 +151,7 @@ class Meta(commands.Cog):
         )
 
     @commands.command(name="source")
-    async def command_source(self, ctx: commands.Context, command: typing.Optional[commands.Command]) -> None:
+    async def command_source(self, ctx: commands.Context, command: t.Optional[commands.Command]) -> None:
         source_url = "https://github.com/Carberra/Carberretta"
 
         if command is None:
