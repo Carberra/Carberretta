@@ -48,9 +48,9 @@ class Bot(commands.Bot):
         print(f"running bot...")
         super().run(Config.TOKEN, reconnect=True)
 
-    async def close(self):
-        print("closing on keyboard interrupt...")
-        await self.shutdown()
+    # async def close(self):
+    #     print("closing on keyboard interrupt...")
+    #     await self.shutdown()
 
     async def shutdown(self):
         print("shutting down...")
@@ -64,7 +64,7 @@ class Bot(commands.Bot):
 
         hub = self.get_cog("Hub")
         await hub.stdout.send(f"Carberretta is shutting down. (Version {self.version})")
-        await super().close()
+        await self.logout()
 
     async def command_prefix(self, bot, message):
         return commands.when_mentioned_or(Config.PREFIX)(bot, message)

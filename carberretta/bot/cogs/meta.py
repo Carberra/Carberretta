@@ -170,6 +170,12 @@ class Meta(commands.Cog):
 
             await ctx.send(f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>")
 
+    @commands.command(name="shutdown")
+    async def shutdown_command(self, ctx: commands.Context) -> None:
+        # Prefer hub shutdown where possible.
+        await ctx.message.delete()
+        await self.bot.shutdown()
+
 
 def setup(bot: commands.Bot) -> None:
     bot.add_cog(Meta(bot))
