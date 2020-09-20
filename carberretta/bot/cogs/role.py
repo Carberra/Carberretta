@@ -7,6 +7,7 @@ Handles role based operations:
 """
 
 
+import random
 import typing as t
 
 import discord
@@ -22,19 +23,30 @@ class Role(commands.Cog):
         self._cache: t.Dict = {}
 
     @commands.group(name="rolereact", aliases=["rr"])
+    @commands.has_permissions(administrator=True)
     async def rr(self, ctx) -> None:
-        pass
+        await ctx.send("+rr <stack> <channel> <colour> <message> <selection>")
 
     @rr.command(name="create")
+    @commands.has_permissions(administrator=True)
     async def command_create(
-        self, ctx, stack: bool, channel: discord.TextChannel, message: str, *, selection: str
+        self, ctx, stack: bool, channel: discord.TextChannel, colour: str, message: str, *, selection: str
     ) -> None:
         roles = []
         for i in (j := iter(selection.split(" "))) :
             roles.append((i, discord.utils.get(ctx.guild.roles, mention=next(j))))
 
-        pretty_roles = "\n".join([f"{emoji}: {role.name}" for emoji, role in roles])
-        embed = discord.Embed(title="Role Reaction", description=f"{message}\n{pretty_roles}")
+        embed = discord.Embed.from_dict(
+            {
+                "title": message,
+                "description": "\n".join([f"{emoji}: {role.name}" for emoji, role in roles]),
+                "color": int(colour, base=16),
+                "author": {"name": "Role Reaction"},
+                "footer": {
+                    "text": ("You are limited to one role.", "You can give yourself as many roles as you like.")[stack]
+                },
+            }
+        )
 
         self._cache.update(
             {
@@ -46,10 +58,12 @@ class Role(commands.Cog):
         )
 
     @rr.command(name="edit")
+    @commands.has_permissions(administrator=True)
     async def command_edit(self, ctx) -> None:
         pass
 
     @rr.command(name="cache")
+    @commands.has_permissions(administrator=True)
     async def command_cache(self, ctx) -> None:
         await ctx.send(f"{self._cache}")
 
