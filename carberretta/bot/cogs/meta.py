@@ -24,9 +24,7 @@ from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
 from carberretta import Config
-from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR
-from carberretta.utils.chron import short_delta
-from carberretta.utils.converters import Command
+from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR, chron, converters
 
 
 class Meta(commands.Cog):
@@ -105,19 +103,11 @@ class Meta(commands.Cog):
     async def command_bot_info(self, ctx: commands.Context) -> None:
         proc = Process()
         with proc.oneshot():
-            uptime = short_delta(timedelta(seconds=time() - proc.create_time()))
-            cpu_time = short_delta(timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user))
+            uptime = chron.short_delta(timedelta(seconds=time() - proc.create_time()))
+            cpu_time = chron.short_delta(timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user), milliseconds=True)
             mem_total = virtual_memory().total / (1024 ** 2)
             mem_of_total = proc.memory_percent()
             mem_usage = mem_total * (mem_of_total / 100)
-
-        code, docs, empty = 0, 0, 0
-        for subdir, _, files in os.walk(ROOT_DIR / "carberretta"):
-            for file in (f for f in files if f.endswith(".py")):
-                analysis = SourceAnalysis.from_file(f"{subdir}/{file}", "pygount", encoding="utf-8")
-                code += analysis.code_count
-                docs += analysis.documentation_count
-                empty += analysis.empty_count
 
         await ctx.send(
             embed=discord.Embed.from_dict(
@@ -141,9 +131,9 @@ class Meta(commands.Cog):
                             "value": f"{mem_usage:,.3f} / {mem_total:,.0f} MiB ({mem_of_total:,.0f}%)",
                             "inline": True,
                         },
-                        {"name": "Code Lines", "value": f"{int(code):,}", "inline": True},
-                        {"name": "Docs Lines", "value": f"{int(docs):,}", "inline": True},
-                        {"name": "Blank Lines", "value": f"{int(empty):,}", "inline": True},
+                        {"name": "Code Lines", "value": f"{int(self.bot.loc.code):,}", "inline": True},
+                        {"name": "Docs Lines", "value": f"{int(self.bot.loc.docs):,}", "inline": True},
+                        {"name": "Blank Lines", "value": f"{int(self.bot.loc.empty):,}", "inline": True},
                         {"name": "Database Calls", "value": f"{self.bot.db._calls:,}", "inline": True},
                     ],
                 }
@@ -151,7 +141,7 @@ class Meta(commands.Cog):
         )
 
     @commands.command(name="source")
-    async def command_source(self, ctx: commands.Context, command: t.Optional[commands.Command]) -> None:
+    async def command_source(self, ctx: commands.Context, command: t.Optional[converters.Command]) -> None:
         source_url = "https://github.com/Carberra/Carberretta"
 
         if command is None:
