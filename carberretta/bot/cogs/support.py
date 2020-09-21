@@ -25,7 +25,7 @@ from discord.ext import commands
 from carberretta import Config
 from carberretta.utils import string
 
-INACTIVE_TIME: t.Final = 120  # 3600
+INACTIVE_TIME: t.Final = 3600
 NAMES: t.Final = [
     "alpha",
     "beta",
