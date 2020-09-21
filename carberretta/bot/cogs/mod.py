@@ -26,7 +26,7 @@ from carberretta.utils.emoji import UNICODE_EMOJI
 class Mod(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.modmail_cooldown: defaultdict = defaultdict(dt.datetime.utcnow)
+        self.mail_cooldown: defaultdict = defaultdict(dt.datetime.utcnow)
 
         self.nickname_whitelist = set(
             string.ascii_letters
@@ -36,8 +36,12 @@ class Mod(commands.Cog):
             + "áàȧâäǟǎăāãåǻǽǣćċĉčďḍḑḓéèėêëěĕēẽe̊ẹǵġĝǧğg̃ģĥḥíìiîïǐĭīĩịĵķǩĺļľŀḽm̂m̄ŉńn̂ṅn̈ňn̄ñņṋóòôȯȱöȫǒŏōõȭőọǿơp̄ŕřŗśŝṡšşṣťțṭṱúùûüǔŭūũűůụẃẁŵẅýỳŷÿȳỹźżžẓǯÁÀȦÂÄǞǍĂĀÃÅǺǼǢĆĊĈČĎḌḐḒÉÈĖÊËĚĔĒẼE̊ẸǴĠĜǦĞG̃ĢĤḤÍÌİÎÏǏĬĪĨỊĴĶǨĹĻĽĿḼM̂M̄ʼNŃN̂ṄN̈ŇN̄ÑŅṊÓÒȮȰÔÖȪǑŎŌÕȬŐỌǾƠP̄ŔŘŖŚŜṠŠȘṢŤȚṬṰÚÙÛÜǓŬŪŨŰŮỤẂẀŴẄÝỲŶŸȲỸŹŻŽẒǮæɑꞵðǝəɛɣıɩŋœɔꞷʊĸßʃþʋƿȝʒʔÆⱭꞴÐƎƏƐƔIƖŊŒƆꞶƱK’ẞƩÞƲǷȜƷʔąa̧ą̊ɓçđɗɖęȩə̧ɛ̧ƒǥɠħɦįi̧ɨɨ̧ƙłm̧ɲǫo̧øơɔ̧ɍşţŧųu̧ưʉy̨ƴĄA̧Ą̊ƁÇĐƊƉĘȨƏ̧Ɛ̧ƑǤƓĦꞪĮI̧ƗƗ̧ƘŁM̧ƝǪO̧ØƠƆ̧ɌŞŢŦŲU̧ƯɄY̨Ƴ"
         )
 
-    async def modmail(self, message: discord.Message) -> None:
-        if (retry_after := (self.modmail_cooldown[message.author.id] - dt.datetime.utcnow()).total_seconds()) > 0:
+    return_message = [
+        "Message sent. If needed, a moderator will DM you regarding this issue. You'll need to wait 1 hour before sending another modmail.",
+        "(INSERT BUSINESS INQUIRY RETURN MESSAGE HERE)"]
+
+    async def mail(self, message: discord.Message) -> None:
+        if (retry_after := (self.mail_cooldown[message.author.id] - dt.datetime.utcnow()).total_seconds()) > 0:
             return await message.channel.send(
                 f"You're still on cooldown. Try again in {chron.long_delta(dt.timedelta(seconds=retry_after))}."
             )
@@ -45,12 +49,21 @@ class Mod(commands.Cog):
         if not 50 <= len(message.content) <= 1000:
             return await message.channel.send("Your message should be between 50 and 1,000 characters long.")
 
+        channel = modmail_channel
+        title = "Modmail"
+        event = 0
+
+        if "business inquiry" in message.content.lower():
+            channel = businessInq_channel
+            title = "Business Inquiry"
+            event = 1
+
         member = self.bot.guild.get_member(message.author.id)
 
-        await self.modmail_channel.send(
+        await self.channel.send(
             embed=discord.Embed.from_dict(
                 {
-                    "title": "Modmail",
+                    "title": title,
                     "color": member.colour.value,
                     "thumbnail": {"url": f"{member.avatar_url}"},
                     "footer": {"text": f"ID: {message.id}"},
@@ -62,10 +75,9 @@ class Mod(commands.Cog):
                 }
             )
         )
-        await message.channel.send(
-            "Message sent. If needed, a moderator will DM you regarding this issue. You'll need to wait 1 hour before sending another modmail."
-        )
-        self.modmail_cooldown[message.author.id] = dt.datetime.utcnow() + dt.timedelta(seconds=3600)
+        await message.channel.send(return_message[event])
+
+        self.mail_cooldown[message.author.id] = dt.datetime.utcnow() + dt.timedelta(seconds=3600)
 
     async def unhoist(self, nickname: str) -> str:
         while nickname and nickname[0] not in string.ascii_letters:
@@ -84,13 +96,14 @@ class Mod(commands.Cog):
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
             self.modmail_channel = self.bot.get_channel(Config.MODMAIL_ID)
+            self.businessInq_channel = self.bot.get_channel(Config.BUSINESSINQ_ID)
             self.bot.ready.up(self)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if not message.author.bot:
             if isinstance(message.channel, discord.DMChannel):
-                await self.modmail(message)
+                await self.mail(message)
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
