@@ -1,9 +1,9 @@
-import aiohttp
 import asyncio
 import datetime as dt
 import traceback
 from pathlib import Path
 
+import aiohttp
 import discord
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from carberretta import Config
 from carberretta.db import Database
-from carberretta.utils import Ready, chron, string
+from carberretta.utils import CodeCounter, Ready, chron, string
 
 
 class Bot(commands.Bot):
@@ -22,9 +22,12 @@ class Bot(commands.Bot):
         self._static = "./carberretta/data/static"
 
         self.ready = Ready(self)
+        self.loc = CodeCounter()
         self.scheduler = AsyncIOScheduler()
         self.session = ClientSession()
         self.db = Database(self)
+
+        self.loc.count()
 
         super().__init__(
             command_prefix=self.command_prefix,
@@ -82,7 +85,7 @@ class Bot(commands.Bot):
                 )
 
     async def on_error(self, err, *args, **kwargs):
-        async with session.post("https://mystb.in/documents", data=traceback.format_exc()) as response:
+        async with self.session.post("https://mystb.in/documents", data=traceback.format_exc()) as response:
             if response.status == 200:
                 data = await response.json()
                 link = f"https://mystb.in/{data['key']}"
