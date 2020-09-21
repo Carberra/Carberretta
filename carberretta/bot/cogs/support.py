@@ -238,7 +238,12 @@ class Support(commands.Cog):
             pass
 
     async def close(self, sc: SupportChannel) -> None:
+        if sc.claimant == self.bot.user or sc.claimant == None:
+            claimant = "The"
+        else:
+            claimant = f"{sc.claimant.display_name}'{'s' if not sc.claimant.display_name.endswith('s') else ''}"
         await self.determine_channel_destination(sc)
+        await sc.channel.send(f"{claimant} support case timed out.")
 
     async def load_states(self) -> t.Mapping[str, int]:
         if isfile(self.state_path):
