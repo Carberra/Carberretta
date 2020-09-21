@@ -94,7 +94,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
-        if before.nick != after.nick and after.nick:
+        if not after.bot and after.nick and before.nick != after.nick:
             try:
                 nickname = await self.unhoist("".join(c for c in after.nick if c in self.nickname_whitelist))
 
@@ -112,7 +112,7 @@ class Mod(commands.Cog):
     @commands.has_permissions(manage_nicknames=True)
     async def validatenicknames_command(self, ctx):
         for member in ctx.guild.members:
-            if member.nick:
+            if not member.bot and member.nick:
                 try:
                     nickname = await self.unhoist("".join(c for c in member.nick if c in self.nickname_whitelist))
 
