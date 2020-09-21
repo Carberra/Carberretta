@@ -171,6 +171,7 @@ class Meta(commands.Cog):
             await ctx.send(f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>")
 
     @commands.command(name="shutdown")
+    @commands.is_owner()
     async def shutdown_command(self, ctx: commands.Context) -> None:
         # Prefer hub shutdown where possible.
         await ctx.message.delete()
