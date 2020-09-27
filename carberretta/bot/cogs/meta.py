@@ -165,7 +165,7 @@ class Meta(commands.Cog):
     async def shutdown_command(self, ctx: commands.Context) -> None:
         # Prefer hub shutdown where possible.
         await ctx.message.delete()
-        await self.bot.shutdown()
+        await self.bot.close()
 
 
 def setup(bot: commands.Bot) -> None:
