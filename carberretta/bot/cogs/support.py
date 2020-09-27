@@ -217,6 +217,10 @@ class Support(commands.Cog):
             ):
                 await self.try_get_from_unavailable("Helper came online.")
 
+            # Attempt to avoid caching problems.
+            if before.roles != after.roles and (set(after.roles) ^ set(before.roles)).pop() == self.helper_role:
+                self.helper_role = discord.utils.get(await self.bot.guild.fetch_roles(), id=Config.HELPER_ROLE_ID)
+
     async def schedule(self, sc: SupportChannel, offset: int = 0) -> None:
         try:
             self.bot.scheduler.add_job(
