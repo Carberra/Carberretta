@@ -32,7 +32,7 @@ class Hub(commands.Cog):
         if not message.author.bot and (self.bot.user in message.mentions or "all" in message.content):
             if message.channel == self.commands:
                 if message.content.startswith("shutdown"):
-                    await self.bot.shutdown()
+                    await self.bot.close()
 
             elif message.channel == self.relay:
                 pass
