@@ -75,7 +75,9 @@ class Bot(commands.Bot):
             return
 
         if not self.ready.bot:
-            return await ctx.send("Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5)
+            return await ctx.send(
+                "Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5
+            )
 
         support = self.get_cog("Support")
         if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "open":
