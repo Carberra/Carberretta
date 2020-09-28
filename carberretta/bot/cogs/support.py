@@ -89,20 +89,27 @@ class SupportChannel:
     def claimant(self) -> discord.Member:
         return getattr(self.message, "author", None)
 
+    def determine_position_in(self, category: discord.CategoryChannel) -> int:
+        return sorted([self.channel, *category.text_channels], key=lambda c: c.id).index(self.channel) + 1
+
     async def send_to_available(self) -> None:
         self.message = None
+        category = self.channel.guild.get_channel(Config.AVAILABLE_SUPPORT_ID)
         await self.channel.edit(
-            category=self.channel.guild.get_channel(Config.AVAILABLE_SUPPORT_ID),
+            category=category,
             reason="Support channel is now available.",
             sync_permissions=True,
+            position=self.determine_position_in(category),
         )
 
     async def send_to_occupied(self, message: discord.Message) -> None:
         self.message = message
+        category = self.channel.guild.get_channel(Config.OCCUPIED_SUPPORT_ID)
         await self.channel.edit(
-            category=self.channel.guild.get_channel(Config.OCCUPIED_SUPPORT_ID),
+            category=category,
             reason="Support channel is now occupied.",
             sync_permissions=True,
+            position=self.determine_position_in(category),
         )
         try:
             await self.channel.send(f"This channel is now occupied by {self.claimant.mention}.")
@@ -112,10 +119,12 @@ class SupportChannel:
 
     async def send_to_unavailable(self) -> None:
         self.message = None
+        category = self.channel.guild.get_channel(Config.UNAVAILABLE_SUPPORT_ID)
         await self.channel.edit(
-            category=self.channel.guild.get_channel(Config.UNAVAILABLE_SUPPORT_ID),
+            category=category,
             reason="Support channel is now unavailable.",
             sync_permissions=True,
+            position=self.determine_position_in(category),
         )
 
 
