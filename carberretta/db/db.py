@@ -61,12 +61,16 @@ class Database:
         return [row[0] for row in await cur.fetchall()]
 
     async def execute(self, command, *values):
-        await self.cxn.execute(command, tuple(values))
+        cur = await self.cxn.execute(command, tuple(values))
         self._calls += 1
 
+        return cur.rowcount
+
     async def executemany(self, command, valueset):
-        await self.cxn.executemany(command, valueset)
+        cur = await self.cxn.executemany(command, valueset)
         self._calls += 1
+
+        return cur.rowcount
 
     async def executescript(self, path, **kwargs):
         with open(path, "r", encoding="utf-8") as script:
