@@ -71,14 +71,17 @@ class Bot(commands.Bot):
     async def process_comamnds(self, message):
         ctx = await self.get_context(message, cls=commands.Context)
 
-        if ctx.command is not None:
-            if self.ready.bot:
-                await self.invoke(ctx)
+        if ctx.command is None:
+            return
 
-            else:
-                await ctx.send(
-                    "Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5,
-                )
+        if not self.ready.bot:
+            return await ctx.send("Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5)
+
+        support = self.get_cog("Support")
+        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "open":
+            return await ctx.message.delete()
+
+        await self.invoke(ctx)
 
     async def on_error(self, err, *args, **kwargs):
         async with self.session.post("https://mystb.in/documents", data=traceback.format_exc()) as response:
