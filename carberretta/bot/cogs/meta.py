@@ -104,7 +104,9 @@ class Meta(commands.Cog):
         proc = Process()
         with proc.oneshot():
             uptime = chron.short_delta(timedelta(seconds=time() - proc.create_time()))
-            cpu_time = chron.short_delta(timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user), milliseconds=True)
+            cpu_time = chron.short_delta(
+                timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user), milliseconds=True
+            )
             mem_total = virtual_memory().total / (1024 ** 2)
             mem_of_total = proc.memory_percent()
             mem_usage = mem_total * (mem_of_total / 100)
