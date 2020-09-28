@@ -5,7 +5,7 @@ services:
     build: .
 
     volumes:
-      - data:/app/data/dynamic
+      - data:/app/carberretta/data/dynamic
 
     environment:
       TOKEN: file:/run/secrets/token
