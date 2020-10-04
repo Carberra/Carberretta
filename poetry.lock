@@ -127,6 +127,14 @@ version = "7.1.2"
 
 [[package]]
 category = "main"
+description = "A basic but robust content filter for python."
+name = "content-filter"
+optional = false
+python-versions = ">=3.4"
+version = "1.1.0"
+
+[[package]]
+category = "main"
 description = "A Python wrapper for the Discord API"
 name = "discord.py"
 optional = false
@@ -301,7 +309,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "295719d361b2ff75acb68c1f428c72aa24d4ea657b363df9b13078a00d3ede6c"
+content-hash = "33810b28883a3cda25b31f7e9b6a388fd73da9840095920a830a70b16210d99f"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -355,6 +363,10 @@ chardet = [
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
+]
+content-filter = [
+    {file = "content-filter-1.1.0.tar.gz", hash = "sha256:79551f46d994dd6ee54864de60a0a7ddffa08dd46e536124d49a745162892ca2"},
+    {file = "content_filter-1.1.0-py3-none-any.whl", hash = "sha256:150d528cf9ca76ab4764cca40f1df771aa71c8fc9f329239dc7e79775b4563f4"},
 ]
 "discord.py" = [
     {file = "discord.py-1.4.1-py3-none-any.whl", hash = "sha256:98ea3096a3585c9c379209926f530808f5fcf4930928d8cfb579d2562d119570"},
