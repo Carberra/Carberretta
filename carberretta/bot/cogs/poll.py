@@ -45,17 +45,20 @@ class Poll(commands.Cog):
                 await ctx.send(
                     embed=discord.Embed.from_dict(
                         {
-                            "title": question,
-                            "description": "\n".join(
-                                [f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]
-                            ),
+                            "title": "Poll",
+                            "description": question,
                             "color": random.randint(0, 0xFFFFFF),
-                            "author": {"name": "Poll"},
                             "footer": {"text": "React to cast a vote!"},
                             "fields": [
                                 {
+                                    "name": "Options",
+                                    "value": "\n".join([f"{chr(0x1f1e6 + i)} {option}" for i, option in enumerate(options)]),
+                                    "inline": False
+                                },
+                                {
                                     "name": "End time",
                                     "value": f"{chron.long_date_and_time(datetime.utcnow() + timedelta(seconds=time))} UTC",
+                                    "inline": False
                                 }
                             ],
                         }
@@ -95,10 +98,9 @@ class Poll(commands.Cog):
         await message.channel.send(
             embed=discord.Embed.from_dict(
                 {
-                    "title": message.embeds[0].title,
-                    "description": f"Click [here]({message.jump_url}) to see the original message.",
+                    "title": "Poll Result",
+                    "description": f"{message.embeds[0].description}\n\n" + f"Click [here]({message.jump_url}) to see the original message.",
                     "color": message.embeds[0].colour.value,
-                    "author": {"name": "Poll Result"},
                     "footer": {"text": "Thanks to everyone who voted!"},
                     "fields": [
                         {
