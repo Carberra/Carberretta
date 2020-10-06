@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands
 
 from carberretta import Config
+from carberretta.utils import chron
 
 
 class Poll(commands.Cog):
@@ -23,7 +24,12 @@ class Poll(commands.Cog):
     @commands.group(name="poll", aliases=["p"])
     @commands.has_permissions(administrator=True)
     async def poll(self, ctx) -> None:
-        await ctx.send("+poll <stack> <time> <question> [options]...")
+        pass
+
+    @poll.command(name="help")
+    @commands.has_permissions(administrator=True)
+    async def help_command(self, ctx):
+        await ctx.send("+poll create <stack> <time> <question> [options]...")
 
     @poll.command(name="create")
     @commands.has_permissions(administrator=True)
@@ -32,6 +38,7 @@ class Poll(commands.Cog):
             raise commands.TooManyArguments
 
         await ctx.message.delete()
+
         message = discord.utils.get(
             self.bot.cached_messages,
             id=(
@@ -45,6 +52,12 @@ class Poll(commands.Cog):
                             "color": random.randint(0, 0xFFFFFF),
                             "author": {"name": "Poll"},
                             "footer": {"text": "React to cast a vote!"},
+                            "fields": [
+                                {
+                                    "name": "End time",
+                                    "value": f"{chron.long_date_and_time(datetime.utcnow() + timedelta(seconds=time))} UTC",
+                                }
+                            ],
                         }
                     )
                 )

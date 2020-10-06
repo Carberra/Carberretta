@@ -370,7 +370,7 @@ class Support(commands.Cog):
 
         if target is not None:
             message = await ctx.channel.history(
-                limit=None, after=dt.datetime.utcnow() - dt.timedelta(seconds=86400)
+                limit=None, after=dt.datetime.utcnow() - dt.timedelta(seconds=86400),
             ).get(author__id=target.id)
         else:
             message = sc.previous_message
