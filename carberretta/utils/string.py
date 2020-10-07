@@ -2,6 +2,7 @@ import re
 import typing as t
 
 from aiohttp import ClientSession
+from discord import Member, User
 
 from string import Formatter
 
@@ -43,6 +44,11 @@ def ordinal(number: int) -> str:
         return f"{number:,}{ORDINAL_ENDINGS.get(str(number)[-1], 'th')}"
     else:
         return f"{number:,}th"
+
+
+def possessive(user: t.Union[Member, User]) -> str:
+    name = getattr(user, "display_name", user.name)
+    return f"{name}'{'s' if not name.endswith('s') else ''}"
 
 
 async def binify(session: ClientSession, text: str) -> str:

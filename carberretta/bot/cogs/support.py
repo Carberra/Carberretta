@@ -345,7 +345,7 @@ class Support(commands.Cog):
         return None
 
     @commands.command(name="close")
-    async def close_command(self, ctx) -> None:
+    async def close_command(self, ctx: commands.Context) -> None:
         if (sc := self.get_support_channel(ctx.channel)) is None:
             return await ctx.message.delete()
 
@@ -355,13 +355,13 @@ class Support(commands.Cog):
         if sc.claimant == self.bot.user or sc.claimant == None:
             claimant = "The"
         else:
-            claimant = f"{sc.claimant.display_name}'{'s' if not sc.claimant.display_name.endswith('s') else ''}"
+            claimant = string.possessive(sc.claimant)
         await self.determine_channel_destination(sc)
         await self.unschedule(sc)
         await ctx.send(f"{claimant} support case was closed.")
 
     @commands.command(name="open", aliases=["reopen"])
-    async def open_command(self, ctx, target: t.Optional[discord.Member]) -> None:
+    async def open_command(self, ctx: commands.Context, target: t.Optional[discord.Member]) -> None:
         if (sc := self.get_support_channel(ctx.channel)) is None:
             return await ctx.message.delete()
 
@@ -381,7 +381,7 @@ class Support(commands.Cog):
         await self.open_case(sc, message)
 
     @commands.command(name="claimant", aliases=["client"])
-    async def claimant_command(self, ctx) -> None:
+    async def claimant_command(self, ctx: commands.Context) -> None:
         if (sc := self.get_support_channel(ctx.channel)) is None:
             return await ctx.message.delete()
 
@@ -391,7 +391,7 @@ class Support(commands.Cog):
         await ctx.send(f"This channel is currently claimed by {sc.claimant.display_name}.")
 
     @commands.command(name="redirect")
-    async def redirect_command(self, ctx, target: discord.Member) -> None:
+    async def redirect_command(self, ctx: commands.Context, target: discord.Member) -> None:
         await ctx.message.delete()
 
         if (sc := self.get_support_channel(ctx.channel)) is None:
@@ -439,9 +439,19 @@ class Support(commands.Cog):
                 f"{target.name}, you were redirected as the channel you attempted to open a support case in is already occupied. Unfortunely, there are no available support channels, so you will need to wait for a channel to become available."
             )
 
+    @commands.command(name="binify")
+    async def binify_command(self, ctx: commands.Context, *, raw: t.Union[discord.Message, str]):
+        async with ctx.typing():
+            if isinstance(raw, discord.Message):
+                await ctx.send(f"{string.possessive(raw.author)} message:\n\n>>> {await string.binify(self.bot.session, raw.clean_content)}")
+                await raw.delete()
+            else:
+                await ctx.send(f"{ctx.author.mention}: {await string.binify(self.bot.session, raw)}")
+                await ctx.message.delete()
+
     # @commands.command(name="call")
     # @commands.cooldown(1, 21600, commands.BucketType.member)
-    # async def call_command(self, ctx) -> None:
+    # async def call_command(self, ctx: commands.Context) -> None:
     #     # Calls a specified role. Useful for preventing mention spamming.
     #     pass
 
