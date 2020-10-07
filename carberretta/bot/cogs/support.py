@@ -181,7 +181,7 @@ class Support(commands.Cog):
 
             data = await self.load_states()
 
-            for channel in self.available_category.text_channels:
+            for channel in [*self.available_category.text_channels, *self.unavailable_category.text_channels]:
                 self._channels.append(SupportChannel(channel))
 
             for channel in self.occupied_category.text_channels:
