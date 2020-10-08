@@ -34,6 +34,8 @@ services:
 secrets:
   token:
     file: ./secrets/token
+  yt-api-key:
+    file: ./secrets/yt-api-key
 
 volumes:
   data:
