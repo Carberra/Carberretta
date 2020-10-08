@@ -26,7 +26,7 @@ services:
       HUB_RELAY_ID: int:657612250768736271
       HUB_COMMANDS_ID: int:657611609094619146
       YOUTUBE_CHANNEL_ID: str:UC13cYu7lec-oOcqQf5L-brg
-      YOUTUBE_API_KEY: file:/run/secrets/yt-api-key
+      YOUTUBE_API_KEY: file:/run/secrets/ytkey
 
     secrets:
       - token
@@ -34,6 +34,8 @@ services:
 secrets:
   token:
     file: ./secrets/token
+  ytkey:
+    file: ./secrets/ytkey
 
 volumes:
   data:
