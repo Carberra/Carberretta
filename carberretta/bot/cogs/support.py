@@ -376,7 +376,7 @@ class Support(commands.Cog):
             message = sc.previous_message
 
         if message is None:
-            return await ctx.send("No case could not be reopened.")
+            return await ctx.send("No case could be reopened.")
 
         await self.open_case(sc, message)
 
