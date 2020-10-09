@@ -12,6 +12,7 @@ from discord.ext import commands
 from carberretta import Config
 from carberretta.db import Database
 from carberretta.utils import CodeCounter, Ready, chron, string
+from carberretta.utils import errors
 
 
 class Bot(commands.Bot):
@@ -163,6 +164,12 @@ class Bot(commands.Bot):
 
         elif isinstance(exc, commands.CheckFailure):
             await ctx.send(f"There was an unhandled command check error (probably missing privileges).")
+
+        elif isinstance(exc, errors.WordAlreadyAdded):
+            await ctx.send(f"The word `{exc.found}` is already in the filter.")
+
+        elif isinstance(exc, errors.WordNotFound):
+            await ctx.send(f"The word `{exc.found}` was not found in the filter.")
 
         # Non-command errors.
         elif (original := getattr(exc, "original", None)) is not None:
