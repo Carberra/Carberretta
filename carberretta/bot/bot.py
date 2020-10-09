@@ -9,10 +9,8 @@ from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
 
-from carberretta import Config
+from carberretta import Config, utils
 from carberretta.db import Database
-from carberretta.utils import CodeCounter, Ready, chron, string
-from carberretta.utils import errors
 
 
 class Bot(commands.Bot):
@@ -22,11 +20,12 @@ class Bot(commands.Bot):
         self._dynamic = "./carberretta/data/dynamic"
         self._static = "./carberretta/data/static"
 
-        self.ready = Ready(self)
-        self.loc = CodeCounter()
         self.scheduler = AsyncIOScheduler()
         self.session = ClientSession()
         self.db = Database(self)
+        self.emoji = utils.EmojiGetter(self)
+        self.loc = utils.CodeCounter()
+        self.ready = utils.Ready(self)
 
         self.loc.count()
 
@@ -116,12 +115,14 @@ class Bot(commands.Bot):
             await ctx.send(f"Too many arguments have been passed.",)
 
         elif isinstance(exc, commands.MissingPermissions):
-            mp = string.list_of([str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
+            mp = utils.string.list_of([str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
             await ctx.send(f"You do not have the {mp} permission(s), which are required to use this command.")
 
         elif isinstance(exc, commands.BotMissingPermissions):
             try:
-                mp = string.list_of([str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
+                mp = utils.string.list_of(
+                    [str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or"
+                )
                 await ctx.send(
                     f"Carberretta does not have the {mp} permission(s), which are required to use this command."
                 )
@@ -145,7 +146,7 @@ class Bot(commands.Bot):
             await ctx.message.delete()
             await ctx.send(
                 cooldown_texts[str(exc.cooldown.type)].format(
-                    ctx.command.name, chron.long_delta(dt.timedelta(seconds=exc.retry_after))
+                    ctx.command.name, utils.chron.long_delta(dt.timedelta(seconds=exc.retry_after))
                 ),
                 delete_after=10,
             )
