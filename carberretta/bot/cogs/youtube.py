@@ -179,7 +179,7 @@ class YouTube(commands.Cog):
             )
 
     @yt_group.command(name="search")
-    async def yt_search_command(self, ctx: commands.Context, query: str) -> None:
+    async def yt_search_command(self, ctx: commands.Context, *, query: str) -> None:
         url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={query}&type=video&maxResults=50&channelId={Config.YOUTUBE_CHANNEL_ID}&key={Config.YOUTUBE_API_KEY}"
 
         async with ctx.typing():
