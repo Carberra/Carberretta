@@ -106,6 +106,10 @@ class Bot(commands.Bot):
         if isinstance(exc, commands.CommandNotFound):
             pass
 
+        # Custom check failure handling.
+        elif hasattr(exc, "msg"):
+            await ctx.send(exc.msg)
+
         elif isinstance(exc, commands.MissingRequiredArgument):
             await ctx.send(f"No `{exc.param.name}` argument was passed, despite being required.")
 
