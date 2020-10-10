@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carberra-carberretta"
-version = "1.0.7"
+version = "1.0.8"
 description = "Discord bot designed to handle specific tasks in the Carberra Tutorials server."
 
 license = "BSD-3-Clause"
@@ -18,6 +18,7 @@ aiofiles = "^0.5.0"
 aiosqlite = "^0.13.0"
 apscheduler = "^3.6.3"
 "discord.py" = "^1.5.0"
+kaomoji = "^0.1.0"
 psutil = "^5.7.0"
 pygount = "^1.2.4"
 python-dotenv = "^0.13.0"
