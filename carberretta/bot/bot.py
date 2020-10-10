@@ -34,6 +34,7 @@ class Bot(commands.Bot):
             case_insensitive=True,
             owner_ids=Config.OWNER_IDS,
             status=discord.Status.dnd,
+            intents=discord.Intents.all(),
         )
 
     def setup(self):
