@@ -150,6 +150,14 @@ version = "2.10"
 
 [[package]]
 category = "main"
+description = "Create procedurally generated kaomoji (i.e., Japanese emoticons) using Python! \\(^ヮ^)/"
+name = "kaomoji"
+optional = false
+python-versions = ">=3.6,<4.0"
+version = "0.1.0"
+
+[[package]]
+category = "main"
 description = "multidict implementation"
 name = "multidict"
 optional = false
@@ -301,7 +309,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "f31b7d8cd31dbce24770980cff2401d14022e557a9c8aa240d0c0e5cb31640a7"
+content-hash = "900205f331dbbfc5c10959ac6c4fe1fce2592a25b1a41d7acbf3a1aad07bef76"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -363,6 +371,10 @@ click = [
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
+]
+kaomoji = [
+    {file = "kaomoji-0.1.0-py3-none-any.whl", hash = "sha256:998ef07efe83f8c530ce4a3ab5489343d5289807813a69638ad0ea2e82dfb8b4"},
+    {file = "kaomoji-0.1.0.tar.gz", hash = "sha256:6f1bd7008408d3b3ab505887d8eb5788780e2e702978816136f6b7f7f923b680"},
 ]
 multidict = [
     {file = "multidict-4.7.6-cp35-cp35m-macosx_10_14_x86_64.whl", hash = "sha256:275ca32383bc5d1894b6975bb4ca6a7ff16ab76fa622967625baeebcf8079000"},
