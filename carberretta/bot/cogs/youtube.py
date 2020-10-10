@@ -118,7 +118,7 @@ class YouTube(commands.Cog):
                             "icon_url": f"{ctx.author.avatar_url}",
                         },
                         "fields": [
-                            {"name": "Subscribers", "value": f"{sub_count:,} - {sub_count+100:,}", "inline": False},
+                            {"name": "Subscribers", "value": f"About {sub_count:,}", "inline": False},
                             {"name": "Views", "value": f"{int(data['statistics']['viewCount']):,}", "inline": False},
                             {"name": "Videos", "value": f"{int(data['statistics']['videoCount']):,}", "inline": False},
                         ],
