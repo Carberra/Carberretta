@@ -1,4 +1,4 @@
-from os.path import isdir
+import os
 
 from aiosqlite import connect
 from apscheduler.triggers.cron import CronTrigger
@@ -7,18 +7,16 @@ from apscheduler.triggers.cron import CronTrigger
 class Database:
     def __init__(self, bot):
         self.bot = bot
-        self.path = f"{self.bot._dynamic}/database.db3"
-        self.build_path = f"{self.bot._static}/build.sql"
+        self.path = f"{bot._dynamic}/database.db3"
+        self.build_path = f"{bot._static}/build.sql"
         self._calls = 0
 
-        self.bot.scheduler.add_job(self.commit, CronTrigger(second=0))
+        bot.scheduler.add_job(self.commit, CronTrigger(second=0))
 
     async def connect(self):
-        if not isdir(self.bot._dynamic):
+        if not os.path.isdir(self.bot._dynamic):
             # If cloned, this dir likely won't exist, so make it.
-            from os import makedirs
-
-            makedirs(self.bot._dynamic)
+            os.makedirs(self.bot._dynamic)
 
         self.cxn = await connect(self.path)
         await self.execute("pragma journal_mode=wal")
