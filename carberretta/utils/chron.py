@@ -1,5 +1,6 @@
 import datetime as dt
 from time import strftime
+from json import JSONEncoder
 
 from carberretta.utils import string
 
@@ -82,3 +83,9 @@ def from_iso(stamp):
 
 def to_iso(obj):
     return obj.isoformat(" ")
+
+
+class DateTimeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (dt.date, dt.datetime)):
+            return obj.isoformat()
