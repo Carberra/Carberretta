@@ -213,6 +213,11 @@ class Support(commands.Cog):
 
         await self.save_states(data)
 
+    async def on_shutdown(self) -> None:
+        data = {f"{sc.id}": getattr(sc.message, "id", 0) for sc in self._channels}
+
+        await self.save_states(data)
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if self.bot.ready.support and not message.author.bot:
