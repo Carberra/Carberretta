@@ -2,6 +2,7 @@ import asyncio
 import datetime as dt
 import traceback
 from pathlib import Path
+from pytz import utc
 
 import aiohttp
 import discord
@@ -27,6 +28,7 @@ class Bot(commands.Bot):
         self.loc = utils.CodeCounter()
         self.ready = utils.Ready(self)
 
+        self.scheduler.configure(timezone=utc)
         self.loc.count()
 
         super().__init__(
@@ -54,9 +56,6 @@ class Bot(commands.Bot):
 
     async def close(self):
         print("shutting down...")
-        for cog in self.cogs.values():
-            if hasattr(cog, "on_shutdown"):
-                await cog.on_shutdown()
 
         self.scheduler.shutdown()
         await self.db.close()
