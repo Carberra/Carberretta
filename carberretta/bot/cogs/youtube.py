@@ -39,7 +39,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
 
                     data = (await response.json())["items"][0]
 
-                duration = self.ctx.bot.get_cog("YouTube").get_duration_from(data["contentDetails"]["duration"])
+                duration = self.ctx.bot.get_cog("YouTube").get_duration(data["contentDetails"]["duration"])
                 published_at = chron.from_iso(data["snippet"]["publishedAt"][:-1])
 
                 await self.message.edit(
@@ -215,7 +215,10 @@ class YouTube(commands.Cog):
                 if response.status != 200:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
-                data = (await response.json())["items"][0]
+                if not (data := (await response.json())["items"]):
+                    return await ctx.send("Invalid video ID.")
+
+                data = data[0]
 
             if data["snippet"]["channelId"] != Config.YOUTUBE_CHANNEL_ID:
                 return await ctx.send("That is not a Carberra video.")
