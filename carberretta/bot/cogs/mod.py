@@ -26,6 +26,12 @@ from carberretta import Config
 from carberretta.utils import chron, DEFAULT_EMBED_COLOUR
 from carberretta.utils.emoji import UNICODE_EMOJI
 from carberretta.utils.errors import WordAlreadyAdded, WordNotFound
+from carberretta.utils.menu import MultiPageMenu
+
+
+class FilterListMenu(MultiPageMenu):
+    def __init__(self, ctx, pagemaps):
+        super().__init__(ctx, pagemaps, timeout=120.0)
 
 
 class Mod(commands.Cog):
@@ -136,31 +142,38 @@ class Mod(commands.Cog):
         else:
             return
 
+    async def to_filter_format(self, text: str):
+        return text.replace('"', '').replace(',', '').replace('.', '').replace('-', '').replace("'", '').replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+
+    async def from_filter_format(self, text: str):
+        return text.replace('#', '*')
+
     async def load_filter_file(self):
+        async def fix_category_type(item, checkType, replacement):
+            try:
+                if not isinstance(filter_data[item], checkType):
+                    filter_data[item] = replacement
+            except:
+                filter_data[item] = replacement
+
+        async def fix_item_type(item, item_name, checkType, section='mainFilter'):
+            try:
+                if not isinstance(item[item_name], checkType):
+                    return True
+            except:
+                return True
+            return False
+
+        async def fix_item_null(index, item, item_name, replacement, section='mainFilter'):
+            try:
+                if not item[item_name]:
+                    filter_data[section][index][item_name] = replacement
+            except:
+                filter_data[section][index][item_name] = replacement
+
+
         if path.isfile(self.filter_file):
             indexes_to_remove = []
-
-            async def fix_category_type(item, checkType, replacement):
-                try:
-                    if not isinstance(filter_data[item], checkType):
-                        filter_data[item] = replacement
-                except:
-                    filter_data[item] = replacement
-
-            async def fix_item_type(item, item_name, checkType, section='mainFilter'):
-                try:
-                    if not isinstance(item[item_name], checkType):
-                        return True
-                except:
-                    return True
-                return False
-
-            async def fix_item_null(index, item, item_name, replacement, section='mainFilter'):
-                try:
-                    if not item[item_name]:
-                        filter_data[section][index][item_name] = replacement
-                except:
-                    filter_data[section][index][item_name] = replacement
 
             try:
                 async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -189,6 +202,9 @@ class Mod(commands.Cog):
                         indexes_to_remove.append(index) if await fix_item_type(item, 'find', str) else None
                         indexes_to_remove.append(index) if await fix_item_type(item, 'word', str) else None
                         indexes_to_remove.append(index) if await fix_item_type(item, 'censored', str) else None
+
+                        if item['find'] != await self.to_filter_format(item['find']):
+                            filter_data['mainFilter'][index]['find'] = await self.to_filter_format(item['find'])
 
                         await fix_item_null(index, item, 'added_by', self.bot.user.id)
                         await fix_item_null(index, item, 'added_on', dt.datetime.utcnow())
@@ -274,7 +290,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
-        find_modified = find.replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+        find_modified = await self.to_filter_format(find)
 
         for word_found in filter_data['mainFilter']:
             if word_found['find'] == find_modified:
@@ -307,7 +323,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
-        find_modified = find.replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+        find_modified = await self.to_filter_format(find)
 
         for word_found in filter_data['mainFilter']:
             if word_found['find'] == find_modified:
@@ -344,8 +360,8 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
-        find_modified = find.replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
-        new_find_modified = new_find.replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+        find_modified = await self.to_filter_format(find)
+        new_find_modified = await self.to_filter_format(new_find)
 
         for index, word_found in enumerate(filter_data['mainFilter']):
             if word_found['find'] == find_modified:
@@ -378,11 +394,15 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` modified to be `{new_find}`.')
 
+    async def chunk_list(self, list_to_split, segment_len):
+        return [list_to_split[i:i + segment_len] for i in range(0, len(list_to_split), segment_len)]
+
     @filter.command(name="list")
     # @commands.has_permissions(manage_guild=True)
     async def filter_list_command(self, ctx, find: str = 'all') -> None:
         found_word_in_filter = False
-        list_embed_fields = []
+        pagemaps = []
+        results_per_page = 10
 
         list_output = {
             'find': [],
@@ -393,7 +413,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
-        find_modified = find.replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+        find_modified = await self.to_filter_format(find)
 
         if find != 'all':
             for index, word_found in enumerate(filter_data['mainFilter']):
@@ -401,91 +421,109 @@ class Mod(commands.Cog):
                     found_word_in_filter = True
                     word_found_index = index
 
-                    result_text = f'Result: #{index + 1}'
-                    list_embed_fields = [
-                        {
-                            "name": "Find",
-                            "value": '||' + word_found['find'] + '||',
-                            "inline": True,
-                        },
-                        {
-                            "name": "Word",
-                            "value": '||' + word_found['word'] + '||',
-                            "inline": True,
-                        },
-                        {
-                            "name": "Censored",
-                            "value": word_found['censored'],
-                            "inline": True,
-                        },
-                        {
-                            "name": "Added By",
-                            "value": self.bot.guild.get_member(word_found['added_by']).mention ,
-                            "inline": True,
-                        },
-                        {
-                            "name": "Added On",
-                            "value": chron.short_date_and_time(chron.from_iso(word_found['added_on'])),
-                            "inline": True,
-                        },
-                        {
-                            "name": "Last Edited By",
-                            "value": self.bot.guild.get_member(word_found['edited_by']).mention if word_found['edited_by'] else "Not Edited",
-                            "inline": True,
-                        },
-                        {
-                            "name": "Last Edited On",
-                            "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
-                            "inline": True,
-                        }
-                    ]
+                    await ctx.send(
+                        embed=discord.Embed.from_dict(
+                            {
+                                "title": "Filter List",
+                                "description": "Note: Words in `find` translated for filter",
+                                "color": DEFAULT_EMBED_COLOUR,
+                                "author": {"name": "Information"},
+                                "footer": {
+                                    "text": f"Requested by {ctx.author.display_name} | Result: #{index + 1}",
+                                    "icon_url": f"{ctx.author.avatar_url}",
+                                },
+                                "fields": [
+                                    {
+                                        "name": "Find",
+                                        "value": '||' + await self.from_filter_format(word_found['find']) + '||',
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Word",
+                                        "value": '||' + word_found['word'] + '||',
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Censored",
+                                        "value": word_found['censored'],
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Added By",
+                                        "value": self.bot.guild.get_member(word_found['added_by']).mention ,
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Added On",
+                                        "value": chron.short_date_and_time(chron.from_iso(word_found['added_on'])),
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Last Edited By",
+                                        "value": self.bot.guild.get_member(word_found['edited_by']).mention if word_found['edited_by'] else "Not Edited",
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Last Edited On",
+                                        "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
+                                        "inline": True,
+                                    }
+                                ]
+                            }
+                        )
+                    )
 
         else:
             for word_found in filter_data['mainFilter']:
-                list_output['find'].append(word_found['find'] + '\n')
+                list_output['find'].append(await self.from_filter_format(word_found['find']) + '\n')
                 list_output['word'].append(word_found['word'] + '\n')
                 list_output['censored'].append(word_found['censored'] + '\n')
 
+            result_count = len(list_output['find'])
+
+            list_output['find'] = await self.chunk_list(list_output['find'], results_per_page)
+            list_output['word'] = await self.chunk_list(list_output['word'], results_per_page)
+            list_output['censored'] = await self.chunk_list(list_output['censored'], results_per_page)
+
             found_word_in_filter = True
-            result_text = 'Results: ' + str(len(list_output['find']))
-            list_embed_fields = [
-                {
-                    "name": "Find",
-                    "value": '||' + "".join(list_output['find']) + '||',
-                    "inline": True
-                },
-                {
-                    "name": "Word",
-                    "value": '||' + "".join(list_output['word']) + '||',
-                    "inline": True
-                },
-                {
-                    "name": "Censored",
-                    "value": "".join(list_output['censored']),
-                    "inline": True
-                }
-            ]
+            num_pages = len(list_output['find'])
+
+            for index, list_pages in enumerate(list_output['find']):
+                pagemaps.append(
+                    {
+                        "title": "Filter List",
+                        "description": "Note: Words in `find` translated for filter",
+                        "color": DEFAULT_EMBED_COLOUR,
+                        "author": {"name": "Information"},
+                        "footer": {
+                            "text": f"Requested by {ctx.author.display_name} | Page {index + 1} of {num_pages} | Results: {result_count}",
+                            "icon_url": f"{ctx.author.avatar_url}",
+                        },
+                        "fields": [
+                            {
+                                "name": "Find",
+                                "value": '||' + "".join(list_output['find'][index]) + '||',
+                                "inline": True
+                            },
+                            {
+                                "name": "Word",
+                                "value": '||' + "".join(list_output['word'][index]) + '||',
+                                "inline": True
+                            },
+                            {
+                                "name": "Censored",
+                                "value": "".join(list_output['censored'][index]),
+                                "inline": True
+                            }
+                        ]
+                    }
+                )
+
+            await FilterListMenu(ctx, pagemaps).start()
 
 
         if not found_word_in_filter:
             raise WordNotFound(find)
-
-        await ctx.send(
-            embed=discord.Embed.from_dict(
-                {
-                    "title": "Filter List",
-                    "color": DEFAULT_EMBED_COLOUR,
-                    "author": {"name": "Information"},
-                    "footer": {
-                        "text": f"Requested by {ctx.author.display_name} | {result_text}",
-                        "icon_url": f"{ctx.author.avatar_url}",
-                    },
-                    "fields": list_embed_fields
-                }
-            )
-        )
-
-
 
 
 def setup(bot: commands.Bot) -> None:
