@@ -5,10 +5,16 @@ Handles YouTube content notifications and stats.
 """
 
 import datetime as dt
+import json
+import os
 import re
+import typing as t
 
+import aiofiles
+import aiofiles.os
 import aiohttp
 import discord
+from apscheduler.triggers.cron import CronTrigger
 from discord.ext import commands
 
 from carberretta import Config
@@ -39,7 +45,8 @@ class SearchMenu(menu.NumberedSelectionMenu):
 
                     data = (await response.json())["items"][0]
 
-                duration = self.ctx.bot.get_cog("YouTube").get_duration_from(data["contentDetails"]["duration"])
+                youtube = self.ctx.bot.get_cog("YouTube")
+                duration = youtube.get_duration(data["contentDetails"]["duration"])
                 published_at = chron.from_iso(data["snippet"]["publishedAt"][:-1])
 
                 await self.message.edit(
@@ -50,7 +57,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
                             "color": DEFAULT_EMBED_COLOUR,
                             "author": {"name": "Query"},
                             "footer": {
-                                "text": f"Requested by {self.ctx.author.display_name}",
+                                "text": f"Requested by {self.ctx.author.display_name} • {youtube.searches_today}/50",
                                 "icon_url": f"{self.ctx.author.avatar_url}",
                             },
                             "fields": [
@@ -70,11 +77,44 @@ class SearchMenu(menu.NumberedSelectionMenu):
 class YouTube(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.yt_path = f"{bot._dynamic}/yt.json"
+
+        bot.scheduler.add_job(self._reset_search_cap, CronTrigger(hour=0, minute=0, second=0))
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
+            data = await self.load_states()
+            self.searches_today = data["searches_today"]
+
             self.bot.ready.up(self)
+
+    @commands.Cog.listener()
+    async def on_disconnect(self) -> None:
+        data = {"searches_today": self.searches_today}
+
+        await self.save_states(data)
+
+    async def on_shutdown(self) -> None:
+        data = {"searches_today": self.searches_today}
+
+        await self.save_states(data)
+
+    async def load_states(self) -> t.Mapping[str, int]:
+        if os.path.isfile(self.yt_path):
+            async with aiofiles.open(self.yt_path, "r", encoding="utf-8") as f:
+                data = json.loads(await f.read())
+            await aiofiles.os.remove(self.yt_path)
+            return data
+        else:
+            return {"searches_today": 0}
+
+    async def save_states(self, data: t.Mapping[str, int]) -> None:
+        async with aiofiles.open(self.yt_path, "w", encoding="utf-8") as f:
+            await f.write(json.dumps(data, ensure_ascii=False))
+
+    def _reset_search_cap(self) -> None:
+        self.searches_today = 0
 
     def get_duration(self, duration, long=False):
         if (
@@ -182,11 +222,16 @@ class YouTube(commands.Cog):
             )
 
     @yt_group.command(name="search")
+    @commands.cooldown(1, 30, commands.BucketType.user)
     async def yt_search_command(self, ctx: commands.Context, *, query: str) -> None:
+        if self.searches_today >= 50:
+            return await ctx.send("Reached maximum amount of daily searches (50).")
+
         url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={query}&type=video&maxResults=50&channelId={Config.YOUTUBE_CHANNEL_ID}&key={Config.YOUTUBE_API_KEY}"
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
+                self.searches_today += 1
                 if response.status != 200:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
@@ -197,7 +242,10 @@ class YouTube(commands.Cog):
             "description": f"{data['pageInfo']['totalResults']} result(s).",
             "color": DEFAULT_EMBED_COLOUR,
             "author": {"name": "Query"},
-            "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
+            "footer": {
+                "text": f"Requested by {ctx.author.display_name} • {self.searches_today}/50",
+                "icon_url": f"{ctx.author.avatar_url}",
+            },
         }
         results = [f"{item['snippet']['title']}" for item in data["items"]]
 
