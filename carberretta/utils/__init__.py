@@ -7,3 +7,4 @@ DEFAULT_EMBED_COLOUR = 0xE33939
 from .emoji import EmojiGetter
 from .loc import CodeCounter
 from .ready import Ready
+from .search import Search
