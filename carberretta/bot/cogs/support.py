@@ -370,8 +370,8 @@ class Support(commands.Cog):
         await self.unschedule(sc)
         await ctx.send(f"{claimant} support case was closed.")
 
-    @commands.command(name="open", aliases=["reopen"])
-    async def open_command(self, ctx: commands.Context, target: t.Optional[discord.Member]) -> None:
+    @commands.command(name="reopen")
+    async def reopen_command(self, ctx: commands.Context, target: t.Optional[discord.Member]) -> None:
         if (sc := self.get_support_channel(ctx.channel)) is None:
             return await ctx.message.delete()
 
