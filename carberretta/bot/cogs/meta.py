@@ -31,8 +31,6 @@ class Meta(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-        # self.bot.remove_command("help")
-
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
@@ -73,32 +71,6 @@ class Meta(commands.Cog):
                 }
             )
         )
-
-    # @commands.command(name="help")
-    # async def command_help(self, ctx: commands.Context, command: t.Optional[commands.Command]) -> None:
-    #     """This command. Invoke without any arguments for full help."""
-    #     print(command)
-    #     if command is None:
-    #         pass
-    #     else:
-    #         syntax = "{} {}".format("|".join([str(command), *command.aliases]), command.signature)
-
-    #         await ctx.send(
-    #             embed=discord.Embed.from_dict(
-    #                 {
-    #                     "title": f"Help with `{command.name}`",
-    #                     "description": command.help or "Not available.",
-    #                     "colour": DEFAULT_EMBED_COLOUR,
-    #                     "thumbnail": {"url": f"{ctx.guild.icon_url}"},
-    #                     "author": {"name": "Carberretta"},
-    #                     "footer": {
-    #                         "text": f"Requested by {ctx.author.display_name}",
-    #                         "icon_url": f"{ctx.author.avatar_url}",
-    #                     },
-    #                     "fields": [{"name": "Syntax", "value": f"```+{syntax}```", "inline": False}],
-    #                 }
-    #             )
-    #         )
 
     @commands.command(name="botinfo", aliases=("bi", "info"))
     async def command_bot_info(self, ctx: commands.Context) -> None:
