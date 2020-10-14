@@ -4,7 +4,6 @@ NOTIFICATIONS
 Handles YouTube and Twitch notifications.
 """
 
-import datetime as dt
 import json
 import os
 import typing as t
