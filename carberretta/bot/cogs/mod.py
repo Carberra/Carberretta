@@ -99,7 +99,6 @@ class Mod(commands.Cog):
             filter_result_raw = checkMessageList(message.content)
             filter_result = {
                 'found': [],
-                'censored': [],
                 'count': []
             } # type: dict
 
@@ -108,7 +107,6 @@ class Mod(commands.Cog):
 
                 for word in filter_result_raw:
                     filter_result['found'].append(word['word'] + '\n')
-                    filter_result['censored'].append(word['censored'] + '\n')
                     filter_result['count'].append(str(word['count']) + '\n')
 
                 warning_msg = await message.channel.send(f"{message.author.mention} please do not use offensive language!")
@@ -126,12 +124,8 @@ class Mod(commands.Cog):
                             "fields": [
                                 {"name": "Member", "value": member.mention, "inline": False},
                                 {"name": "Message", "value": message.content, "inline": False},
-                                {"name": "Found", "value": '||' +
-                                    "".join(filter_result['found']) + '||', "inline": True},
-                                {"name": "Censored",
-                                    "value": "".join(filter_result['censored']), "inline": True},
-                                {"name": "Count",
-                                    "value": "".join(filter_result['count']), "inline": True},
+                                {"name": "Found", "value": '||' + "".join(filter_result['found']) + '||', "inline": True},
+                                {"name": "Count", "value": "".join(filter_result['count']), "inline": True},
                                 {"name": "Context",
                                     "value": f'[Jump to Message](https://discordapp.com/channels/{message.guild.id}/{message.channel.id}/{warning_msg.id})', "inline": False},
                             ],
@@ -286,7 +280,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="add")
     # @commands.has_permissions(manage_guild=True)
-    async def filter_add_command(self, ctx, find: str, word: str, censored: str) -> None:
+    async def filter_add_command(self, ctx, find: str, word: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
@@ -296,10 +290,14 @@ class Mod(commands.Cog):
             if word_found['find'] == find_modified:
                 raise WordAlreadyAdded(find)
 
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == find_modified:
+                raise WordAlreadyAdded(find)
+
         word_to_add = {
             'find': find_modified,
             'word': word,
-            'censored': censored,
+            'censored': word,
             'added_by': ctx.author.id,
             'added_on': dt.datetime.utcnow(),
             'edited_by': None,
@@ -354,7 +352,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="edit")
     # @commands.has_permissions(manage_guild=True)
-    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str, new_censored: str) -> None:
+    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str) -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -370,7 +368,11 @@ class Mod(commands.Cog):
                 word_found_info = word_found
 
             elif word_found['find'] == new_find_modified:
-                raise WordAlreadyAdded(new_word)
+                raise WordAlreadyAdded(new_find)
+
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == new_find_modified:
+                raise WordAlreadyAdded(new_find)
 
         if not found_word_in_filter:
             raise WordNotFound(find)
@@ -378,7 +380,7 @@ class Mod(commands.Cog):
         word_to_edit = {
             'find': new_find_modified,
             'word': new_word,
-            'censored': new_censored,
+            'censored': new_word,
             'added_by': word_found_info['added_by'],
             'added_on': word_found_info['added_on'],
             'edited_by': ctx.author.id,
@@ -397,18 +399,130 @@ class Mod(commands.Cog):
     async def chunk_list(self, list_to_split, segment_len):
         return [list_to_split[i:i + segment_len] for i in range(0, len(list_to_split), segment_len)]
 
+    @filter.command(name="conditionadd", aliases=['cnda'])
+    # @commands.has_permissions(manage_guild=True)
+    async def filter_add_condition_command(self, ctx, find: str, word: str) -> None:
+        async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
+            filter_data = json.loads(await f.read())
+
+        find_modified = await self.to_filter_format(find)
+
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == find_modified:
+                raise WordAlreadyAdded(find)
+
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == find_modified:
+                raise WordAlreadyAdded(find)
+
+        word_to_add = {
+            'find': find_modified,
+            'word': word,
+            'censored': word,
+            'added_by': ctx.author.id,
+            'added_on': dt.datetime.utcnow(),
+            'edited_by': None,
+            'edited_on': None
+        }
+
+        filter_data['conditionFilter'].append(word_to_add)
+
+        async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
+            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+
+        updateListFromFile()
+
+        await ctx.send(f'Word `{find}` added into the condition filter.')
+
+    @filter.command(name="conditionremove", aliases=['cndr'])
+    # @commands.has_permissions(manage_guild=True)
+    async def filter_remove_condition_command(self, ctx, find: str) -> None:
+        found_word_in_filter = False
+
+        async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
+            filter_data = json.loads(await f.read())
+
+        find_modified = await self.to_filter_format(find)
+
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == find_modified:
+                found_word_in_filter = True
+                word_found_info = word_found
+
+        if not found_word_in_filter:
+            raise WordNotFound(find)
+
+        word_to_remove = {
+            'find': find_modified,
+            'word': word_found_info['word'],
+            'censored': word_found_info['censored'],
+            'added_by': word_found_info['added_by'],
+            'added_on': word_found_info['added_on'],
+            'edited_by': word_found_info['edited_by'],
+            'edited_on': word_found_info['edited_on']
+        }
+
+        filter_data['conditionFilter'].remove(word_to_remove)
+
+        async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
+            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+
+        updateListFromFile()
+
+        await ctx.send(f'Word `{find}` removed from the condition filter.')
+
+    @filter.command(name="conditionedit", aliases=['cnde'])
+    # @commands.has_permissions(manage_guild=True)
+    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str) -> None:
+        found_word_in_filter = False
+
+        async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
+            filter_data = json.loads(await f.read())
+
+        find_modified = await self.to_filter_format(find)
+        new_find_modified = await self.to_filter_format(new_find)
+
+        for index, word_found in enumerate(filter_data['conditionFilter']):
+            if word_found['find'] == find_modified:
+                found_word_in_filter = True
+                word_found_index = index
+                word_found_info = word_found
+
+            elif word_found['find'] == new_find_modified:
+                raise WordAlreadyAdded(new_find)
+
+        for word_found in filter_data['conditionFilter']:
+            if word_found['find'] == new_find_modified:
+                raise WordAlreadyAdded(new_find)
+
+        if not found_word_in_filter:
+            raise WordNotFound(find)
+
+        word_to_edit = {
+            'find': new_find_modified,
+            'word': new_word,
+            'censored': new_word,
+            'added_by': word_found_info['added_by'],
+            'added_on': word_found_info['added_on'],
+            'edited_by': ctx.author.id,
+            'edited_on': dt.datetime.utcnow()
+        }
+
+        filter_data['conditionFilter'][word_found_index] = word_to_edit
+
+        async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
+            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+
+        updateListFromFile()
+
+        await ctx.send(f'Word `{find}` modified to be `{new_find}`.')
+
     @filter.command(name="list")
     # @commands.has_permissions(manage_guild=True)
     async def filter_list_command(self, ctx, find: str = 'all') -> None:
         found_word_in_filter = False
         pagemaps = []
         results_per_page = 10
-
-        list_output = {
-            'find': [],
-            'word': [],
-            'censored': []
-        } # type: dict
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
@@ -424,7 +538,7 @@ class Mod(commands.Cog):
                     await ctx.send(
                         embed=discord.Embed.from_dict(
                             {
-                                "title": "Filter List",
+                                "title": "Filter Word (Main)",
                                 "description": "Note: Words in `find` translated for filter",
                                 "color": DEFAULT_EMBED_COLOUR,
                                 "author": {"name": "Information"},
@@ -441,11 +555,6 @@ class Mod(commands.Cog):
                                     {
                                         "name": "Word",
                                         "value": '||' + word_found['word'] + '||',
-                                        "inline": True,
-                                    },
-                                    {
-                                        "name": "Censored",
-                                        "value": word_found['censored'],
                                         "inline": True,
                                     },
                                     {
@@ -473,17 +582,86 @@ class Mod(commands.Cog):
                         )
                     )
 
+                    return
+
+
+            for index, word_found in enumerate(filter_data['conditionFilter']):
+                if word_found['find'] == find_modified:
+                    found_word_in_filter = True
+                    word_found_index = index
+                    main_filter_len = len(filter_data['mainFilter'])
+
+                    await ctx.send(
+                        embed=discord.Embed.from_dict(
+                            {
+                                "title": "Filter Word (Conditional)",
+                                "description": "Note: Words in `find` translated for filter",
+                                "color": DEFAULT_EMBED_COLOUR,
+                                "author": {"name": "Information"},
+                                "footer": {
+                                    "text": f"Requested by {ctx.author.display_name} | Result: #{index + 1 + main_filter_len}",
+                                    "icon_url": f"{ctx.author.avatar_url}",
+                                },
+                                "fields": [
+                                    {
+                                        "name": "Find",
+                                        "value": '||' + await self.from_filter_format(word_found['find']) + '||',
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Word",
+                                        "value": '||' + word_found['word'] + '||',
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Added By",
+                                        "value": self.bot.guild.get_member(word_found['added_by']).mention ,
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Added On",
+                                        "value": chron.short_date_and_time(chron.from_iso(word_found['added_on'])),
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Last Edited By",
+                                        "value": self.bot.guild.get_member(word_found['edited_by']).mention if word_found['edited_by'] else "Not Edited",
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Last Edited On",
+                                        "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
+                                        "inline": True,
+                                    }
+                                ]
+                            }
+                        )
+                    )
+
+                    return
+
         else:
+            list_output = {
+                'find': [],
+                'word': [],
+                'filter': []
+            } # type: dict
+
             for word_found in filter_data['mainFilter']:
                 list_output['find'].append(await self.from_filter_format(word_found['find']) + '\n')
                 list_output['word'].append(word_found['word'] + '\n')
-                list_output['censored'].append(word_found['censored'] + '\n')
+                list_output['filter'].append('Main\n')
+
+            for word_found in filter_data['conditionFilter']:
+                list_output['find'].append(await self.from_filter_format(word_found['find']) + '\n')
+                list_output['word'].append(word_found['word'] + '\n')
+                list_output['filter'].append('Conditional\n')
 
             result_count = len(list_output['find'])
 
             list_output['find'] = await self.chunk_list(list_output['find'], results_per_page)
             list_output['word'] = await self.chunk_list(list_output['word'], results_per_page)
-            list_output['censored'] = await self.chunk_list(list_output['censored'], results_per_page)
+            list_output['filter'] = await self.chunk_list(list_output['filter'], results_per_page)
 
             found_word_in_filter = True
             num_pages = len(list_output['find'])
@@ -511,8 +689,8 @@ class Mod(commands.Cog):
                                 "inline": True
                             },
                             {
-                                "name": "Censored",
-                                "value": "".join(list_output['censored'][index]),
+                                "name": "Filter",
+                                "value": '||' + "".join(list_output['filter'][index]) + '||',
                                 "inline": True
                             }
                         ]
