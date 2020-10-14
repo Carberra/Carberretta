@@ -153,6 +153,10 @@ class Support(commands.Cog):
         return [c for c in self._channels if c.state == SupportState.AVAILABLE]
 
     @property
+    def occupied_channels(self) -> t.List[SupportChannel]:
+        return [c for c in self._channels if c.state == SupportState.OCCUPIED]
+
+    @property
     def usable_channels(self) -> t.List[SupportChannel]:
         return [c for c in self._channels if c.state != SupportState.UNAVAILABLE]
 
@@ -166,7 +170,7 @@ class Support(commands.Cog):
 
     @staticmethod
     def idle_timeout(offset: int = 0) -> dt.datetime:
-        return dt.datetime.now() + dt.timedelta(seconds=INACTIVE_TIME + offset)
+        return dt.datetime.utcnow() + dt.timedelta(seconds=INACTIVE_TIME + offset)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -202,6 +206,12 @@ class Support(commands.Cog):
                     await self.schedule(sc, -secs_since_activity)
 
             self.bot.ready.up(self)
+
+    @commands.Cog.listener()
+    async def on_disconnect(self) -> None:
+        data = {f"{sc.id}": getattr(sc.message, "id", 0) for sc in self._channels}
+
+        await self.save_states(data)
 
     async def on_shutdown(self) -> None:
         data = {f"{sc.id}": getattr(sc.message, "id", 0) for sc in self._channels}

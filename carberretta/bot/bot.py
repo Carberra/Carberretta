@@ -2,6 +2,7 @@ import asyncio
 import datetime as dt
 import traceback
 from pathlib import Path
+from pytz import utc
 
 import aiohttp
 import discord
@@ -27,6 +28,7 @@ class Bot(commands.Bot):
         self.loc = utils.CodeCounter()
         self.ready = utils.Ready(self)
 
+        self.scheduler.configure(timezone=utc)
         self.loc.count()
 
         super().__init__(
@@ -34,6 +36,7 @@ class Bot(commands.Bot):
             case_insensitive=True,
             owner_ids=Config.OWNER_IDS,
             status=discord.Status.dnd,
+            intents=discord.Intents.all(),
         )
 
     def setup(self):
@@ -104,6 +107,10 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx, exc):
         if isinstance(exc, commands.CommandNotFound):
             pass
+
+        # Custom check failure handling.
+        elif hasattr(exc, "msg"):
+            await ctx.send(exc.msg)
 
         elif isinstance(exc, commands.MissingRequiredArgument):
             await ctx.send(f"No `{exc.param.name}` argument was passed, despite being required.")
