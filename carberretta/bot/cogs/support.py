@@ -426,7 +426,7 @@ class Support(commands.Cog):
             big_message = "**Your previous messages:**"
             for message in reversed(messages):
                 content = f"`{message.created_at.strftime('%H:%M:%S')}`  {message.clean_content}"
-                big_message += f"\n{await string.binify(self.bot.session, content)}"
+                big_message += f"\n{await string.binify(self.bot.session, content, only_codeblocks=True)}"
 
             return [big_message[i : i + 2000] for i in range(0, len(big_message), 2000)]
 
@@ -467,7 +467,7 @@ class Support(commands.Cog):
                 file = f"{await string.binify(self.bot.session, file_contents) if file_contents else ''}"
 
                 await ctx.send(f"**{string.possessive(obj.author)} message:**\n{content}{file}")
-                await ctx.message.detete()
+                await ctx.message.delete()
             else:
                 await ctx.send(
                     f"{ctx.author.mention}:\n{await string.binify(self.bot.session, obj, only_codeblocks=True)}"
