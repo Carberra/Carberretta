@@ -7,13 +7,13 @@ Provides tag and message archiving funcionalities.
 
 import asyncio
 import datetime as dt
+import io
 import json
 import os
 import re
 import typing as t
 from enum import Enum
 from inspect import Parameter
-from os.path import isfile
 
 import aiofiles
 import aiofiles.os
@@ -290,7 +290,7 @@ class Support(commands.Cog):
         await sc.channel.send(f"{claimant} support case timed out.")
 
     async def load_states(self) -> t.Mapping[str, int]:
-        if isfile(self.state_path):
+        if os.path.isfile(self.state_path):
             async with aiofiles.open(f"{self.bot._dynamic}/support.json", "r", encoding="utf-8") as f:
                 data = json.loads(await f.read())
             await aiofiles.os.remove(self.state_path)
@@ -450,15 +450,28 @@ class Support(commands.Cog):
             )
 
     @commands.command(name="binify")
-    async def binify_command(self, ctx: commands.Context, *, raw: t.Union[discord.Message, str]):
+    async def binify_command(self, ctx: commands.Context, *, obj: t.Union[discord.Message, str]):
         async with ctx.typing():
-            if isinstance(raw, discord.Message):
-                await ctx.send(
-                    f"{string.possessive(raw.author)} message:\n\n>>> {await string.binify(self.bot.session, raw.clean_content)}"
+            if isinstance(obj, discord.Message):
+                if obj.attachments:
+                    await obj.attachments[0].save(data := io.BytesIO())
+                    file_contents = data.read().decode(encoding="utf-8")
+                else:
+                    file_contents = ""
+
+                content = (
+                    f"{await string.binify(self.bot.session, obj.clean_content, only_codeblocks=True)}" + "\n\n"
+                    if obj.clean_content
+                    else ""
                 )
-                await raw.delete()
+                file = f"{await string.binify(self.bot.session, file_contents) if file_contents else ''}"
+
+                await ctx.send(f"**{string.possessive(obj.author)} message:**\n{content}{file}")
+                await ctx.message.detete()
             else:
-                await ctx.send(f"{ctx.author.mention}: {await string.binify(self.bot.session, raw)}")
+                await ctx.send(
+                    f"{ctx.author.mention}:\n{await string.binify(self.bot.session, obj, only_codeblocks=True)}"
+                )
                 await ctx.message.delete()
 
     # @commands.command(name="call")
