@@ -51,7 +51,18 @@ def possessive(user: t.Union[Member, User]) -> str:
     return f"{name}'{'s' if not name.endswith('s') else ''}"
 
 
-async def binify(session: ClientSession, text: str) -> str:
+async def binify(session: ClientSession, text: str, only_codeblocks=False) -> str:
+    async def convert(body, to_replace, ext=""):
+        async with session.post("https://mystb.in/documents", data=body) as response:
+            if response.status != 200:
+                return response.status
+
+            data = await response.json()
+            return text.replace(to_replace, f"https://mystb.in/{data['key']}{ext}")
+
+    if not only_codeblocks:
+        return await convert(text, text)
+
     while (match := re.search(r"```([a-z]*)(\n?)([\s\S]*?)\n?```", text)) is not None:
         if not match.group(2):
             code = match.group(1) + match.group(3)
@@ -60,10 +71,5 @@ async def binify(session: ClientSession, text: str) -> str:
             code = match.group(3) or match.group(1) or "None"
             ext = f".{match.group(1)}" or ""
 
-        async with session.post("https://mystb.in/documents", data=code) as response:
-            if response.status == 200:
-                data = await response.json()
-                text = text.replace(match.group(0), f"https://mystb.in/{data['key']}{ext}")
-            else:
-                break
+        text = await convert(code, match.group(0), ext)
     return text
