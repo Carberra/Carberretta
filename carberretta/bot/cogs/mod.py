@@ -66,7 +66,7 @@ class Mod(commands.Cog):
                     "color": member.colour.value,
                     "thumbnail": {"url": f"{member.avatar_url}"},
                     "footer": {"text": f"ID: {message.id}"},
-                    "image": {"url": att[0].url if len((att := message.attachments)) else None},
+                    "image": {"url": att[0].url if (att := message.attachments) else None},
                     "fields": [
                         {"name": "Member", "value": member.mention, "inline": False},
                         {"name": "Message", "value": message.content, "inline": False},
@@ -120,7 +120,7 @@ class Mod(commands.Cog):
                             "color": 0xe33838,
                             "thumbnail": {"url": f"{member.avatar_url}"},
                             "footer": {"text": f"ID: {message.id}"},
-                            "image": {"url": att[0].url if len((att := message.attachments)) else None},
+                            "image": {"url": att[0].url if (att := message.attachments) else None},
                             "fields": [
                                 {"name": "Member", "value": member.mention, "inline": False},
                                 {"name": "Message", "value": message.content, "inline": False},
@@ -209,7 +209,7 @@ class Mod(commands.Cog):
                 filter_data['mainFilter'].pop(index)
 
             async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-                await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+                await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         else:
             filter_file_template = {
@@ -219,7 +219,7 @@ class Mod(commands.Cog):
             }
 
             async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-                await f.write(json.dumps(filter_file_template, indent=4, cls=chron.DateTimeEncoder))
+                await f.write(json.dumps(filter_file_template, cls=chron.DateTimeEncoder))
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -307,7 +307,7 @@ class Mod(commands.Cog):
         filter_data['mainFilter'].append(word_to_add)
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
@@ -344,7 +344,7 @@ class Mod(commands.Cog):
         filter_data['mainFilter'].remove(word_to_remove)
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
@@ -390,7 +390,7 @@ class Mod(commands.Cog):
         filter_data['mainFilter'][word_found_index] = word_to_edit
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
@@ -428,7 +428,7 @@ class Mod(commands.Cog):
         filter_data['conditionFilter'].append(word_to_add)
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
@@ -465,7 +465,7 @@ class Mod(commands.Cog):
         filter_data['conditionFilter'].remove(word_to_remove)
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
@@ -511,7 +511,7 @@ class Mod(commands.Cog):
         filter_data['conditionFilter'][word_found_index] = word_to_edit
 
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(filter_data, indent=4, cls=chron.DateTimeEncoder))
+            await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
         updateListFromFile()
 
