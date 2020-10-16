@@ -168,6 +168,7 @@ class Mod(commands.Cog):
 
         if path.isfile(self.filter_file):
             indexes_to_remove = []
+            conditional_indexes_to_remove = []
 
             try:
                 async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -205,8 +206,40 @@ class Mod(commands.Cog):
                         await fix_item_null(index, item, 'edited_by', None)
                         await fix_item_null(index, item, 'edited_on', None)
 
+            for index, item in enumerate(filter_data['conditionFilter']):
+                if not isinstance(item, dict):
+                    conditional_indexes_to_remove.append(index)
+
+                else:
+                    try:
+                        if not item['find'] or not item['word'] or not item['censored']:
+                            conditional_indexes_to_remove.append(index)
+                    except:
+                        conditional_indexes_to_remove.append(index)
+                    else:
+                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'find', str) else None
+                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'word', str) else None
+                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'censored', str) else None
+
+                        if item['find'] != await self.to_filter_format(item['find']):
+                            filter_data['conditionFilter'][index]['find'] = await self.to_filter_format(item['find'])
+
+                        await fix_item_null(index, item, 'added_by', self.bot.user.id, section='conditionFilter')
+                        await fix_item_null(index, item, 'added_on', dt.datetime.utcnow(), section='conditionFilter')
+                        await fix_item_null(index, item, 'edited_by', None, section='conditionFilter')
+                        await fix_item_null(index, item, 'edited_on', None, section='conditionFilter')
+
+                        try:
+                            if not isinstance(item['require_space'], bool):
+                                filter_data['conditionFilter'][index]['require_space'] = True
+                        except:
+                            filter_data['conditionFilter'][index]['require_space'] = True
+
             for index in indexes_to_remove:
                 filter_data['mainFilter'].pop(index)
+
+            for index in conditional_indexes_to_remove:
+                filter_data['conditionFilter'].pop(index)
 
             async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
                 await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
@@ -401,11 +434,18 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionadd", aliases=['cnda'])
     @commands.has_permissions(manage_guild=True)
-    async def filter_add_condition_command(self, ctx, find: str, word: str) -> None:
+    async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
+
+        if space_before == 'y' or space_before == 'yes' or space_before == 'true' or space_before == 't':
+            require_space_translated = True
+        elif space_before == 'n' or space_before == 'no' or space_before == 'false' or space_before == 'f':
+            require_space_translated = False
+        else:
+            raise commands.BadArgument('Invalid answer to space_before. Be sure to define a yes or no answer.')
 
         for word_found in filter_data['conditionFilter']:
             if word_found['find'] == find_modified:
@@ -422,7 +462,8 @@ class Mod(commands.Cog):
             'added_by': ctx.author.id,
             'added_on': dt.datetime.utcnow(),
             'edited_by': None,
-            'edited_on': None
+            'edited_on': None,
+            'require_space': require_space_translated
         }
 
         filter_data['conditionFilter'].append(word_to_add)
@@ -473,7 +514,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionedit", aliases=['cnde'])
     @commands.has_permissions(manage_guild=True)
-    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str) -> None:
+    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str) -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -481,6 +522,13 @@ class Mod(commands.Cog):
 
         find_modified = await self.to_filter_format(find)
         new_find_modified = await self.to_filter_format(new_find)
+
+        if new_space_before == 'y' or new_space_before == 'yes' or new_space_before == 'true' or new_space_before == 't':
+            require_space_translated = True
+        elif new_space_before == 'n' or new_space_before == 'no' or new_space_before == 'false' or new_space_before == 'f':
+            require_space_translated = False
+        else:
+            raise commands.BadArgument('Invalid answer to space_before. Be sure to define a yes or no answer.')
 
         for index, word_found in enumerate(filter_data['conditionFilter']):
             if word_found['find'] == find_modified:
@@ -505,7 +553,8 @@ class Mod(commands.Cog):
             'added_by': word_found_info['added_by'],
             'added_on': word_found_info['added_on'],
             'edited_by': ctx.author.id,
-            'edited_on': dt.datetime.utcnow()
+            'edited_on': dt.datetime.utcnow(),
+            'require_space': require_space_translated
         }
 
         filter_data['conditionFilter'][word_found_index] = word_to_edit
@@ -576,7 +625,7 @@ class Mod(commands.Cog):
                                         "name": "Last Edited On",
                                         "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
                                         "inline": True,
-                                    }
+                                    },
                                 ]
                             }
                         )
@@ -631,6 +680,11 @@ class Mod(commands.Cog):
                                     {
                                         "name": "Last Edited On",
                                         "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
+                                        "inline": True,
+                                    },
+                                    {
+                                        "name": "Space Before",
+                                        "value": 'True' if word_found['require_space'] else 'False',
                                         "inline": True,
                                     }
                                 ]
