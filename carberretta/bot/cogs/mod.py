@@ -103,8 +103,6 @@ class Mod(commands.Cog):
             } # type: dict
 
             if filter_result_raw:
-                await message.delete()
-
                 for word in filter_result_raw:
                     filter_result['found'].append(word['word'] + '\n')
                     filter_result['count'].append(str(word['count']) + '\n')
@@ -132,6 +130,8 @@ class Mod(commands.Cog):
                         }
                     )
                 )
+
+                await message.delete()
 
         else:
             return
