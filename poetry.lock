@@ -131,7 +131,7 @@ description = "A basic but robust content filter for python."
 name = "content-filter"
 optional = false
 python-versions = ">=3.4"
-version = "1.1.1"
+version = "1.1.2"
 
 [[package]]
 category = "main"
@@ -373,8 +373,8 @@ click = [
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
 content-filter = [
-    {file = "content-filter-1.1.1.tar.gz", hash = "sha256:787095873e05f28aff4d587bd7ebe4214e3f78bf6a7657294be095282b6583bd"},
-    {file = "content_filter-1.1.1-py3-none-any.whl", hash = "sha256:143dcb8825c049c9e21385a57cbc66bf591394c1ab992187e7a7deacf098f16e"},
+    {file = "content-filter-1.1.2.tar.gz", hash = "sha256:53816e9e2fffb62b45b2daa838e0e082b0fc5392cc0043ac5feb9ecc592324fe"},
+    {file = "content_filter-1.1.2-py3-none-any.whl", hash = "sha256:fd93cdf9eb66227ed032325a2a1620530466bbce69b8819da97aa3bbd6108c5e"},
 ]
 "discord.py" = [
     {file = "discord.py-1.5.0-py3-none-any.whl", hash = "sha256:3acb61fde0d862ed346a191d69c46021e6063673f63963bc984ae09a685ab211"},
