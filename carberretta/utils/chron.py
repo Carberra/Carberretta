@@ -4,6 +4,11 @@ from json import JSONEncoder
 
 from carberretta.utils import string
 
+class DateTimeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (dt.date, dt.datetime)):
+            return obj.isoformat()
+
 
 def sys_time():
     return strftime("%H:%M:%S")
@@ -83,9 +88,3 @@ def from_iso(stamp):
 
 def to_iso(obj):
     return obj.isoformat(" ")
-
-
-class DateTimeEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (dt.date, dt.datetime)):
-            return obj.isoformat()
