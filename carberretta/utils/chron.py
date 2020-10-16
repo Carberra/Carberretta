@@ -1,6 +1,6 @@
 import datetime as dt
-from time import strftime
 from json import JSONEncoder
+from time import strftime
 
 from carberretta.utils import string
 
