@@ -127,7 +127,7 @@ class Mod(commands.Cog):
                                 {"name": "Found", "value": '||' + "".join(filter_result['found']) + '||', "inline": True},
                                 {"name": "Count", "value": "".join(filter_result['count']), "inline": True},
                                 {"name": "Context",
-                                    "value": f'[Jump to Message](https://discordapp.com/channels/{message.guild.id}/{message.channel.id}/{warning_msg.id})', "inline": False},
+                                    "value": f'[Jump to Message]({warning_msg.jump_url})', "inline": False},
                             ],
                         }
                     )
