@@ -24,7 +24,7 @@ from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
 from carberretta import Config
-from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR, chron, converters
+from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR, chron, converters, string
 
 
 class Meta(commands.Cog):
@@ -36,6 +36,7 @@ class Meta(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
+            self.contributors = [self.bot.guild.get_member(id_) for id_ in (*Config.OWNER_IDS, 219255057022058498)]
             self.bot.ready.up(self)
 
     @commands.command(name="about")
@@ -44,18 +45,18 @@ class Meta(commands.Cog):
             embed=discord.Embed.from_dict(
                 {
                     "title": "About Carberretta",
-                    "description": "Type `+info` for bot stats.",
+                    "description": "Use `+botinfo` for detailed statistics.",
                     "color": DEFAULT_EMBED_COLOUR,
                     "thumbnail": {"url": f"{self.bot.user.avatar_url}"},
-                    "author": {"name": "Carberretta"},
+                    "author": {"name": "Information"},
                     "footer": {
                         "text": f"Requested by {ctx.author.display_name}",
                         "icon_url": f"{ctx.author.avatar_url}",
                     },
                     "fields": [
                         {
-                            "name": "Authors",
-                            "value": "\n".join(f"<@{id_}>" for id_ in Config.OWNER_IDS),
+                            "name": "Contributors",
+                            "value": string.list_of([m.mention for m in self.contributors]),
                             "inline": False,
                         },
                         {
@@ -114,29 +115,30 @@ class Meta(commands.Cog):
         await ctx.send(
             embed=discord.Embed.from_dict(
                 {
-                    "title": "Carberretta Information",
+                    "title": "Bot information",
+                    "description": "Use `+about` for licensing and development information.",
                     "color": DEFAULT_EMBED_COLOUR,
                     "thumbnail": {"url": f"{self.bot.user.avatar_url}"},
-                    "author": {"name": "Carberretta"},
+                    "author": {"name": "Information"},
                     "footer": {
                         "text": f"Requested by {ctx.author.display_name}",
                         "icon_url": f"{ctx.author.avatar_url}",
                     },
                     "fields": [
-                        {"name": "Bot Version", "value": self.bot.version, "inline": True},
-                        {"name": "Python Version", "value": python_version(), "inline": True},
-                        {"name": "discord.py Version", "value": discord.__version__, "inline": True},
+                        {"name": "Bot version", "value": self.bot.version, "inline": True},
+                        {"name": "Python version", "value": python_version(), "inline": True},
+                        {"name": "discord.py version", "value": discord.__version__, "inline": True},
                         {"name": "Uptime", "value": uptime, "inline": True},
-                        {"name": "CPU Time", "value": cpu_time, "inline": True},
+                        {"name": "CPU time", "value": cpu_time, "inline": True},
                         {
-                            "name": "Memory Usage",
+                            "name": "Memory usage",
                             "value": f"{mem_usage:,.3f} / {mem_total:,.0f} MiB ({mem_of_total:,.0f}%)",
                             "inline": True,
                         },
-                        {"name": "Code Lines", "value": f"{int(self.bot.loc.code):,}", "inline": True},
-                        {"name": "Docs Lines", "value": f"{int(self.bot.loc.docs):,}", "inline": True},
-                        {"name": "Blank Lines", "value": f"{int(self.bot.loc.empty):,}", "inline": True},
-                        {"name": "Database Calls", "value": f"{self.bot.db._calls:,}", "inline": True},
+                        {"name": "Code lines", "value": f"{int(self.bot.loc.code):,}", "inline": True},
+                        {"name": "Docs lines", "value": f"{int(self.bot.loc.docs):,}", "inline": True},
+                        {"name": "Blank lines", "value": f"{int(self.bot.loc.empty):,}", "inline": True},
+                        {"name": "Database calls", "value": f"{self.bot.db._calls:,}", "inline": True},
                     ],
                 }
             )

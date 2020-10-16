@@ -263,7 +263,10 @@ class YouTube(commands.Cog):
                 if response.status != 200:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
-                data = (await response.json())["items"][0]
+                if not (data := (await response.json())["items"]):
+                    return await ctx.send("Invalid video ID.")
+
+                data = data[0]
 
             if data["snippet"]["channelId"] != Config.YOUTUBE_CHANNEL_ID:
                 return await ctx.send("That is not a Carberra video.")
