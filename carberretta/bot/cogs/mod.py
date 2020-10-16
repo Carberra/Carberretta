@@ -109,7 +109,7 @@ class Mod(commands.Cog):
                     filter_result['found'].append(word['word'] + '\n')
                     filter_result['count'].append(str(word['count']) + '\n')
 
-                warning_msg = await message.channel.send(f"{message.author.mention} please do not use offensive language!")
+                warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
 
                 member = self.bot.guild.get_member(message.author.id)
 
