@@ -11,15 +11,15 @@ Handles automatic mod systems:
 """
 
 import datetime as dt
+import json
 import string
 import typing as t
-import json
-import aiofiles
 from collections import defaultdict
-from content_filter import checkMessageList, useCustomListFile, updateListFromFile
 from os import path
 
+import aiofiles
 import discord
+from content_filter import checkMessageList, useCustomListFile, updateListFromFile
 from discord.ext import commands
 
 from carberretta import Config
