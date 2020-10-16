@@ -23,7 +23,7 @@ import discord
 from discord.ext import commands
 
 from carberretta import Config
-from carberretta.utils import chron, DEFAULT_EMBED_COLOUR
+from carberretta.utils import DEFAULT_EMBED_COLOUR, chron
 from carberretta.utils.emoji import UNICODE_EMOJI
 from carberretta.utils.errors import WordAlreadyAdded, WordNotFound
 from carberretta.utils.menu import MultiPageMenu
