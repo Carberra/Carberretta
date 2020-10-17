@@ -307,12 +307,12 @@ class Mod(commands.Cog):
         await ctx.send("Done.")
 
     @commands.group(name="filter", aliases=["f"], invoke_without_command=True)
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter(self, ctx) -> None:
         await ctx.send("+filter <action> [input]...")
 
     @filter.command(name="add")
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_add_command(self, ctx, find: str, word: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
@@ -347,7 +347,7 @@ class Mod(commands.Cog):
         await ctx.send(f'Word `{find}` added into the filter.')
 
     @filter.command(name="remove")
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_command(self, ctx, find: str) -> None:
         found_word_in_filter = False
 
@@ -384,7 +384,7 @@ class Mod(commands.Cog):
         await ctx.send(f'Word `{find}` removed from the filter.')
 
     @filter.command(name="edit")
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str) -> None:
         found_word_in_filter = False
 
@@ -433,7 +433,7 @@ class Mod(commands.Cog):
         return [list_to_split[i:i + segment_len] for i in range(0, len(list_to_split), segment_len)]
 
     @filter.command(name="conditionadd", aliases=['cnda'])
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
@@ -476,7 +476,7 @@ class Mod(commands.Cog):
         await ctx.send(f'Word `{find}` added into the condition filter.')
 
     @filter.command(name="conditionremove", aliases=['cndr'])
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_condition_command(self, ctx, find: str) -> None:
         found_word_in_filter = False
 
@@ -513,7 +513,7 @@ class Mod(commands.Cog):
         await ctx.send(f'Word `{find}` removed from the condition filter.')
 
     @filter.command(name="conditionedit", aliases=['cnde'])
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str) -> None:
         found_word_in_filter = False
 
@@ -567,7 +567,7 @@ class Mod(commands.Cog):
         await ctx.send(f'Word `{find}` modified to be `{new_find}`.')
 
     @filter.command(name="list")
-    @commands.has_permissions(manage_guild=True)
+    @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_list_command(self, ctx, find: str = 'all') -> None:
         found_word_in_filter = False
         pagemaps = []
