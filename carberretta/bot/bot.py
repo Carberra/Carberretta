@@ -138,6 +138,10 @@ class Bot(commands.Bot):
                 # (might redirect this to log channel once it's set up).
                 pass
 
+        elif isinstance(exc, commands.MissingRole):
+            missing_role = self.get_guild(Config.GUILD_ID).get_role(exc.missing_role).name
+            await ctx.send(f"You do not have the {missing_role} role, which is required to use this command.")
+
         elif isinstance(exc, commands.NotOwner):
             await ctx.send(f"That command can only be used by Carberretta's owner.")
 
