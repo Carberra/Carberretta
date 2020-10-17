@@ -83,7 +83,7 @@ class Bot(commands.Bot):
             )
 
         support = self.get_cog("Support")
-        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "open":
+        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "reopen":
             return await ctx.message.delete()
 
         await self.invoke(ctx)
