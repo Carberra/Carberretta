@@ -470,7 +470,7 @@ class Support(commands.Cog):
                 await ctx.message.delete()
             else:
                 await ctx.send(
-                    f"{ctx.author.mention}:\n{await string.binify(self.bot.session, obj, only_codeblocks=True)}"
+                    f"{ctx.author.mention}:\n{await string.binify(self.bot.session, discord.utils.escape_mentions(obj), only_codeblocks=True)}"
                 )
                 await ctx.message.delete()
 
