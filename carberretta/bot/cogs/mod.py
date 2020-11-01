@@ -15,7 +15,7 @@ import json
 import string
 import typing as t
 from collections import defaultdict
-from os import path
+from pathlib import Path
 
 import aiofiles
 import discord
@@ -166,7 +166,7 @@ class Mod(commands.Cog):
                 filter_data[section][index][item_name] = replacement
 
 
-        if path.isfile(self.filter_file):
+        if Path.isfile(self.filter_file):
             indexes_to_remove = []
             conditional_indexes_to_remove = []
 
@@ -261,7 +261,7 @@ class Mod(commands.Cog):
             self.modlog_channel = self.bot.get_channel(Config.MODLOG_ID)
 
             await self.load_filter_file()
-            useCustomListFile(self.filter_file, path.abspath('./carberretta'))
+            useCustomListFile(self.filter_file, Path.absolute('./carberretta'))
 
             self.bot.ready.up(self)
 
