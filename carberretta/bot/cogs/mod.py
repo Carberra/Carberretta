@@ -137,7 +137,23 @@ class Mod(commands.Cog):
             return
 
     async def to_filter_format(self, text: str):
-        return text.replace('"', '').replace(',', '').replace('.', '').replace('-', '').replace("'", '').replace('+', 't').replace('!', 'i').replace('@', 'a').replace('1', 'i').replace('0', 'o').replace('3', 'e').replace('$', 's').replace('*', '#')
+        conversion_table = str.maketrans({
+            '"': None,
+            ',': None,
+            '.': None,
+            '-': None,
+            '\'': None,
+            '+': 't',
+            '!': 'i',
+            '@': 'a',
+            '1': 'i',
+            '0': 'o',
+            '3': 'e',
+            '$': 's',
+            '*': '#',
+        })
+
+        return text.translate(conversion_table)
 
     async def from_filter_format(self, text: str):
         return text.replace('#', '*')
