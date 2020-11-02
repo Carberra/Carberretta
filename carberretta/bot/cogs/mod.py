@@ -158,6 +158,26 @@ class Mod(commands.Cog):
     async def from_filter_format(self, text: str):
         return text.replace('#', '*')
 
+    async def word_found(self, filter_data: dict, filter_type: str, find: str, already_added = False, not_found = False):
+        found_word_in_filter = False
+
+        for idx, word_found in enumerate(filter_data[filter_type]):
+            if word_found['find'] == find:
+                found_word_in_filter = True
+                index = idx
+                info = word_found
+
+                if already_added:
+                    raise WordAlreadyAdded(find)
+
+        if not found_word_in_filter and not_found:
+            raise WordNotFound(find)
+
+        try:
+            return index, info
+        except:
+            return False
+
     async def load_filter_file(self):
         async def fix_category_type(item, checkType, replacement):
             try:
@@ -182,7 +202,7 @@ class Mod(commands.Cog):
                 filter_data[section][index][item_name] = replacement
 
 
-        if Path.isfile(self.filter_file):
+        if Path(self.filter_file).is_file():
             indexes_to_remove = []
             conditional_indexes_to_remove = []
 
@@ -277,7 +297,7 @@ class Mod(commands.Cog):
             self.modlog_channel = self.bot.get_channel(Config.MODLOG_ID)
 
             await self.load_filter_file()
-            useCustomListFile(self.filter_file, Path.absolute('./carberretta'))
+            useCustomListFile(self.filter_file, Path('./carberretta').absolute())
 
             self.bot.ready.up(self)
 
@@ -334,14 +354,8 @@ class Mod(commands.Cog):
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
-
-        for word_found in filter_data['mainFilter']:
-            if word_found['find'] == find_modified:
-                raise WordAlreadyAdded(find)
-
-        for word_found in filter_data['conditionFilter']:
-            if word_found['find'] == find_modified:
-                raise WordAlreadyAdded(find)
+        await self.word_found(filter_data, 'mainFilter', find_modified, already_added=True)
+        await self.word_found(filter_data, 'conditionFilter', find_modified, already_added=True)
 
         word_to_add = {
             'find': find_modified,
@@ -365,20 +379,11 @@ class Mod(commands.Cog):
     @filter.command(name="remove")
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_command(self, ctx, find: str) -> None:
-        found_word_in_filter = False
-
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
-
-        for word_found in filter_data['mainFilter']:
-            if word_found['find'] == find_modified:
-                found_word_in_filter = True
-                word_found_info = word_found
-
-        if not found_word_in_filter:
-            raise WordNotFound(find)
+        word_found_index, word_found_info = await self.word_found(filter_data, 'mainFilter', find_modified, not_found=True)
 
         word_to_remove = {
             'find': find_modified,
@@ -463,13 +468,8 @@ class Mod(commands.Cog):
         else:
             raise commands.BadArgument('Invalid answer to space_before. Be sure to define a yes or no answer.')
 
-        for word_found in filter_data['conditionFilter']:
-            if word_found['find'] == find_modified:
-                raise WordAlreadyAdded(find)
-
-        for word_found in filter_data['conditionFilter']:
-            if word_found['find'] == find_modified:
-                raise WordAlreadyAdded(find)
+        await self.word_found(filter_data, 'mainFilter', find_modified, already_added=True)
+        await self.word_found(filter_data, 'conditionFilter', find_modified, already_added=True)
 
         word_to_add = {
             'find': find_modified,
@@ -494,20 +494,11 @@ class Mod(commands.Cog):
     @filter.command(name="conditionremove", aliases=['cndr'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_condition_command(self, ctx, find: str) -> None:
-        found_word_in_filter = False
-
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
-
-        for word_found in filter_data['conditionFilter']:
-            if word_found['find'] == find_modified:
-                found_word_in_filter = True
-                word_found_info = word_found
-
-        if not found_word_in_filter:
-            raise WordNotFound(find)
+        word_found_index, word_found_info = await self.word_found(filter_data, 'mainFilter', find_modified, not_found=True)
 
         word_to_remove = {
             'find': find_modified,
