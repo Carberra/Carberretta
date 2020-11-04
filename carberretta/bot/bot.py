@@ -83,7 +83,7 @@ class Bot(commands.Bot):
             )
 
         support = self.get_cog("Support")
-        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "open":
+        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "reopen":
             return await ctx.message.delete()
 
         await self.invoke(ctx)
@@ -138,6 +138,10 @@ class Bot(commands.Bot):
                 # (might redirect this to log channel once it's set up).
                 pass
 
+        elif isinstance(exc, commands.MissingRole):
+            missing_role = self.get_guild(Config.GUILD_ID).get_role(exc.missing_role).name
+            await ctx.send(f"You do not have the {missing_role} role, which is required to use this command.")
+
         elif isinstance(exc, commands.NotOwner):
             await ctx.send(f"That command can only be used by Carberretta's owner.")
 
@@ -172,6 +176,12 @@ class Bot(commands.Bot):
 
         elif isinstance(exc, commands.CheckFailure):
             await ctx.send(f"There was an unhandled command check error (probably missing privileges).")
+
+        elif isinstance(exc, utils.errors.WordAlreadyAdded):
+            await ctx.send(f"The word `{exc.found}` is already in the filter.")
+
+        elif isinstance(exc, utils.errors.WordNotFound):
+            await ctx.send(f"The word `{exc.found}` was not found in the filter.")
 
         # Non-command errors.
         elif (original := getattr(exc, "original", None)) is not None:

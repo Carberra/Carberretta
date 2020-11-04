@@ -1,7 +1,14 @@
 import datetime as dt
+from json import JSONEncoder
 from time import strftime
 
 from carberretta.utils import string
+
+
+class DateTimeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (dt.date, dt.datetime)):
+            return obj.isoformat()
 
 
 def sys_time():
