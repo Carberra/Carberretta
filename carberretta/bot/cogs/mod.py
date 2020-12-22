@@ -19,7 +19,7 @@ from pathlib import Path
 
 import aiofiles
 import discord
-from content_filter import checkMessageList, useCustomListFile, updateListFromFile
+from content_filter import Filter
 from discord.ext import commands
 
 from carberretta import Config
@@ -96,7 +96,7 @@ class Mod(commands.Cog):
         ctx = await self.bot.get_context(message, cls=commands.Context)
 
         if ctx.command is None:
-            filter_result_raw = checkMessageList(message.content)
+            filter_result_raw = self.filter.check(message.content).as_list
             filter_result = {
                 'found': [],
                 'count': []
@@ -297,7 +297,7 @@ class Mod(commands.Cog):
             self.modlog_channel = self.bot.get_channel(Config.MODLOG_ID)
 
             await self.load_filter_file()
-            useCustomListFile(self.filter_file, Path('./carberretta').absolute())
+            self.filter = Filter(list_file=self.filter_file)
 
             self.bot.ready.up(self)
 
@@ -372,7 +372,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` added into the filter.')
 
@@ -400,7 +400,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` removed from the filter.')
 
@@ -446,7 +446,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` modified to be `{new_find}`.')
 
@@ -487,7 +487,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` added into the condition filter.')
 
@@ -515,7 +515,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` removed from the condition filter.')
 
@@ -569,7 +569,7 @@ class Mod(commands.Cog):
         async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
             await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
 
-        updateListFromFile()
+        self.filter.reload_file()
 
         await ctx.send(f'Word `{find}` modified to be `{new_find}`.')
 
