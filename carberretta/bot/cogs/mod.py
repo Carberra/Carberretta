@@ -178,109 +178,8 @@ class Mod(commands.Cog):
         except:
             return False
 
-    async def load_filter_file(self):
-        async def fix_category_type(item, checkType, replacement):
-            try:
-                if not isinstance(filter_data[item], checkType):
-                    filter_data[item] = replacement
-            except:
-                filter_data[item] = replacement
-
-        async def fix_item_type(item, item_name, checkType, section='mainFilter'):
-            try:
-                if not isinstance(item[item_name], checkType):
-                    return True
-            except:
-                return True
-            return False
-
-        async def fix_item_null(index, item, item_name, replacement, section='mainFilter'):
-            try:
-                if not item[item_name]:
-                    filter_data[section][index][item_name] = replacement
-            except:
-                filter_data[section][index][item_name] = replacement
-
-
-        if Path(self.filter_file).is_file():
-            indexes_to_remove = []
-            conditional_indexes_to_remove = []
-
-            try:
-                async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
-                    filter_data = json.loads(await f.read())
-            except:
-                filter_data = {}
-
-            if not isinstance(filter_data, dict):
-                filter_data = {}
-
-            await fix_category_type('mainFilter', list, [])
-            await fix_category_type('dontFilter', None, None)
-            await fix_category_type('conditionFilter', list, [])
-
-            for index, item in enumerate(filter_data['mainFilter']):
-                if not isinstance(item, dict):
-                    indexes_to_remove.append(index)
-
-                else:
-                    try:
-                        if not item['find'] or not item['word'] or not item['censored']:
-                            indexes_to_remove.append(index)
-                    except:
-                        indexes_to_remove.append(index)
-                    else:
-                        indexes_to_remove.append(index) if await fix_item_type(item, 'find', str) else None
-                        indexes_to_remove.append(index) if await fix_item_type(item, 'word', str) else None
-                        indexes_to_remove.append(index) if await fix_item_type(item, 'censored', str) else None
-
-                        if item['find'] != await self.to_filter_format(item['find']):
-                            filter_data['mainFilter'][index]['find'] = await self.to_filter_format(item['find'])
-
-                        await fix_item_null(index, item, 'added_by', self.bot.user.id)
-                        await fix_item_null(index, item, 'added_on', dt.datetime.utcnow())
-                        await fix_item_null(index, item, 'edited_by', None)
-                        await fix_item_null(index, item, 'edited_on', None)
-
-            for index, item in enumerate(filter_data['conditionFilter']):
-                if not isinstance(item, dict):
-                    conditional_indexes_to_remove.append(index)
-
-                else:
-                    try:
-                        if not item['find'] or not item['word'] or not item['censored']:
-                            conditional_indexes_to_remove.append(index)
-                    except:
-                        conditional_indexes_to_remove.append(index)
-                    else:
-                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'find', str) else None
-                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'word', str) else None
-                        conditional_indexes_to_remove.append(index) if await fix_item_type(item, 'censored', str) else None
-
-                        if item['find'] != await self.to_filter_format(item['find']):
-                            filter_data['conditionFilter'][index]['find'] = await self.to_filter_format(item['find'])
-
-                        await fix_item_null(index, item, 'added_by', self.bot.user.id, section='conditionFilter')
-                        await fix_item_null(index, item, 'added_on', dt.datetime.utcnow(), section='conditionFilter')
-                        await fix_item_null(index, item, 'edited_by', None, section='conditionFilter')
-                        await fix_item_null(index, item, 'edited_on', None, section='conditionFilter')
-
-                        try:
-                            if not isinstance(item['require_space'], bool):
-                                filter_data['conditionFilter'][index]['require_space'] = True
-                        except:
-                            filter_data['conditionFilter'][index]['require_space'] = True
-
-            for index in indexes_to_remove:
-                filter_data['mainFilter'].pop(index)
-
-            for index in conditional_indexes_to_remove:
-                filter_data['conditionFilter'].pop(index)
-
-            async with aiofiles.open(self.filter_file, "w", encoding="utf-8") as f:
-                await f.write(json.dumps(filter_data, cls=chron.DateTimeEncoder))
-
-        else:
+    async def check_filter_file(self):
+        if not Path(self.filter_file).is_file():
             filter_file_template = {
                 "mainFilter": [],
                 "dontFilter": None,
@@ -296,7 +195,7 @@ class Mod(commands.Cog):
             self.modmail_channel = self.bot.get_channel(Config.MODMAIL_ID)
             self.modlog_channel = self.bot.get_channel(Config.MODLOG_ID)
 
-            await self.load_filter_file()
+            await self.check_filter_file()
             self.filter = Filter(list_file=self.filter_file)
 
             self.bot.ready.up(self)
@@ -453,7 +352,7 @@ class Mod(commands.Cog):
     async def chunk_list(self, list_to_split, segment_len):
         return [list_to_split[i:i + segment_len] for i in range(0, len(list_to_split), segment_len)]
 
-    @filter.command(name="conditionadd", aliases=['cnda'])
+    @filter.command(name="conditionadd", aliases=['cnda', 'cadd'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -491,7 +390,7 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` added into the condition filter.')
 
-    @filter.command(name="conditionremove", aliases=['cndr'])
+    @filter.command(name="conditionremove", aliases=['cndr', 'cremove'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_condition_command(self, ctx, find: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -519,7 +418,7 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` removed from the condition filter.')
 
-    @filter.command(name="conditionedit", aliases=['cnde'])
+    @filter.command(name="conditionedit", aliases=['cnde', 'cedit'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str) -> None:
         found_word_in_filter = False
