@@ -131,7 +131,7 @@ description = "A basic but robust content filter for python."
 name = "content-filter"
 optional = false
 python-versions = ">=3.4"
-version = "1.1.2"
+version = "2.0.0"
 
 [[package]]
 category = "main"
@@ -317,7 +317,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "41fd958291007bb22837b2f20a1236bb7ba5c4234ce56840b960b29a40559083"
+content-hash = "7795de9c78a613cbc6fcb27aeb90c73a6c6d70a5e2e21044454ea108fd53cb5b"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -373,8 +373,8 @@ click = [
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
 content-filter = [
-    {file = "content-filter-1.1.2.tar.gz", hash = "sha256:53816e9e2fffb62b45b2daa838e0e082b0fc5392cc0043ac5feb9ecc592324fe"},
-    {file = "content_filter-1.1.2-py3-none-any.whl", hash = "sha256:fd93cdf9eb66227ed032325a2a1620530466bbce69b8819da97aa3bbd6108c5e"},
+    {file = "content_filter-2.0.0-py3-none-any.whl", hash = "sha256:864f86a0082631caaf52a819e43600db49c4059f4b69539342a99fe53ba1421b"},
+    {file = "content_filter-2.0.0.tar.gz", hash = "sha256:d3f64974a661169dfd6a8980129d6cc299c1dcd486ad4348ecb4e3ce7509b632"},
 ]
 "discord.py" = [
     {file = "discord.py-1.5.0-py3-none-any.whl", hash = "sha256:3acb61fde0d862ed346a191d69c46021e6063673f63963bc984ae09a685ab211"},
