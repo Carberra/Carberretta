@@ -285,7 +285,7 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` added into the filter.')
 
-    @filter.command(name="remove")
+    @filter.command(name="remove", aliases=["rm"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_command(self, ctx, find: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -366,7 +366,7 @@ class Mod(commands.Cog):
     async def chunk_list(self, list_to_split, segment_len):
         return [list_to_split[i:i + segment_len] for i in range(0, len(list_to_split), segment_len)]
 
-    @filter.command(name="conditionadd", aliases=['cnda', 'cadd'])
+    @filter.command(name="conditionadd", aliases=["cadd"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str, action: str = "warn") -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -406,7 +406,7 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` added into the condition filter.')
 
-    @filter.command(name="conditionremove", aliases=['cndr', 'cremove'])
+    @filter.command(name="conditionremove", aliases=["crm"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_remove_condition_command(self, ctx, find: str) -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -436,7 +436,7 @@ class Mod(commands.Cog):
 
         await ctx.send(f'Word `{find}` removed from the condition filter.')
 
-    @filter.command(name="conditionedit", aliases=['cnde', 'cedit'])
+    @filter.command(name="conditionedit", aliases=["cedit"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
     async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str, new_action: str = "warn") -> None:
         found_word_in_filter = False
