@@ -583,6 +583,11 @@ class Mod(commands.Cog):
                                         "value": chron.short_date_and_time(chron.from_iso(word_found['edited_on'])) if word_found['edited_on'] else "Not Edited",
                                         "inline": True,
                                     },
+                                    {
+                                        "name": "Action",
+                                        "value": word_found['action'].capitalize(),
+                                        "inline": True,
+                                    },
                                 ]
                             }
                         )
@@ -643,7 +648,12 @@ class Mod(commands.Cog):
                                         "name": "Space Before",
                                         "value": 'True' if word_found['require_space'] else 'False',
                                         "inline": True,
-                                    }
+                                    },
+                                    {
+                                        "name": "Action",
+                                        "value": word_found['action'].capitalize(),
+                                        "inline": True,
+                                    },
                                 ]
                             }
                         )
