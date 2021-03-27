@@ -130,6 +130,7 @@ class Mod(commands.Cog):
 
                 member = self.bot.guild.get_member(message.author.id)
 
+                await message.delete()
                 await self.modlog_channel.send(
                     embed=discord.Embed.from_dict(
                         {
@@ -151,7 +152,16 @@ class Mod(commands.Cog):
                     )
                 )
 
-                await message.delete()
+                if action == "ban":
+                    # impliment with v2 mod system
+                    return
+                elif action =="kick":
+                    # impliment with v2 mod system
+                    return
+                elif action == "warn":
+                    # impliment with v2 mod system
+                    return
+
 
         else:
             return
