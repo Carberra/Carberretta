@@ -25,7 +25,7 @@ from discord.ext import commands
 from carberretta import Config
 from carberretta.utils import DEFAULT_EMBED_COLOUR, chron
 from carberretta.utils.emoji import UNICODE_EMOJI
-from carberretta.utils.errors import WordAlreadyAdded, WordNotFound
+from carberretta.utils.errors import WordAlreadyAdded, WordNotFound, InvalidAction
 from carberretta.utils.menu import MultiPageMenu
 
 
@@ -178,6 +178,14 @@ class Mod(commands.Cog):
         except:
             return False
 
+    async def action_type(self, action: str):
+        action_types = ('warn', 'kick', 'ban')
+
+        if action not in action_types:
+            raise InvalidAction(action, action_types)
+
+        return
+
     async def check_filter_file(self):
         if not Path(self.filter_file).is_file():
             filter_file_template = {
@@ -248,13 +256,14 @@ class Mod(commands.Cog):
 
     @filter.command(name="add")
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_add_command(self, ctx, find: str, word: str) -> None:
+    async def filter_add_command(self, ctx, find: str, word: str, action: str = "warn") -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
         await self.word_found(filter_data, 'mainFilter', find_modified, already_added=True)
         await self.word_found(filter_data, 'conditionFilter', find_modified, already_added=True)
+        await self.action_type(action)
 
         word_to_add = {
             'find': find_modified,
@@ -263,7 +272,8 @@ class Mod(commands.Cog):
             'added_by': ctx.author.id,
             'added_on': dt.datetime.utcnow(),
             'edited_by': None,
-            'edited_on': None
+            'edited_on': None,
+            'action': action
         }
 
         filter_data['mainFilter'].append(word_to_add)
@@ -291,7 +301,8 @@ class Mod(commands.Cog):
             'added_by': word_found_info['added_by'],
             'added_on': word_found_info['added_on'],
             'edited_by': word_found_info['edited_by'],
-            'edited_on': word_found_info['edited_on']
+            'edited_on': word_found_info['edited_on'],
+            'action': word_found_info['action']
         }
 
         filter_data['mainFilter'].remove(word_to_remove)
@@ -305,7 +316,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="edit")
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str) -> None:
+    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str, new_action: str = "warn") -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -330,6 +341,8 @@ class Mod(commands.Cog):
         if not found_word_in_filter:
             raise WordNotFound(find)
 
+        await self.action_type(new_action)
+
         word_to_edit = {
             'find': new_find_modified,
             'word': new_word,
@@ -337,7 +350,8 @@ class Mod(commands.Cog):
             'added_by': word_found_info['added_by'],
             'added_on': word_found_info['added_on'],
             'edited_by': ctx.author.id,
-            'edited_on': dt.datetime.utcnow()
+            'edited_on': dt.datetime.utcnow(),
+            'action': new_action
         }
 
         filter_data['mainFilter'][word_found_index] = word_to_edit
@@ -354,7 +368,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionadd", aliases=['cnda', 'cadd'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str) -> None:
+    async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str, action: str = "warn") -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
@@ -369,6 +383,7 @@ class Mod(commands.Cog):
 
         await self.word_found(filter_data, 'mainFilter', find_modified, already_added=True)
         await self.word_found(filter_data, 'conditionFilter', find_modified, already_added=True)
+        await self.action_type(action)
 
         word_to_add = {
             'find': find_modified,
@@ -378,7 +393,8 @@ class Mod(commands.Cog):
             'added_on': dt.datetime.utcnow(),
             'edited_by': None,
             'edited_on': None,
-            'require_space': require_space_translated
+            'require_space': require_space_translated,
+            'action': action
         }
 
         filter_data['conditionFilter'].append(word_to_add)
@@ -397,7 +413,7 @@ class Mod(commands.Cog):
             filter_data = json.loads(await f.read())
 
         find_modified = await self.to_filter_format(find)
-        word_found_index, word_found_info = await self.word_found(filter_data, 'mainFilter', find_modified, not_found=True)
+        word_found_index, word_found_info = await self.word_found(filter_data, 'conditionFilter', find_modified, not_found=True)
 
         word_to_remove = {
             'find': find_modified,
@@ -406,7 +422,9 @@ class Mod(commands.Cog):
             'added_by': word_found_info['added_by'],
             'added_on': word_found_info['added_on'],
             'edited_by': word_found_info['edited_by'],
-            'edited_on': word_found_info['edited_on']
+            'edited_on': word_found_info['edited_on'],
+            'require_space': word_found_info['require_space'],
+            'action': word_found_info['action']
         }
 
         filter_data['conditionFilter'].remove(word_to_remove)
@@ -420,7 +438,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionedit", aliases=['cnde', 'cedit'])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str) -> None:
+    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str, new_action: str = "warn") -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -452,6 +470,8 @@ class Mod(commands.Cog):
         if not found_word_in_filter:
             raise WordNotFound(find)
 
+        await self.action_type(new_action)
+
         word_to_edit = {
             'find': new_find_modified,
             'word': new_word,
@@ -460,7 +480,8 @@ class Mod(commands.Cog):
             'added_on': word_found_info['added_on'],
             'edited_by': ctx.author.id,
             'edited_on': dt.datetime.utcnow(),
-            'require_space': require_space_translated
+            'require_space': require_space_translated,
+            'action': new_action
         }
 
         filter_data['conditionFilter'][word_found_index] = word_to_edit
