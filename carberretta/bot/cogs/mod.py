@@ -166,7 +166,7 @@ class Mod(commands.Cog):
         else:
             return
 
-    async def to_filter_format(self, text: str):
+    async def to_filter_format(self, text: str) -> str:
         conversion_table = str.maketrans({
             '"': None,
             ',': None,
@@ -185,10 +185,10 @@ class Mod(commands.Cog):
 
         return text.translate(conversion_table)
 
-    async def from_filter_format(self, text: str):
+    async def from_filter_format(self, text: str) -> str:
         return text.replace('#', '*')
 
-    async def word_found(self, filter_data: dict, filter_type: str, find: str, already_added = False, not_found = False):
+    async def word_found(self, filter_data: dict, filter_type: str, find: str, already_added = False, not_found = False) -> t.Union[tuple, bool]:
         found_word_in_filter = False
 
         for idx, word_found in enumerate(filter_data[filter_type]):
@@ -208,7 +208,7 @@ class Mod(commands.Cog):
         except:
             return False
 
-    async def action_type(self, action: str):
+    async def action_type(self, action: str) -> None:
         action_types = ('warn', 'kick', 'ban')
 
         if action not in action_types:
@@ -216,7 +216,7 @@ class Mod(commands.Cog):
 
         return
 
-    async def check_filter_file(self):
+    async def check_filter_file(self) -> None:
         if not Path(self.filter_file).is_file():
             filter_file_template = {
                 "mainFilter": [],
