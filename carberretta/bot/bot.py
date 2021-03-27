@@ -183,6 +183,9 @@ class Bot(commands.Bot):
         elif isinstance(exc, utils.errors.WordNotFound):
             await ctx.send(f"The word `{exc.found}` was not found in the filter.")
 
+        elif isinstance(exc, utils.errors.InvalidAction):
+            await ctx.send(f"The action `{exc.action}` is not one of the allowed actions. The following are the allowed actions: `{', '.join(exc.action_types)}`.")
+
         # Non-command errors.
         elif (original := getattr(exc, "original", None)) is not None:
             if isinstance(original, discord.HTTPException):
