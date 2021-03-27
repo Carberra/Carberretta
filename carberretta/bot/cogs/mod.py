@@ -98,16 +98,35 @@ class Mod(commands.Cog):
         if ctx.command is None:
             filter_result_raw = self.filter.check(message.content).as_list
             filter_result = {
+                'raw': [],
                 'found': [],
                 'count': []
             } # type: dict
 
             if filter_result_raw:
+                actions = []
+
+                async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
+                    filter_data = json.loads(await f.read())
+
                 for word in filter_result_raw:
+                    filter_result['raw'].append(word['find'] + '\n')
                     filter_result['found'].append(word['word'] + '\n')
                     filter_result['count'].append(str(word['count']) + '\n')
 
-                warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                    for filter_word in filter_data[word['filter']]:
+                        if filter_word['find'] == word['find']:
+                            actions.append(filter_word['action'])
+
+                if "ban" in actions:
+                    action = "ban"
+                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                elif "kick" in actions:
+                    action = "kick"
+                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                elif "warn" in actions:
+                    action = "warn"
+                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
 
                 member = self.bot.guild.get_member(message.author.id)
 
@@ -117,15 +136,16 @@ class Mod(commands.Cog):
                             "title": "Filtered Message",
                             "color": 0xe33838,
                             "thumbnail": {"url": f"{member.avatar_url}"},
-                            "footer": {"text": f"ID: {message.id}"},
+                            "footer": {"text": f"Message ID: {message.id}"},
                             "image": {"url": att[0].url if (att := message.attachments) else None},
                             "fields": [
                                 {"name": "Member", "value": member.mention, "inline": False},
                                 {"name": "Message", "value": message.content, "inline": False},
+                                {"name": "Identified", "value": '||' + "".join(filter_result['raw']) + '||', "inline": True},
                                 {"name": "Found", "value": '||' + "".join(filter_result['found']) + '||', "inline": True},
                                 {"name": "Count", "value": "".join(filter_result['count']), "inline": True},
-                                {"name": "Context",
-                                    "value": f'[Jump to Message]({warning_msg.jump_url})', "inline": False},
+                                {"name": "Context", "value": f'[Jump to Message]({warning_msg.jump_url})', "inline": True},
+                                {"name": "Action", "value": f'{action.capitalize()}', "inline": True},
                             ],
                         }
                     )
