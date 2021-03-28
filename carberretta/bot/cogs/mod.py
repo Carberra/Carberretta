@@ -120,13 +120,16 @@ class Mod(commands.Cog):
 
                 if "ban" in actions:
                     action = "ban"
-                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                    ctx_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
                 elif "kick" in actions:
                     action = "kick"
-                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                    ctx_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
                 elif "warn" in actions:
                     action = "warn"
-                    warning_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                    ctx_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
+                elif "verbal" in actions:
+                    action = "verbal"
+                    ctx_msg = await message.channel.send(f"{message.author.mention}, please do not use offensive language.")
 
                 member = self.bot.guild.get_member(message.author.id)
 
@@ -145,7 +148,7 @@ class Mod(commands.Cog):
                                 {"name": "Identified", "value": '||' + "".join(filter_result['raw']) + '||', "inline": True},
                                 {"name": "Found", "value": '||' + "".join(filter_result['found']) + '||', "inline": True},
                                 {"name": "Count", "value": "".join(filter_result['count']), "inline": True},
-                                {"name": "Context", "value": f'[Jump to Message]({warning_msg.jump_url})', "inline": True},
+                                {"name": "Context", "value": f'[Jump to Message]({ctx_msg.jump_url})', "inline": True},
                                 {"name": "Action", "value": f'{action.capitalize()}', "inline": True},
                             ],
                         }
@@ -159,6 +162,9 @@ class Mod(commands.Cog):
                     # impliment with v2 mod system
                     return
                 elif action == "warn":
+                    # impliment with v2 mod system
+                    return
+                elif action == "verbal":
                     # impliment with v2 mod system
                     return
 
@@ -209,7 +215,7 @@ class Mod(commands.Cog):
             return False
 
     async def action_type(self, action: str) -> None:
-        action_types = ('warn', 'kick', 'ban')
+        action_types = ('verbal', 'warn', 'kick', 'ban')
 
         if action not in action_types:
             raise InvalidAction(action, action_types)
@@ -286,7 +292,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="add")
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_add_command(self, ctx, find: str, word: str, action: str = "warn") -> None:
+    async def filter_add_command(self, ctx, find: str, word: str, action: str = "verbal") -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
@@ -346,7 +352,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="edit")
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str, new_action: str = "warn") -> None:
+    async def filter_edit_command(self, ctx, find: str, new_find: str, new_word: str, new_action: str = "verbal") -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
@@ -398,7 +404,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionadd", aliases=["cadd"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str, action: str = "warn") -> None:
+    async def filter_add_condition_command(self, ctx, find: str, word: str, space_before: str, action: str = "verbal") -> None:
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
             filter_data = json.loads(await f.read())
 
@@ -468,7 +474,7 @@ class Mod(commands.Cog):
 
     @filter.command(name="conditionedit", aliases=["cedit"])
     @commands.has_role(Config.MODERATOR_ROLE_ID)
-    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str, new_action: str = "warn") -> None:
+    async def filter_edit_condition_command(self, ctx, find: str, new_find: str, new_word: str, new_space_before: str, new_action: str = "verbal") -> None:
         found_word_in_filter = False
 
         async with aiofiles.open(self.filter_file, "r", encoding="utf-8") as f:
