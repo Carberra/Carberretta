@@ -7,7 +7,7 @@ Handles automatic mod systems:
     Nicknames;
     Profanity filter.
 
-**Manual moderation is handled by S4, and thus is not included.**
+**Manual moderation is handled by Solaris, and thus is not included.**
 """
 
 import datetime as dt
