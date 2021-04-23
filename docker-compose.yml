@@ -29,6 +29,10 @@ services:
       HUB_COMMANDS_ID: int:657611609094619146
       YOUTUBE_CHANNEL_ID: str:UC13cYu7lec-oOcqQf5L-brg
       YOUTUBE_API_KEY: file:/run/secrets/yt-api-key
+      SUPPORTER_ROLE_ID: int:835215080877588550
+      PATRON_ROLE_ID: int:691858776147623996
+      TWITCH_SUB_ROLE_ID: int:829026839941873689
+      BOOSTER_ROLE_ID: int:657197640538259508
 
     secrets:
       - token
