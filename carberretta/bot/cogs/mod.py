@@ -95,7 +95,7 @@ class Mod(commands.Cog):
     async def profanity_filter(self, message: discord.Message) -> None:
         ctx = await self.bot.get_context(message, cls=commands.Context)
 
-        if ctx.command is None:
+        if ctx.command is None and not self.modchat_channel.id == message.channel.id:
             filter_result_raw = self.filter.check(message.content).as_list
             filter_result = {
                 'raw': [],
@@ -238,6 +238,7 @@ class Mod(commands.Cog):
         if not self.bot.ready.booted:
             self.modmail_channel = self.bot.get_channel(Config.MODMAIL_ID)
             self.modlog_channel = self.bot.get_channel(Config.MODLOG_ID)
+            self.modchat_channel = self.bot.get_channel(Config.MODCHAT_ID)
 
             await self.check_filter_file()
             self.filter = Filter(list_file=self.filter_file)
