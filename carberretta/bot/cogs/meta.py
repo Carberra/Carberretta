@@ -20,6 +20,7 @@ from time import time
 
 import discord
 from discord.ext import commands
+from github import Github
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
@@ -36,6 +37,7 @@ class Meta(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
+            self.gh = Github(Config.GITHUB_API_TOKEN)
             self.bot.ready.up(self)
 
     @commands.command(name="about")
@@ -161,6 +163,10 @@ class Meta(commands.Cog):
                 location = module.replace(".", "/") + ".py"
 
             await ctx.send(f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>")
+
+    @commands.command(name="issue")
+    async def command_issue(self, ctx: commands.Context, issue_number: int) -> None:
+        await ctx.send(self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number))
 
     @commands.command(name="shutdown")
     @commands.is_owner()
