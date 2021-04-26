@@ -55,7 +55,7 @@ class Links(commands.Cog):
     async def command_pep(self, ctx: commands.Context, pep_number: int) -> None:
         async with self.bot.session.get(f"https://python.org/dev/peps/pep-{pep_number:04}") as response:
             if response.status != 200:
-                await ctx.send(f"PEP `{pep_number:04}` could not be found.")
+                await ctx.send(f"PEP {pep_number:04} could not be found.")
                 return
 
             await ctx.send(f"PEP {pep_number:04}: <https://python.org/dev/peps/pep-{pep_number:04}>")
