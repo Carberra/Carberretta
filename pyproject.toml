@@ -24,6 +24,7 @@ pygount = "^1.2.4"
 python-dotenv = "^0.13.0"
 toml = "^0.10.1"
 PyGithub = "^1.55"
+urllib3 = "^1.26.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.782"
