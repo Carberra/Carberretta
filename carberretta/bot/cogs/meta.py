@@ -20,7 +20,7 @@ from time import time
 
 import discord
 from discord.ext import commands
-from github import Github
+from github import Github, UnknownObjectException
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
@@ -165,8 +165,50 @@ class Meta(commands.Cog):
             await ctx.send(f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>")
 
     @commands.command(name="issue")
-    async def command_issue(self, ctx: commands.Context, issue_number: int) -> None:
-        await ctx.send(self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number))
+    async def command_issue(self, ctx: commands.Context, *, issue_query: str) -> None:
+        try:
+            issue_number = int(issue_query.lstrip("#"))
+
+            try:
+                issue = self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number)
+            except UnknownObjectException:
+                await ctx.send("Invalid issue number")
+                return
+
+            issue_status = "Open"
+
+            if issue.closed_at:
+                issue_status = "Closed"
+
+            await ctx.send(
+                embed=discord.Embed.from_dict(
+                    {
+                        "title": issue.title,
+                        "description": f"Click [here](https://github.com/Carberra/Carberretta/issues/{issue_number}) to view on the web version.",
+                        "color": DEFAULT_EMBED_COLOUR,
+                        "author": {"name": "Query"},
+                        "footer": {
+                            "text": f"Requested by {ctx.author.display_name}",
+                            "icon_url": f"{ctx.author.avatar_url}",
+                        },
+                        "fields": [
+                            {
+                                "name": "Description",
+                                "value": issue.body,
+                                "inline": False
+                            },
+                            {
+                                "name": "Status",
+                                "value": issue_status,
+                                "inline": True,
+                            },
+                        ],
+                    }
+                )
+            )
+
+        except ValueError:
+            await ctx.send("Query Issues (coming soon)")
 
     @commands.command(name="shutdown")
     @commands.is_owner()
