@@ -33,6 +33,7 @@ services:
       PATRON_ROLE_ID: int:691858776147623996
       TWITCH_SUB_ROLE_ID: int:829026839941873689
       BOOSTER_ROLE_ID: int:657197640538259508
+      GITHUB_API_TOKEN: file:/run/secrets/github-api-token
 
     secrets:
       - token
@@ -43,6 +44,8 @@ secrets:
     file: ./secrets/token
   yt-api-key:
     file: ./secrets/yt-api-key
+  github-api-token:
+    file: ./secrets/github-api-token
 
 volumes:
   data:
