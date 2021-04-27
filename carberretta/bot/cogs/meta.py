@@ -102,7 +102,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
 
     async def display_issue(self, name):
         for issue in self.data:
-            if issue.title == name:
+            if f"{issue.title} (#{issue.number})" == name:
                 await self.message.clear_reactions()
                 await self.message.edit(embed=discord.Embed.from_dict(await issue_embed(issue, issue.number, self.ctx.author)))
 
