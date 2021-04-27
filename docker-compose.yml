@@ -38,6 +38,7 @@ services:
     secrets:
       - token
       - yt-api-key
+      - github-api-token
 
 secrets:
   token:
