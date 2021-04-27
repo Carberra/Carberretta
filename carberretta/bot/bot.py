@@ -71,7 +71,7 @@ class Bot(commands.Bot):
     async def command_prefix(self, bot, message):
         return commands.when_mentioned_or(Config.PREFIX)(bot, message)
 
-    async def process_comamnds(self, message):
+    async def process_commands(self, message):
         ctx = await self.get_context(message, cls=commands.Context)
 
         if ctx.command is None:
@@ -213,4 +213,4 @@ class Bot(commands.Bot):
 
     async def on_message(self, message):
         if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
-            await self.process_comamnds(message)
+            await self.process_commands(message)
