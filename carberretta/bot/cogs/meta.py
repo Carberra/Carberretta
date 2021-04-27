@@ -82,11 +82,7 @@ async def issue_embed(issue: Issue.Issue, issue_number: int, author: discord.Mem
             {"name": "Milestone", "value": issue_milestone, "inline": True},
             {"name": "Created by", "value": issue_creator, "inline": True},
             {"name": "Created at", "value": chron.long_date(issue.created_at), "inline": True},
-            {
-                "name": "Existed for",
-                "value": chron.short_delta(datetime.utcnow() - issue.created_at),
-                "inline": True,
-            },
+            {"name": "Existed for", "value": chron.short_delta(datetime.utcnow() - issue.created_at), "inline": True,},
         ],
     }
 
@@ -104,7 +100,9 @@ class SearchMenu(menu.NumberedSelectionMenu):
         for issue in self.data:
             if f"{issue.title} (#{issue.number})" == name:
                 await self.message.clear_reactions()
-                await self.message.edit(embed=discord.Embed.from_dict(await issue_embed(issue, issue.number, self.ctx.author)))
+                await self.message.edit(
+                    embed=discord.Embed.from_dict(await issue_embed(issue, issue.number, self.ctx.author))
+                )
 
 
 class Meta(commands.Cog):
@@ -266,7 +264,9 @@ class Meta(commands.Cog):
                 "author": {"name": "Query"},
                 "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
             }
-            results = [f"{issue.title} (#{issue.number})" for issue in data]
+            results = [f"{issue.title} (#{issue.number})" for issue in data if not issue.closed_at] + [
+                f"{issue.title} (#{issue.number})" for issue in data if issue.closed_at
+            ]
 
             if not results:
                 return await ctx.send("No results found.")
