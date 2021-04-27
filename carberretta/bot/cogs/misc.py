@@ -33,7 +33,7 @@ class Miscellaneous(commands.Cog):
             digit = f"{ord(c):x}".upper()
             name = unicodedata.name(c, "N/A")
             names.append(f"[{name}](https://fileformat.info/info/unicode/char/{digit})")
-            digits.append(f"U+{digit:>04}")
+            points.append(f"U+{digit:>04}")
 
         embed = discord.Embed.from_dict(
             {
@@ -44,7 +44,7 @@ class Miscellaneous(commands.Cog):
                 "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
                 "fields": [
                     {"name": "Names", "value": "\n".join(names), "inline": True},
-                    {"name": "Digits", "value": "\n".join(digits), "inline": True},
+                    {"name": "Code points", "value": "\n".join(points), "inline": True},
                 ],
             }
         )
