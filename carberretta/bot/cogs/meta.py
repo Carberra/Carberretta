@@ -275,7 +275,9 @@ class Meta(commands.Cog):
                 return await ctx.send("No results found. Are you sure that's an issue for Carberretta?")
 
             if not len(results) > 1:
-                return await ctx.send(embed=discord.Embed.from_dict(await issue_embed(data[0], data[0].number, ctx.author)))
+                return await ctx.send(
+                    embed=discord.Embed.from_dict(await issue_embed(data[0], data[0].number, ctx.author))
+                )
 
             await SearchMenu(ctx, data, results, pagemap).start()
 
