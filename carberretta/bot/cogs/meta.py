@@ -20,7 +20,7 @@ from time import time
 
 import discord
 from discord.ext import commands
-from github import Github, UnknownObjectException
+from github import Github, UnknownObjectException, Issue
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
@@ -33,6 +33,67 @@ class Meta(commands.Cog):
         self.bot = bot
 
         # self.bot.remove_command("help")
+
+    async def issue_embed(self, issue: Issue.Issue, issue_number: int, author: discord.Member) -> dict:
+            issue_open = "Open"
+            issue_color = 0x17a007
+            issue_body = issue.body
+            issue_status = "Unknown"
+            issue_types = []
+            issue_type_label = "Type"
+            issue_milestone = "None"
+            issue_creator = issue.user.login
+
+            if issue.closed_at:
+                issue_open = "Closed"
+                issue_color = DEFAULT_EMBED_COLOUR
+
+            if len(issue.body) > 300:
+                issue_body = f"{issue.body[:300]}..."
+
+                if issue.body[299] == " ":
+                    issue_body = f"{issue.body[:299]}..."
+
+            for label in issue.labels:
+                if label.name.startswith("status/"):
+                    issue_status = label.name[7:].capitalize()
+                    continue
+
+                if label.name.startswith("type/"):
+                    issue_types.append(label.name[5:].capitalize())
+                    continue
+
+            if issue.milestone:
+                issue_milestone = issue.milestone.title
+
+            if issue.user.name:
+                issue_creator = f"{issue.user.name} ({issue.user.login})"
+
+            if len(issue_types) > 1:
+                issue_type_label = "Types"
+
+            if not len(issue_types) > 0:
+                issue_types = ["Unknown"]
+
+            return {
+                "title": f"{issue_open}: {issue.title}",
+                "description": f"Click [here](https://github.com/Carberra/Carberretta/issues/{issue_number}) to view on the web version.",
+                "color": issue_color,
+                "author": {"name": "Query"},
+                "footer": {
+                    "text": f"Requested by {author.display_name}",
+                    "icon_url": f"{author.avatar_url}",
+                },
+                "fields": [
+                    {"name": "Description", "value": issue_body, "inline": False},
+                    {"name": "Status", "value": issue_status, "inline": True},
+                    {"name": issue_type_label, "value": ", ".join(issue_types), "inline": True},
+                    {"name": "Milestone", "value": issue_milestone, "inline": True},
+                    {"name": "Created at", "value": chron.long_date(issue.created_at), "inline": True},
+                    {"name": "Created by", "value": issue_creator, "inline": True},
+                    {"name": "Existed for", "value": chron.short_delta(datetime.utcnow() - issue.created_at), "inline": True},
+                ],
+            }
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -175,67 +236,9 @@ class Meta(commands.Cog):
                 await ctx.send("Invalid issue number")
                 return
 
-            issue_open = "Open"
-            issue_color = 0x17a007
-            issue_body = issue.body
-            issue_status = "Unknown"
-            issue_types = []
-            issue_type_label = "Type"
-            issue_milestone = "None"
-            issue_creator = issue.user.login
-
-            if issue.closed_at:
-                issue_open = "Closed"
-                issue_color = DEFAULT_EMBED_COLOUR
-
-            if len(issue.body) > 300:
-                issue_body = f"{issue.body[:300]}..."
-
-                if issue.body[299] == " ":
-                    issue_body = f"{issue.body[:299]}..."
-
-            for label in issue.labels:
-                if label.name.startswith("status/"):
-                    issue_status = label.name[7:].capitalize()
-                    continue
-
-                if label.name.startswith("type/"):
-                    issue_types.append(label.name[5:].capitalize())
-                    continue
-
-            if issue.milestone:
-                issue_milestone = issue.milestone.title
-
-            if issue.user.name:
-                issue_creator = f"{issue.user.name} ({issue.user.login})"
-
-            if len(issue_types) > 1:
-                issue_type_label = "Types"
-
-            if not len(issue_types) > 0:
-                issue_types = ["Unknown"]
-
             await ctx.send(
                 embed=discord.Embed.from_dict(
-                    {
-                        "title": f"{issue_open}: {issue.title}",
-                        "description": f"Click [here](https://github.com/Carberra/Carberretta/issues/{issue_number}) to view on the web version.",
-                        "color": issue_color,
-                        "author": {"name": "Query"},
-                        "footer": {
-                            "text": f"Requested by {ctx.author.display_name}",
-                            "icon_url": f"{ctx.author.avatar_url}",
-                        },
-                        "fields": [
-                            {"name": "Description", "value": issue_body, "inline": False},
-                            {"name": "Status", "value": issue_status, "inline": True},
-                            {"name": issue_type_label, "value": ", ".join(issue_types), "inline": True},
-                            {"name": "Milestone", "value": issue_milestone, "inline": True},
-                            {"name": "Created at", "value": chron.long_date(issue.created_at), "inline": True},
-                            {"name": "Created by", "value": issue_creator, "inline": True},
-                            {"name": "Existed for", "value": chron.short_delta(datetime.utcnow() - issue.created_at), "inline": True},
-                        ],
-                    }
+                    await self.issue_embed(issue, issue_number, ctx.author)
                 )
             )
 
