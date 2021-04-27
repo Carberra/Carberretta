@@ -27,7 +27,7 @@ class Miscellaneous(commands.Cog):
             return await ctx.send("You can only pass 15 characters at a time.")
 
         names = []
-        digits = []
+        points = []
 
         for c in characters:
             digit = f"{ord(c):x}".upper()
