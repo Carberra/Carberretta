@@ -14,7 +14,7 @@ class ConfigMeta(type):
             "bool": bool,
             "int": int,
             "float": float,
-            "file": lambda x: Path(x).read_text(),
+            "file": lambda x: Path(x).read_text().strip("\n"),
             "str": str,
             "set": lambda x: set([cls.resolve_value(e.strip()) for e in x.split(",")]),
         }
