@@ -43,5 +43,6 @@ class Supporter(commands.Cog):
 
             await ctx.send("Done.")
 
+
 def setup(bot: commands.Bot) -> None:
     bot.add_cog(Supporter(bot))

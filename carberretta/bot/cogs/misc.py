@@ -41,14 +41,11 @@ class Miscellaneous(commands.Cog):
                 "description": f"Displaying information on {len(characters)} character(s).",
                 "color": DEFAULT_EMBED_COLOUR,
                 "author": {"name": "Query"},
-                "footer": {
-                    "text": f"Requested by {ctx.author.display_name}",
-                    "icon_url": f"{ctx.author.avatar_url}",
-                },
+                "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
                 "fields": [
                     {"name": "Names", "value": "\n".join(names), "inline": True},
                     {"name": "Digits", "value": "\n".join(digits), "inline": True},
-                ]
+                ],
             }
         )
 
