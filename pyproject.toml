@@ -20,9 +20,11 @@ apscheduler = "^3.6.3"
 "discord.py" = "^1.5.0"
 kaomoji = "^0.1.0"
 psutil = "^5.8.0"
+PyGithub = "^1.55"
 pygount = "^1.2.4"
 python-dotenv = "^0.13.0"
 toml = "^0.10.1"
+urllib3 = "^1.26.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.782"
