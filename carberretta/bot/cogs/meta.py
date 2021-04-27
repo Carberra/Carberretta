@@ -20,7 +20,7 @@ from time import time
 
 import discord
 from discord.ext import commands
-from github import Github, UnknownObjectException, Issue
+from github import Github, Issue, UnknownObjectException
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
