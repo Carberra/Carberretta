@@ -269,7 +269,7 @@ class Meta(commands.Cog):
             ]
 
             if not results:
-                return await ctx.send("No results found.")
+                return await ctx.send("No results found. Are you sure that's an issue for Carberretta?")
 
             if not len(results) > 1:
                 return await ctx.send(embed=discord.Embed.from_dict(await issue_embed(data[0], data[0].number, ctx.author)))
