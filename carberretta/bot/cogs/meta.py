@@ -31,7 +31,7 @@ from carberretta.utils import DEFAULT_EMBED_COLOUR, ROOT_DIR, chron, converters,
 async def issue_embed(issue: Issue.Issue, issue_number: int, author: discord.Member) -> dict:
     issue_open = "Open"
     issue_color = 0x17A007
-    issue_body = issue.body
+    issue_body = "*No description provided.*"
     issue_status = "Unknown"
     issue_types = []
     issue_type_label = "Type"
@@ -41,6 +41,9 @@ async def issue_embed(issue: Issue.Issue, issue_number: int, author: discord.Mem
     if issue.closed_at:
         issue_open = "Closed"
         issue_color = DEFAULT_EMBED_COLOUR
+
+    if issue.body:
+        issue_body = issue.body
 
     if len(issue.body) > 300:
         issue_body = f"{issue.body[:300]}..."
