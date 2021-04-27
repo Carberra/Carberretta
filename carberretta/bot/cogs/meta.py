@@ -252,7 +252,7 @@ class Meta(commands.Cog):
             try:
                 issue = self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number)
             except UnknownObjectException:
-                await ctx.send("Invalid issue number")
+                await ctx.send("Invalid issue number.")
                 return
 
             await ctx.send(embed=discord.Embed.from_dict(await issue_embed(issue, issue_number, ctx.author)))
