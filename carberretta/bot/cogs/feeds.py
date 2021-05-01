@@ -77,9 +77,11 @@ class Feeds(commands.Cog):
             self.streams_role = self.bot.guild.get_role(Config.STREAMS_ROLE_ID)
             self.youtube = self.bot.get_cog("YouTube")
 
-            self.bot.scheduler.add_job(self.get_new_videos, CronTrigger(minute="*/3", second=0))
-            self.bot.scheduler.add_job(self.get_new_vods, CronTrigger(minute="*/3", second=20))
-            self.bot.scheduler.add_job(self.get_new_streams, CronTrigger(minute="*/3", second=40))
+            if (await self.bot.application_info()).id == 696804435321552906:
+                self.bot.scheduler.add_job(self.get_new_videos, CronTrigger(minute="*/3", second=0))
+                self.bot.scheduler.add_job(self.get_new_vods, CronTrigger(minute="*/3", second=15))
+                self.bot.scheduler.add_job(self.get_new_premieres, CronTrigger(minute="*/3", second=30))
+                self.bot.scheduler.add_job(self.get_new_streams, CronTrigger(minute="*/3", second=45))
 
             self.bot.ready.up(self)
 
@@ -128,66 +130,7 @@ class Feeds(commands.Cog):
             thumbnails = data["snippet"]["thumbnails"]
             duration = data["contentDetails"]["duration"]
 
-            current_premiere = await self.bot.db.field(
-                "SELECT Upcoming FROM premieres WHERE VideoID = ?", item.yt_videoid
-            )
-
-            if duration != "P0D" and data["snippet"]["liveBroadcastContent"] == "upcoming":
-                # There is an upcoming premiere
-
-                scheduled_time = chron.from_iso(data["liveStreamingDetails"]["scheduledStartTime"].strip("Z"))
-
-                if not current_premiere:
-                    # This is a premiere we havent announced
-
-                    await self.videos_channel.send(
-                        f"Hey {self.videos_role.mention},\nA new premiere is scheduled for {chron.long_date_and_time(scheduled_time)} UTC!\nHope to see you there!",
-                        embed=discord.Embed.from_dict(
-                            {
-                                "title": item.title,
-                                "description": desc if len(desc := item.summary) <= 500 else f"{desc[:500]}...",
-                                "color": DEFAULT_EMBED_COLOUR,
-                                "url": item.link,
-                                "author": {"name": "Carberra Tutorials"},
-                                "image": {"url": thumbnails["maxres"]["url"]},
-                                "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
-                            }
-                        ),
-                    )
-
-                    await self.bot.db.execute(
-                        "INSERT INTO premieres (VideoID, Upcoming) VALUES (?, ?)", item.yt_videoid, 1
-                    )
-
-                    await self.bot.db.commit()
-                    return item.yt_videoid
-
-            elif current_premiere:
-                # A previously announced premiere is currently live
-
-                scheduled_time = chron.from_iso(data["liveStreamingDetails"]["scheduledStartTime"].strip("Z"))
-
-                await self.videos_channel.send(
-                    f"Hey {self.videos_role.mention},\nA new premiere started at {chron.long_date_and_time(scheduled_time)} UTC!\nCome and join us!",
-                    embed=discord.Embed.from_dict(
-                        {
-                            "title": item.title,
-                            "description": desc if len(desc := item.summary) <= 500 else f"{desc[:500]}...",
-                            "color": DEFAULT_EMBED_COLOUR,
-                            "url": item.link,
-                            "author": {"name": "Carberra Tutorials"},
-                            "image": {"url": thumbnails["maxres"]["url"]},
-                            "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
-                        }
-                    ),
-                )
-
-                await self.bot.db.execute("UPDATE premieres SET Upcoming = ? WHERE VideoID = ?", 1, item.yt_videoid)
-
-                await self.bot.db.commit()
-                return item.yt_videoid
-
-            elif item.yt_videoid == current_vid:
+            if item.yt_videoid == current_vid:
                 # This is a video we already announced
                 return
 
@@ -218,6 +161,104 @@ class Feeds(commands.Cog):
 
                     await self.bot.db.commit()
                     return item.yt_videoid
+
+    async def get_new_premieres(self) -> tuple:
+        for item in await self.call_feed():
+            data = await self.call_yt_api(item.yt_videoid)
+            thumbnails = data["snippet"]["thumbnails"]
+            duration = data["contentDetails"]["duration"]
+            live_content = data["snippet"]["liveBroadcastContent"]
+
+            upcoming = await self.bot.db.field(
+                "SELECT Upcoming FROM premieres WHERE VideoID = ?", item.yt_videoid
+            )
+
+            announced = await self.bot.db.field(
+                "SELECT Announced FROM premieres WHERE VideoID = ?", item.yt_videoid
+            )
+
+            if "liveStreamingDetails" in data.keys():
+                start_time = data["liveStreamingDetails"]["scheduledStartTime"].strip("Z")
+                scheduled_time = chron.from_iso(start_time)
+
+
+                if not upcoming and duration != "P0D":
+                    # We have not seen this premiere before
+
+                    if live_content == "upcoming" and not announced:
+                        # This premiere is upcoming and not live
+
+                        await self.videos_channel.send(
+                            f"Hey {self.videos_role.mention},\nA new premiere is scheduled for {chron.long_date_and_time(scheduled_time)} UTC!\nHope to see you there!",
+                            embed=discord.Embed.from_dict(
+                                {
+                                    "title": item.title,
+                                    "description": desc if len(desc := item.summary) <= 500 else f"{desc[:500]}...",
+                                    "color": DEFAULT_EMBED_COLOUR,
+                                    "url": item.link,
+                                    "author": {"name": "Carberra Tutorials"},
+                                    "image": {"url": thumbnails["maxres"]["url"]},
+                                    "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
+                                }
+                            ),
+                        )
+
+                        await self.bot.db.execute(
+                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 0
+                        )
+
+                        await self.bot.db.commit()
+                        return item.yt_videoid, False
+
+                    elif live_content =="live" and not upcoming and not announced:
+                        # The premiere was never upcoming is now live
+
+                        await self.videos_channel.send(
+                            f"Hey {self.videos_role.mention},\nA new premiere started on {chron.long_date_and_time(scheduled_time)} UTC!\nCome and join us!",
+                            embed=discord.Embed.from_dict(
+                                {
+                                    "title": item.title,
+                                    "description": desc if len(desc := item.summary) <= 500 else f"{desc[:500]}...",
+                                    "color": DEFAULT_EMBED_COLOUR,
+                                    "url": item.link,
+                                    "author": {"name": "Carberra Tutorials"},
+                                    "image": {"url": thumbnails["maxres"]["url"]},
+                                    "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
+                                }
+                            ),
+                        )
+
+                        await self.bot.db.execute(
+                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 1
+                        )
+
+                        await self.bot.db.commit()
+                        return item.yt_videoid, True
+
+                elif not announced:
+                    # A premiere was upcoming, and is now live
+
+                    await self.videos_channel.send(
+                        f"Hey {self.videos_role.mention},\nA new premiere started on {chron.long_date_and_time(scheduled_time)} UTC!\nCome and join us!",
+                        embed=discord.Embed.from_dict(
+                            {
+                                "title": item.title,
+                                "description": desc if len(desc := item.summary) <= 500 else f"{desc[:500]}...",
+                                "color": DEFAULT_EMBED_COLOUR,
+                                "url": item.link,
+                                "author": {"name": "Carberra Tutorials"},
+                                "image": {"url": thumbnails["maxres"]["url"]},
+                                "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
+                            }
+                        ),
+                    )
+
+                    await self.bot.db.execute(
+                        "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 1
+                    )
+
+                    await self.bot.db.commit()
+                    return item.yt_videoid, True
 
     async def get_new_streams(self) -> tuple:
         data = await self.call_twitch_api()
@@ -322,6 +363,16 @@ class Feeds(commands.Cog):
         last_vod = await self.get_new_vods()
         await ctx.send(f"Announced VOD: {last_vod}." if last_vod else "No new VODs.")
 
+    @feed_group.command(name="premiere")
+    @commands.is_owner()
+    async def feed_premiere_command(self, ctx: commands.Context) -> None:
+        if not (last_premiere := await self.get_new_premieres()):
+            await ctx.send("No new premieres.")
+        else:
+            await ctx.send(
+                f"Announced live premiere: {last_premiere[0]}." if last_premiere[1] else f"Announced upcoming premiere: {last_premiere[0]}."
+            )
+
     @feed_group.command(name="stream")
     @commands.is_owner()
     async def feed_stream_command(self, ctx: commands.Context) -> None:
@@ -329,7 +380,7 @@ class Feeds(commands.Cog):
             await ctx.send("No new streams.")
         else:
             await ctx.send(
-                f"Stream ended: {last_stream[0]}." if not last_stream[1] else f"Announced stream: {last_stream[0]}."
+                f"Stream ended: {last_stream[0]}." if last_stream[1] else f"Announced stream: {last_stream[0]}."
             )
 
 

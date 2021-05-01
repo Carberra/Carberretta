@@ -14,5 +14,6 @@ VALUES
 
 CREATE TABLE IF NOT EXISTS premieres (
     VideoID text NOT NULL PRIMARY KEY,
-    Upcoming int
+    Upcoming int,
+    Announced int
 );
