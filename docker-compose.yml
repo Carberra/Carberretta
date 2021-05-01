@@ -34,11 +34,15 @@ services:
       TWITCH_SUB_ROLE_ID: int:829026839941873689
       BOOSTER_ROLE_ID: int:657197640538259508
       GITHUB_API_TOKEN: file:/run/secrets/github-api-token
+      TWITCH_CLIENT_ID: file:/run/secrets/twitch-client-id
+      TWITCH_CLIENT_SECRET: file:/run/secrets/twitch-client-secret
 
     secrets:
       - token
       - yt-api-key
       - github-api-token
+      - twitch-client-id
+      - twitch-client-secret
 
 secrets:
   token:
@@ -47,6 +51,10 @@ secrets:
     file: ./secrets/yt-api-key
   github-api-token:
     file: ./secrets/github-api-token
+  twitch-client-id:
+    file: ./secrets/twitch-client-id
+  twitch-client-secret:
+    file: ./secrets/twitch-client-secret
 
 volumes:
   data:
