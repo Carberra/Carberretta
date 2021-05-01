@@ -189,7 +189,7 @@ class Feeds(commands.Cog):
                         # This premiere is upcoming and not live
 
                         await self.videos_channel.send(
-                            f"Hey {self.videos_role.mention}, A new premiere is scheduled for {chron.long_date_and_time(scheduled_time)} UTC! Hope to see you there!",
+                            f"Hey {self.videos_role.mention}, a new premiere is scheduled for {chron.long_date_and_time(scheduled_time)} UTC! Hope to see you there!",
                             embed=discord.Embed.from_dict(
                                 {
                                     "title": item.title,
@@ -214,7 +214,7 @@ class Feeds(commands.Cog):
                         # The premiere was never upcoming is now live
 
                         await self.videos_channel.send(
-                            f"Hey {self.videos_role.mention}, A new premiere started on {chron.long_date_and_time(scheduled_time)} UTC! Come and join us!",
+                            f"Hey {self.videos_role.mention}, a new premiere started on {chron.long_date_and_time(scheduled_time)} UTC! Come and join us!",
                             embed=discord.Embed.from_dict(
                                 {
                                     "title": item.title,
@@ -239,7 +239,7 @@ class Feeds(commands.Cog):
                     # A premiere was upcoming, and is now live
 
                     await self.videos_channel.send(
-                        f"Hey {self.videos_role.mention}, A new premiere started on {chron.long_date_and_time(scheduled_time)} UTC! Come and join us!",
+                        f"Hey {self.videos_role.mention}, a new premiere started on {chron.long_date_and_time(scheduled_time)} UTC! Come and join us!",
                         embed=discord.Embed.from_dict(
                             {
                                 "title": item.title,
