@@ -5,6 +5,7 @@ A place for commands which don't fit anywhere else.
 """
 
 import unicodedata
+from random import choice
 
 import discord
 from discord.ext import commands
@@ -50,6 +51,30 @@ class Miscellaneous(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+        
+    @commands.command(name='meme')
+    async def command_meme(self, ctx: commands.Context) -> None:
+        if ctx.channel.id not in [IDs lol]:
+            return
+
+        async with self.bot.session.get("https://memes.blademaker.tv/api/") as resp:
+            data = await resp.json()
+        title = data['title']
+        image = data['image']
+        sub = data['subreddit']
+        upvotes = data['ups']
+        downvotes = data['downs']
+        nsfw = data['nsfw']
+        nsfwcheck = True
+        while nsfwcheck:
+            if nsfw:
+                pass
+            else:
+                meme_embed = discord.Embed(title=title, url=image, color=DEFAULT_EMBED_COLOUR)
+                meme_embed.set_image(url=image)
+                meme_embed.set_footer(text=f'👍 {UpVotes} | 👎 {DownVote}')
+                await ctx.send(embed=meme_embed)
+                break
 
 
 def setup(bot: commands.Bot) -> None:
