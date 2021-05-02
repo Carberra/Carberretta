@@ -59,6 +59,13 @@ class Links(commands.Cog):
                 return
 
             await ctx.send(f"PEP {pep_number:04}: <https://python.org/dev/peps/pep-{pep_number:04}>")
+            
+    @commands.command(name="google", aliases=['lmgt', 'lmgtfy'])
+    async def command_google(self, ctx: commands.Context, *, query: str) -> None:
+        if len(query) > 500:
+            return await ctx.send("Your query should be no longer than 500 characters.")
+
+        await ctx.send(f"<https://letmegooglethat.com/?q={query.replace(' ', '+'}>")
 
 
 def setup(bot: commands.Bot) -> None:
