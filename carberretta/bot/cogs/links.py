@@ -61,7 +61,7 @@ class Links(commands.Cog):
             await ctx.send(f"PEP {pep_number:04}: <https://python.org/dev/peps/pep-{pep_number:04}>")
             
     @commands.command(name="google", aliases=['lmgt', 'lmgtfy'])
-    async def command_google(self, ctx, *, query):
+    async def command_google(self, ctx: commands.Context, *, query: str) -> None:
         if len(query) > 500:
             return await ctx.send("Please keep the query under 500 characters")
            
