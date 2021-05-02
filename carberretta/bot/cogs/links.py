@@ -63,7 +63,7 @@ class Links(commands.Cog):
     @commands.command(name="google", aliases=['lmgt', 'lmgtfy'])
     async def command_google(self, ctx: commands.Context, *, query: str) -> None:
         if len(query) > 500:
-            return await ctx.send("Please keep the query under 500 characters")
+            return await ctx.send("Your query should be no longer than 500 characters.")
            
         await ctx.send(f"<https://letmegooglethat.com/?q={query.replace(' ', '+'}>")
 
