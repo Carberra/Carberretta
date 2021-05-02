@@ -7,7 +7,11 @@ A place for commands which don't fit anywhere else.
 import unicodedata
 
 import discord
+from discord import Embed
 from discord.ext import commands
+
+from requests import get
+from random import choice
 
 from carberretta.utils import DEFAULT_EMBED_COLOUR
 
@@ -50,6 +54,28 @@ class Miscellaneous(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+        
+    @command(name='meme')
+    async def meme_finder_from_internet(self, ctx: commands.Context):
+        reddit = 'memes'
+        r = get(f"https://memes.blademaker.tv/api/{reddit}")
+        res = r.json()
+        title = res['title']
+        image = res['image']
+        sub = res['subreddit']
+        UpVotes = res['ups']
+        DownVote = res['downs']
+        nsfw = res['nsfw']
+        yes = True
+        while yes:
+            if nsfw:
+                pass
+            else:
+                meme_embed = Embed(title=title, description=f"if the image doesn't load, click on the title !", url=image)
+                meme_embed.set_image(url=image)
+                meme_embed.set_footer(text=f'👍:{UpVotes} | 👎:{DownVote}')
+                await ctx.send(embed=meme_embed)
+                break
 
 
 def setup(bot: commands.Bot) -> None:
