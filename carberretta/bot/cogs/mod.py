@@ -3,7 +3,6 @@ MOD
 
 Handles automatic mod systems:
     Mention-spam preventer;
-    Modmail system;
     Nicknames;
     Profanity filter.
 
@@ -26,7 +25,6 @@ from carberretta.utils.emoji import UNICODE_EMOJI
 class Mod(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.modmail_cooldown: defaultdict = defaultdict(dt.datetime.utcnow)
 
         self.nickname_whitelist = set(
             string.ascii_letters
@@ -35,37 +33,6 @@ class Mod(commands.Cog):
             + "".join(UNICODE_EMOJI)
             + "áàȧâäǟǎăāãåǻǽǣćċĉčďḍḑḓéèėêëěĕēẽe̊ẹǵġĝǧğg̃ģĥḥíìiîïǐĭīĩịĵķǩĺļľŀḽm̂m̄ŉńn̂ṅn̈ňn̄ñņṋóòôȯȱöȫǒŏōõȭőọǿơp̄ŕřŗśŝṡšşṣťțṭṱúùûüǔŭūũűůụẃẁŵẅýỳŷÿȳỹźżžẓǯÁÀȦÂÄǞǍĂĀÃÅǺǼǢĆĊĈČĎḌḐḒÉÈĖÊËĚĔĒẼE̊ẸǴĠĜǦĞG̃ĢĤḤÍÌİÎÏǏĬĪĨỊĴĶǨĹĻĽĿḼM̂M̄ʼNŃN̂ṄN̈ŇN̄ÑŅṊÓÒȮȰÔÖȪǑŎŌÕȬŐỌǾƠP̄ŔŘŖŚŜṠŠȘṢŤȚṬṰÚÙÛÜǓŬŪŨŰŮỤẂẀŴẄÝỲŶŸȲỸŹŻŽẒǮæɑꞵðǝəɛɣıɩŋœɔꞷʊĸßʃþʋƿȝʒʔÆⱭꞴÐƎƏƐƔIƖŊŒƆꞶƱK’ẞƩÞƲǷȜƷʔąa̧ą̊ɓçđɗɖęȩə̧ɛ̧ƒǥɠħɦįi̧ɨɨ̧ƙłm̧ɲǫo̧øơɔ̧ɍşţŧųu̧ưʉy̨ƴĄA̧Ą̊ƁÇĐƊƉĘȨƏ̧Ɛ̧ƑǤƓĦꞪĮI̧ƗƗ̧ƘŁM̧ƝǪO̧ØƠƆ̧ɌŞŢŦŲU̧ƯɄY̨Ƴ"
         )
-
-    async def modmail(self, message: discord.Message) -> None:
-        if (retry_after := (self.modmail_cooldown[message.author.id] - dt.datetime.utcnow()).total_seconds()) > 0:
-            return await message.channel.send(
-                f"You're still on cooldown. Try again in {chron.long_delta(dt.timedelta(seconds=retry_after))}."
-            )
-
-        if not 50 <= len(message.content) <= 1000:
-            return await message.channel.send("Your message should be between 50 and 1,000 characters long.")
-
-        member = self.bot.guild.get_member(message.author.id)
-
-        await self.modmail_channel.send(
-            embed=discord.Embed.from_dict(
-                {
-                    "title": "Modmail",
-                    "color": member.colour.value,
-                    "thumbnail": {"url": f"{member.avatar_url}"},
-                    "footer": {"text": f"ID: {message.id}"},
-                    "image": {"url": att[0].url if len((att := message.attachments)) else None},
-                    "fields": [
-                        {"name": "Member", "value": member.mention, "inline": False},
-                        {"name": "Message", "value": message.content, "inline": False},
-                    ],
-                }
-            )
-        )
-        await message.channel.send(
-            "Message sent. If needed, a moderator will DM you regarding this issue. You'll need to wait 1 hour before sending another modmail."
-        )
-        self.modmail_cooldown[message.author.id] = dt.datetime.utcnow() + dt.timedelta(seconds=3600)
 
     async def unhoist(self, nickname: str) -> str:
         while nickname and nickname[0] not in string.ascii_letters:
@@ -83,14 +50,7 @@ class Mod(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         if not self.bot.ready.booted:
-            self.modmail_channel = self.bot.get_channel(Config.MODMAIL_ID)
             self.bot.ready.up(self)
-
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
-        if not message.author.bot:
-            if isinstance(message.channel, discord.DMChannel):
-                await self.modmail(message)
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
