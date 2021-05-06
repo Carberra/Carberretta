@@ -54,7 +54,7 @@ def possessive(user: t.Union[Member, User]) -> str:
 async def binify(session: ClientSession, text: str, only_codeblocks=False) -> str:
     async def convert(body, to_replace, ext=""):
         async with session.post("https://mystb.in/documents", data=body) as response:
-            if response.status != 200:
+            if not 200 <= response.status <= 299:
                 return response.status
 
             data = await response.json()

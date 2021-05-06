@@ -32,7 +32,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
                 await self.message.clear_reactions()
 
                 async with self.ctx.bot.session.get(url) as response:
-                    if response.status != 200:
+                    if not 200 <= response.status <= 299:
                         return await self.message.edit(
                             content=f"The YouTube API returned {response.status} {response.reason}.", embed=None
                         )
@@ -102,7 +102,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = (await response.json())["items"][0]
@@ -135,7 +135,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = (await response.json())["items"][0]
@@ -187,7 +187,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = await response.json()
@@ -212,7 +212,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 if not (data := (await response.json())["items"]):

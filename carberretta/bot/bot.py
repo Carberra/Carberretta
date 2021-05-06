@@ -90,7 +90,7 @@ class Bot(commands.Bot):
 
     async def on_error(self, err, *args, **kwargs):
         async with self.session.post("https://mystb.in/documents", data=traceback.format_exc()) as response:
-            if response.status == 200:
+            if 200 <= response.status <= 299:
                 data = await response.json()
                 link = f"https://mystb.in/{data['key']}"
             else:
