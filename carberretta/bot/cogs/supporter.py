@@ -20,13 +20,14 @@ class Supporter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
-        added = set(after.roles) - set(before.roles)
-        if any(r in added for r in (self.patron_role, self.sub_role, self.booster_role)):
-            await after.add_roles(self.supporter_role, reason="Received supporting role.")
+        if self.bot.ready.supporter:
+            added = set(after.roles) - set(before.roles)
+            if any(r in added for r in (self.patron_role, self.sub_role, self.booster_role)):
+                await after.add_roles(self.supporter_role, reason="Received supporting role.")
 
-        removed = set(before.roles) - set(after.roles)
-        if any(r in removed for r in (self.patron_role, self.sub_role, self.booster_role)):
-            await after.remove_roles(self.supporter_role, reason="Lost supporting role.")
+            removed = set(before.roles) - set(after.roles)
+            if any(r in removed for r in (self.patron_role, self.sub_role, self.booster_role)):
+                await after.remove_roles(self.supporter_role, reason="Lost supporting role.")
 
     @commands.command(name="syncroles")
     @commands.is_owner()
