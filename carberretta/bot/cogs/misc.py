@@ -47,34 +47,34 @@ class Miscellaneous(commands.Cog):
     @commands.command(name="hug", aliases=["huggies", "hugs", "huggie"])
     @commands.cooldown(1, 10, commands.BucketType.user)
     async def hug_user_command(self, ctx: commands.Context, user: discord.Member):
-        userID = user.id
-        userID2 = ctx.author.id
-        timesHuggedOthers2 = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
-                                                      userID) or None
-        timesHuggedOthers = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
-                                                     userID2) or None
+        user_id = user.id
+        user_id_2 = ctx.author.id
+        times_hugged_others_2 = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
+                                                      user_id) or None
+        times_hugged_others = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
+                                                     user_id_2) or None
 
-        if userID == userID2:
+        if user_id == user_id_2:
             await ctx.send("Congratulations, You Played Yourself")
             return
 
-        if timesHuggedOthers2 is None:
-            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', userID)
-        if timesHuggedOthers is None:
-            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', userID2)
+        if times_hugged_others_2 is None:
+            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', user_id)
+        if times_hugged_others is None:
+            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', user_id_2)
 
         await self.bot.db.execute(
-            'UPDATE hugLeaderboard SET given = given + 1 WHERE UserID = ?', userID2)
-        await self.bot.db.execute('UPDATE hugLeaderboard SET received = received + 1 WHERE UserID = ?', userID)
-        timesGotHugs = await self.bot.db.record('SELECT received FROM hugs WHERE UserID = ?', userID)
+            'UPDATE hugLeaderboard SET given = given + 1 WHERE UserID = ?', user_id_2)
+        await self.bot.db.execute('UPDATE hugLeaderboard SET received = received + 1 WHERE UserID = ?', user_id)
+        received_count = await self.bot.db.record('SELECT received FROM hugs WHERE UserID = ?', user_id)
         await self.bot.db.commit()
 
-        hugFile = discord.File('carberretta/data/static/hug.gif', filename='hug.gif')
-        hugEmbed = discord.Embed(title='Huggies', timestamp=datetime.datetime.utcnow(),
+        hug_file = discord.File('carberretta/data/static/hug.gif', filename='hug.gif')
+        hug_embed = discord.Embed(title='Huggies', timestamp=datetime.datetime.utcnow(),
                                  description=f'You Hugged {user.display_name}')
-        hugEmbed.set_thumbnail(url='attachment://hug.gif')
-        hugEmbed.set_footer(text=f'now they have {timesGotHugs[0]} hug(s)', icon_url=user.avatar_url)
-        await ctx.send(file=hugFile, embed=hugEmbed)
+        hug_embed.set_thumbnail(url='attachment://hug.gif')
+        hug_embed.set_footer(text=f'now they have {received_count[0]} hug(s)', icon_url=user.avatar_url)
+        await ctx.send(file=hug_file, embed=hug_embed)
         return
 
     @commands.command(name="huglb", aliases=["hugleaderboard"])
