@@ -17,7 +17,8 @@ from carberretta.db import Database
 class Bot(commands.Bot):
     def __init__(self, version):
         self.version = version
-        self._cogs = [p.stem for p in Path(".").glob("./carberretta/bot/cogs/*.py")]
+        self._cogs = [p.stem for p in Path(
+            ".").glob("./carberretta/bot/cogs/*.py")]
         self._dynamic = "./carberretta/data/dynamic"
         self._static = "./carberretta/data/static"
 
@@ -122,7 +123,8 @@ class Bot(commands.Bot):
             await ctx.send(f"Too many arguments have been passed.",)
 
         elif isinstance(exc, commands.MissingPermissions):
-            mp = utils.string.list_of([str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
+            mp = utils.string.list_of(
+                [str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
             await ctx.send(f"You do not have the {mp} permission(s), which are required to use this command.")
 
         elif isinstance(exc, commands.BotMissingPermissions):
@@ -153,7 +155,8 @@ class Bot(commands.Bot):
             await ctx.message.delete()
             await ctx.send(
                 cooldown_texts[str(exc.cooldown.type)].format(
-                    ctx.command.name, utils.chron.long_delta(dt.timedelta(seconds=exc.retry_after))
+                    ctx.command.name, utils.chron.long_delta(
+                        dt.timedelta(seconds=exc.retry_after))
                 ),
                 delete_after=10,
             )
@@ -196,7 +199,8 @@ class Bot(commands.Bot):
     async def on_ready(self):
         if not self.ready.booted:
             self.scheduler.start()
-            print(f" scheduler started ({len(self.scheduler.get_jobs()):,} job(s) scheduled)")
+            print(
+                f" scheduler started ({len(self.scheduler.get_jobs()):,} job(s) scheduled)")
 
             self.guild = self.get_guild(Config.GUILD_ID)
             await self.db.sync()
@@ -213,5 +217,4 @@ class Bot(commands.Bot):
 
     async def on_message(self, message):
         if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
-            await self.db.execute("INSERT OR IGNORE INTO users (UserID) VALUES (?)", message.author.id)
             await self.process_commands(message)
