@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS premieres (
     Announced int
 );
 
-CREATE TABLE IF NOT EXISTS users (
-    UserID int NOT NULL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS members (
+    MemberID int NOT NULL PRIMARY KEY,
     Experience int DEFAULT 0,
     Level int DEFAULT 0,
     LevelMessage boolean DEFAULT 0,
