@@ -9,19 +9,25 @@ import unicodedata
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BucketType
 from discord.ext.menus import MenuPages, ListPageSource
 
 from carberretta.utils import DEFAULT_EMBED_COLOUR
 
 
 class Leaderboard(ListPageSource):
-    def __init__(self, ctx: commands.Context, data, bot):
+    def __init__(self, ctx: commands.Context, data):
         self.ctx = ctx
-        self.bot = bot
         super().__init__(data, per_page=10)
 
-    async def write_page(self, menu, offset, fields=[]):
+    async def format_page(self, menu, entries):
+        offset = (menu.current_page * self.per_page) + 1
+        fields = []
+        table = ("\n".join(
+            f"{idx + offset}. **{entry[1]}** - {self.ctx.guild.get_member(entry[0])}"
+            for idx, entry in enumerate(entries)))
+
+        fields.append(("Hugs Given", table))
+        
         len_data = len(self.entries)
 
         embed = discord.Embed(title="Hug Leaderboard", colour=self.ctx.author.colour)
@@ -33,29 +39,19 @@ class Leaderboard(ListPageSource):
 
         return embed
 
-    async def format_page(self, menu, entries):
-        offset = (menu.current_page * self.per_page) + 1
-        fields = []
-        table = ("\n".join(
-            f"{idx + offset}. **{entry[1]}** - {self.ctx.guild.get_member(entry[0])}"
-            for idx, entry in enumerate(entries)))
-
-        fields.append(("Hugs Given to Others", table))
-        return await self.write_page(menu, offset, fields)
-
 
 class Miscellaneous(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @commands.command(name="hug", aliases=["huggies", "hugs", "huggie"])
-    @commands.cooldown(1, 10, BucketType.user)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def hug_user_command(self, ctx: commands.Context, user: discord.Member):
         userID = user.id
         userID2 = ctx.author.id
-        timesHuggedOthers2 = await self.bot.db.record("SELECT TimesHuggedOthers FROM hugLeaderboard WHERE UserID = ?",
+        timesHuggedOthers2 = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
                                                       userID) or None
-        timesHuggedOthers = await self.bot.db.record("SELECT TimesHuggedOthers FROM hugLeaderboard WHERE UserID = ?",
+        timesHuggedOthers = await self.bot.db.record("SELECT given FROM hugs WHERE UserID = ?",
                                                      userID2) or None
 
         if userID == userID2:
@@ -63,14 +59,14 @@ class Miscellaneous(commands.Cog):
             return
 
         if timesHuggedOthers2 is None:
-            await self.bot.db.execute('INSERT INTO hugLeaderboard (UserID) VALUES (?)', userID)
+            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', userID)
         if timesHuggedOthers is None:
-            await self.bot.db.execute('INSERT INTO hugLeaderboard (UserID) VALUES (?)', userID2)
+            await self.bot.db.execute('INSERT INTO hugs (UserID) VALUES (?)', userID2)
 
         await self.bot.db.execute(
-            'UPDATE hugLeaderboard SET TimesHuggedOthers = TimesHuggedOthers + 1 WHERE UserID = ?', userID2)
-        await self.bot.db.execute('UPDATE hugLeaderboard SET TimesGotHugs = TimesGotHugs + 1 WHERE UserID = ?', userID)
-        timesGotHugs = await self.bot.db.record('SELECT TimesGotHugs FROM hugLeaderboard WHERE UserID = ?', userID)
+            'UPDATE hugLeaderboard SET given = given + 1 WHERE UserID = ?', userID2)
+        await self.bot.db.execute('UPDATE hugLeaderboard SET received = received + 1 WHERE UserID = ?', userID)
+        timesGotHugs = await self.bot.db.record('SELECT received FROM hugs WHERE UserID = ?', userID)
         await self.bot.db.commit()
 
         hugFile = discord.File('carberretta/data/static/hug.gif', filename='hug.gif')
@@ -84,8 +80,8 @@ class Miscellaneous(commands.Cog):
     @commands.command(name="huglb", aliases=["hugleaderboard"])
     async def hug_leaderboard_command(self, ctx: commands.Context):
         records = await self.bot.db.records(
-            "SELECT UserID, TimesHuggedOthers, TimesGotHugs FROM hugLeaderboard ORDER BY TimesHuggedOthers DESC")
-        menu = MenuPages(source=Leaderboard(ctx, records, self.bot),
+            "SELECT UserID, given, received FROM hugs ORDER BY given DESC")
+        menu = MenuPages(source=Leaderboard(ctx, records),
                          clear_reactions_after=True,
                          timeout=60.0)
         await menu.start(ctx)
