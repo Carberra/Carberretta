@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS premieres (
     Upcoming int,
     Announced int
 );
+
+CREATE TABLE IF NOT EXISTS hugLeaderboard (
+    UserID INTEGER NOT NULL PRIMARY KEY,
+    TimesGotHugs INTEGER DEFAULT 0,
+    TimesHuggedOthers INTEGER DEFAULT 0
+)
