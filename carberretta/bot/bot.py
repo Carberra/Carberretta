@@ -213,4 +213,5 @@ class Bot(commands.Bot):
 
     async def on_message(self, message):
         if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
+            await self.db.execute("INSERT OR IGNORE INTO users (UserID) VALUES (?)", message.author.id)
             await self.process_commands(message)
