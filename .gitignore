@@ -1,6 +1,7 @@
 ### Custom ###
 dynamic/
 .env
+.vscode/
 
 ### Database ###
 *.accdb
