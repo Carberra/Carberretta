@@ -96,6 +96,7 @@ class Poll(commands.Cog):
                 max_value = value
             elif value == max_value:
                 most_voted.append(r.emoji)
+        self._cache.remove(message)
 
         await message.channel.send(
             embed=discord.Embed.from_dict(
