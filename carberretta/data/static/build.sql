@@ -17,3 +17,11 @@ CREATE TABLE IF NOT EXISTS premieres (
     Upcoming int,
     Announced int
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    UserID int NOT NULL PRIMARY KEY,
+    Experience int DEFAULT 0,
+    Level int DEFAULT 0,
+    LevelMessage boolean DEFAULT 0,
+    LastUpdate DATETIME DEFAULT CURRENT_TIMESTAMP
+);
