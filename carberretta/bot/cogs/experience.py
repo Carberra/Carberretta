@@ -34,7 +34,8 @@ class Experience(commands.Cog):
                                                      Experience=Experience + (CASE WHEN ROUND((JULIANDAY(CURRENT_TIMESTAMP) - JULIANDAY(LastUpdate)) * 86400) > 60 THEN ? ELSE 0 END),
                                                      LastUpdate=CURRENT_TIMESTAMP
                                                      WHERE MemberID = ?
-                                                     RETURNING Experience, Level, LevelMessage""", message.author.id, randint(1, 20), message.author.id)
+                                                     RETURNING Experience, Level, LevelMessage
+                                                     """, message.author.id, randint(1, 20), message.author.id)
         if (new_lvl := self.calc_lvl(exp)) > lvl:
             await self.bot.db.execute("UPDATE members SET Level = ? WHERE MemberID = ?", new_lvl, message.author.id)
             if lvl_msg:
@@ -54,7 +55,7 @@ class Experience(commands.Cog):
 
     @commands.command(name="togglelevelmessage", aliases=["togglelvlmsg", "lvluplog"])
     async def command_togglelevelmessage(self, ctx: commands.Context):
-        changed_to = await self.bot.db.field("UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE UserID = ? RETURNING LevelMessage", ctx.author.id)
+        changed_to = await self.bot.db.field("UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE MemberID = ? RETURNING LevelMessage", ctx.author.id)
         await ctx.send(f"Turned level up messages {'on' if changed_to else 'off'}.")
 
     @commands.command(name="leveltop", aliases=["ranktop", "lvltop", "experiencetop", "exptop", "xptop"])
