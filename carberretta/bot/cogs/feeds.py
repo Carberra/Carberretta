@@ -86,7 +86,7 @@ class Feeds(commands.Cog):
             self.bot.ready.up(self)
 
     async def get_new_vods(self) -> str:
-        current_vod = await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "vod")
+        current_vod = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "vod")
 
         for item in await self.call_feed():
             data = await self.call_yt_api(item.yt_videoid)
@@ -116,14 +116,13 @@ class Feeds(commands.Cog):
                 )
 
                 await self.bot.db.execute(
-                    "UPDATE feeds SET ContentValue = ? WHERE ContentType = ?", item.yt_videoid, "vod"
+                    "UPDATE videos SET ContentValue = ? WHERE ContentType = ?", item.yt_videoid, "vod"
                 )
 
-                await self.bot.db.commit()
                 return item.yt_videoid
 
     async def get_new_videos(self) -> str:
-        current_vid = await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "video")
+        current_vid = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "video")
 
         for item in await self.call_feed():
             data = await self.call_yt_api(item.yt_videoid)
@@ -156,31 +155,29 @@ class Feeds(commands.Cog):
                     )
 
                     await self.bot.db.execute(
-                        "UPDATE feeds SET ContentValue = ? WHERE ContentType = ?", item.yt_videoid, "video"
+                        "UPDATE videos SET ContentValue = ? WHERE ContentType = ?", item.yt_videoid, "video"
                     )
 
-                    await self.bot.db.commit()
                     return item.yt_videoid
 
     async def get_new_premieres(self) -> tuple:
+        known_premieres = {
+            _id: [_upcoming, _announced]
+            for _id, _upcoming, _announced in await self.bot.db.records("SELECT * FROM premieres")
+        }
+
         for item in await self.call_feed():
             data = await self.call_yt_api(item.yt_videoid)
             thumbnails = data["snippet"]["thumbnails"]
             duration = data["contentDetails"]["duration"]
             live_content = data["snippet"]["liveBroadcastContent"]
 
-            upcoming = await self.bot.db.field(
-                "SELECT Upcoming FROM premieres WHERE VideoID = ?", item.yt_videoid
-            )
-
-            announced = await self.bot.db.field(
-                "SELECT Announced FROM premieres WHERE VideoID = ?", item.yt_videoid
-            )
+            upcoming = known_premieres[item.yt_videoid][0] if item.yt_videoid in known_premieres.keys() else None
+            announced = known_premieres[item.yt_videoid][1] if item.yt_videoid in known_premieres.keys() else None
 
             if "liveStreamingDetails" in data.keys():
                 start_time = data["liveStreamingDetails"]["scheduledStartTime"].strip("Z")
                 scheduled_time = chron.from_iso(start_time)
-
 
                 if not upcoming and duration != "P0D":
                     # We have not seen this premiere before
@@ -204,13 +201,15 @@ class Feeds(commands.Cog):
                         )
 
                         await self.bot.db.execute(
-                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 0
+                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)",
+                            item.yt_videoid,
+                            1,
+                            0,
                         )
 
-                        await self.bot.db.commit()
                         return item.yt_videoid, False
 
-                    elif live_content =="live" and not upcoming and not announced:
+                    elif live_content == "live" and not upcoming and not announced:
                         # The premiere was never upcoming is now live
 
                         await self.videos_channel.send(
@@ -229,10 +228,12 @@ class Feeds(commands.Cog):
                         )
 
                         await self.bot.db.execute(
-                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 1
+                            "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)",
+                            item.yt_videoid,
+                            1,
+                            1,
                         )
 
-                        await self.bot.db.commit()
                         return item.yt_videoid, True
 
                 elif not announced:
@@ -257,17 +258,16 @@ class Feeds(commands.Cog):
                         "REPLACE INTO premieres (VideoID, Upcoming, Announced) VALUES (?, ?, ?)", item.yt_videoid, 1, 1
                     )
 
-                    await self.bot.db.commit()
                     return item.yt_videoid, True
 
     async def get_new_streams(self) -> tuple:
         data = await self.call_twitch_api()
 
         if data:
+            live_now = await self.bot.db.field("SELECT StreamLive FROM streams WHERE ID = 1")
 
-            if data["is_live"] and not int(
-                await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "stream_live")
-            ): # The stream is live and we havent announced it yet
+            if data["is_live"] and not live_now:
+                # The stream is live and we havent announced it yet
 
                 start = chron.from_iso(data["started_at"].strip("Z"))
 
@@ -286,44 +286,30 @@ class Feeds(commands.Cog):
                     ),
                 )
 
-                await self.bot.db.execute("UPDATE feeds SET ContentValue = '1' WHERE ContentType = ?", "stream_live")
-
-                await self.bot.db.execute("UPDATE feeds SET ContentValue = ? WHERE ContentType = ?", start, "stream_start")
-
                 await self.bot.db.execute(
-                    "UPDATE feeds SET ContentValue = ? WHERE ContentType = ?", message.id, "stream_message"
+                    "UPDATE streams SET StreamLive = ?, StreamStart = ?, StreamMessage= ? WHERE ID = 1",
+                    1,
+                    start,
+                    message.id,
                 )
 
-                await self.bot.db.commit()
                 return data["title"], False
 
-            elif not data["is_live"] and int(
-                await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "stream_live")
-            ):
+            elif not data["is_live"] and live_now:
                 # The stream is not live and last we checked it was (stream is over)
 
-                await self.bot.db.execute("UPDATE feeds SET ContentValue = '0' WHERE ContentType = ?", "stream_live")
-
                 await self.bot.db.execute(
-                    "UPDATE feeds SET ContentValue = ? WHERE ContentType = ?", dt.datetime.utcnow(), "stream_end"
+                    "UPDATE streams SET StreamLive = ?, StreamEnd = ? WHERE ID = 1", (0), (dt.datetime.utcnow())
                 )
 
-                await self.bot.db.commit()
-
-                duration = chron.from_iso(
-                    await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "stream_end")
-                ) - chron.from_iso(
-                    await self.bot.db.field("SELECT ContentValue FROM feeds WHERE ContentType = ?", "stream_start")
+                start, stream_message, end = await self.bot.db.record(
+                    "SELECT StreamStart, StreamMessage, StreamEnd FROM streams WHERE ID = 1"
                 )
+
+                duration = chron.from_iso(end) - chron.from_iso(start)
 
                 try:
-                    message = await self.videos_channel.fetch_message(
-                        int(
-                            await self.bot.db.field(
-                                "SELECT ContentValue FROM feeds WHERE ContentType = ?", "stream_message"
-                            )
-                        )
-                    )
+                    message = await self.videos_channel.fetch_message(stream_message)
 
                 except (discord.NotFound, discord.Forbidden, discord.HTTPException):
                     return
@@ -348,34 +334,36 @@ class Feeds(commands.Cog):
 
     @commands.group(name="feed", invoke_without_command=True)
     @commands.is_owner()
-    async def feed_group(self, ctx: commands.Context) -> None:
+    async def group_feed(self, ctx: commands.Context) -> None:
         pass
 
-    @feed_group.command(name="video")
+    @group_feed.command(name="video")
     @commands.is_owner()
-    async def feed_video_command(self, ctx: commands.Context) -> None:
+    async def command_feed_video(self, ctx: commands.Context) -> None:
         last_video = await self.get_new_videos()
         await ctx.send(f"Announced video: {last_video}." if last_video else "No new videos.")
 
-    @feed_group.command(name="vod")
+    @group_feed.command(name="vod")
     @commands.is_owner()
-    async def feed_vod_command(self, ctx: commands.Context) -> None:
+    async def command_feed_vod(self, ctx: commands.Context) -> None:
         last_vod = await self.get_new_vods()
         await ctx.send(f"Announced VOD: {last_vod}." if last_vod else "No new VODs.")
 
-    @feed_group.command(name="premiere")
+    @group_feed.command(name="premiere")
     @commands.is_owner()
-    async def feed_premiere_command(self, ctx: commands.Context) -> None:
+    async def command_feed_premiere(self, ctx: commands.Context) -> None:
         if not (last_premiere := await self.get_new_premieres()):
             await ctx.send("No new premieres.")
         else:
             await ctx.send(
-                f"Announced live premiere: {last_premiere[0]}." if last_premiere[1] else f"Announced upcoming premiere: {last_premiere[0]}."
+                f"Announced live premiere: {last_premiere[0]}."
+                if last_premiere[1]
+                else f"Announced upcoming premiere: {last_premiere[0]}."
             )
 
-    @feed_group.command(name="stream")
+    @group_feed.command(name="stream")
     @commands.is_owner()
-    async def feed_stream_command(self, ctx: commands.Context) -> None:
+    async def command_feed_stream(self, ctx: commands.Context) -> None:
         if not (last_stream := await self.get_new_streams()):
             await ctx.send("No new streams.")
         else:
