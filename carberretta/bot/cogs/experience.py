@@ -18,7 +18,7 @@ class Experience(commands.Cog):
         return ceil((exp / 42) ** 0.55)
 
     @staticmethod
-    def calc_next_lvl_at(lvl: int) -> int:
+    def calc_required_exp(lvl: int) -> int:
         return ceil((lvl ** (1 / .55)) * 42)
 
     @commands.Cog.listener()
@@ -26,6 +26,7 @@ class Experience(commands.Cog):
         if message.author.bot:
             return
         # xp add values can change
+        # 60 seconds can change
         exp, lvl, lvl_msg = await self.bot.db.record("""
                                                      INSERT INTO members(MemberID)
                                                      VALUES(?)
@@ -48,8 +49,8 @@ class Experience(commands.Cog):
             await ctx.send(f"{member.display_name} is not in the database.")
             return
         lvl = self.calc_lvl(exp)
-        next_at = self.calc_next_lvl_at(lvl)
-        await ctx.send(f"{member.display_name} has `{lvl}` levels. (`{exp}/{next_at}`)")
+        required_exp = self.calc_required_exp(lvl)
+        await ctx.send(f"{member.display_name} has `{lvl}` levels. (`{exp}/{required_exp}`)")
 
     @commands.command(name="togglelevelmessage", aliases=["togglelvlmsg", "lvluplog"])
     async def command_togglelevelmessage(self, ctx: commands.Context):
