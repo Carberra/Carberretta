@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS premieres (
     Upcoming int,
     Announced int
 );
+
+CREATE TABLE IF NOT EXISTS hugs (
+    UserID INTEGER NOT NULL PRIMARY KEY,
+    Received INTEGER DEFAULT 0,
+    Given INTEGER DEFAULT 0
+);
