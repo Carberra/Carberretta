@@ -23,5 +23,5 @@ CREATE TABLE IF NOT EXISTS members (
     Experience integer DEFAULT 0,
     Level integer DEFAULT 0,
     LevelMessage integer DEFAULT 0,
-    LastUpdate numeric DEFAULT CURRENT_TIMESTAMP
+    NextUpdate numeric DEFAULT CURRENT_TIMESTAMP
 );

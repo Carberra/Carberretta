@@ -31,8 +31,8 @@ class Experience(commands.Cog):
                 "INSERT INTO members(UserID) "
                 "VALUES(?) "
                 "ON CONFLICT(UserID) DO UPDATE SET "
-                "Experience = Experience + (CASE WHEN ROUND((JULIANDAY(CURRENT_TIMESTAMP) - JULIANDAY(LastUpdate)) * 86400) > 60 THEN ? ELSE 0 END), "
-                "LastUpdate = CURRENT_TIMESTAMP "
+                "Experience = Experience + (CASE WHEN NextUpdate < CURRENT_TIMESTAMP THEN ? ELSE 0 END), "
+                "NextUpdate = (CASE WHEN NextUpdate < CURRENT_TIMESTAMP THEN DATETIME(CURRENT_TIMESTAMP, '+60 seconds') ELSE NextUpdate END) "
                 "WHERE UserID = ? "
                 "RETURNING Experience, Level, LevelMessage"
             ),
@@ -77,11 +77,13 @@ class Experience(commands.Cog):
         name="togglelevelmessage",
         aliases=["togglelvlmsg", "lvluplog", "lvlupmsg"],
     )
-    async def command_togglelevelmessage(self, ctx: commands.Context):
+    async def command_togglelevelmessage(self, ctx: commands.Context) -> None:
         changed_to = await self.bot.db.field(
             "UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE UserID = ? RETURNING LevelMessage",
             ctx.author.id,
         )
+        if changed_to is None:
+            return await ctx.send("You are not in the database.")
         await ctx.send(
             f"Turned level up messages {'on' if changed_to else 'off'}."
         )
@@ -101,10 +103,13 @@ class Experience(commands.Cog):
             "xplb",
         ],
     )
-    async def command_leveltop(self, ctx: commands.Context):
+    async def command_leveltop(self, ctx: commands.Context) -> None:
         leaderboard = await self.bot.db.records(
             "SELECT UserID, Level, Experience FROM members ORDER BY Experience DESC LIMIT 10"
         )
+
+        if len(leaderboard) == 0:
+            return await ctx.send("No one is in the database yet.")
 
         embed = discord.Embed.from_dict(
             {
