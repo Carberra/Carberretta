@@ -299,7 +299,7 @@ class Feeds(commands.Cog):
                 # The stream is not live and last we checked it was (stream is over)
 
                 await self.bot.db.execute(
-                    "UPDATE streams SET StreamLive = ?, StreamEnd = ? WHERE ID = 1", (0), (dt.datetime.utcnow())
+                    "UPDATE streams SET StreamLive = ?, StreamEnd = ? WHERE ID = 1", 0, dt.datetime.utcnow()
                 )
 
                 start, stream_message, end = await self.bot.db.record(
