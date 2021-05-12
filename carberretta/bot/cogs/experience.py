@@ -10,7 +10,7 @@ from carberretta.utils import DEFAULT_EMBED_COLOUR
 
 class Experience(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
-        self.bot = bot
+        self.bot: commands.Bot = bot
 
     @staticmethod
     def calc_lvl(exp: int) -> int:
@@ -53,40 +53,28 @@ class Experience(commands.Cog):
                     mention_author=False,
                 )
 
-    @commands.command(
-        name="level", aliases=["lvl", "rank", "experience", "exp", "xp"]
-    )
-    async def command_level(
-        self, ctx: commands.Context, member: t.Optional[discord.Member]
-    ) -> None:
-        member = member or ctx.author
-        exp = await self.bot.db.field(
-            "SELECT Experience FROM members WHERE UserID = ?", member.id
-        )
+    @commands.command(name="level", aliases=["lvl", "rank", "experience", "exp", "xp"])
+    async def command_level(self, ctx: commands.Context, member: t.Optional[discord.Member]) -> None:
+        member: discord.Member = member or ctx.author
+        exp: t.Union[int, None] = await self.bot.db.field("SELECT Experience FROM members WHERE UserID = ?", member.id)
         if exp is None:
-            return await ctx.send(
-                f"{member.display_name} is not in the database."
-            )
-        lvl = self.calc_lvl(exp)
-        required_exp = self.calc_required_exp(lvl)
-        await ctx.send(
-            f"{member.display_name} is on level {lvl}. Progress to next level: ({exp}/{required_exp})."
-        )
+            return await ctx.send(f"{member.display_name} is not in the database.")
+        lvl: int = self.calc_lvl(exp)
+        required_exp: int = self.calc_required_exp(lvl)
+        await ctx.send(f"{member.display_name} is on level {lvl}. Progress to next level: ({exp}/{required_exp}).")
 
     @commands.command(
         name="togglelevelmessage",
         aliases=["togglelvlmsg", "lvluplog", "lvlupmsg"],
     )
     async def command_togglelevelmessage(self, ctx: commands.Context) -> None:
-        changed_to = await self.bot.db.field(
+        changed_to: t.Union[int, None] = await self.bot.db.field(
             "UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE UserID = ? RETURNING LevelMessage",
             ctx.author.id,
         )
         if changed_to is None:
             return await ctx.send("You are not in the database.")
-        await ctx.send(
-            f"Turned level up messages {'on' if changed_to else 'off'}."
-        )
+        await ctx.send(f"Turned level up messages {'on' if changed_to else 'off'}.")
 
     @commands.command(
         name="leveltop",
@@ -104,7 +92,7 @@ class Experience(commands.Cog):
         ],
     )
     async def command_leveltop(self, ctx: commands.Context) -> None:
-        leaderboard = await self.bot.db.records(
+        leaderboard: tuple = await self.bot.db.records(
             "SELECT UserID, Level, Experience FROM members ORDER BY Experience DESC LIMIT 10"
         )
 
@@ -121,9 +109,7 @@ class Experience(commands.Cog):
                         for i, member in enumerate(leaderboard)
                     ]
                 ),
-                "thumbnail": {
-                    "url": f"{self.bot.get_user(leaderboard[0][0]).avatar_url}"
-                },
+                "thumbnail": {"url": f"{self.bot.get_user(leaderboard[0][0]).avatar_url}"},
                 "footer": {"text": f"Showing top {len(leaderboard)}."},
             }
         )
