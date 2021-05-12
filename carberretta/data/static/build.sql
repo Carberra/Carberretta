@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS videos (
     ContentType text NOT NULL PRIMARY KEY,
-    ContentValue text default ""
+    ContentValue text DEFAULT ""
 );
 
 INSERT OR IGNORE INTO videos (ContentType)
