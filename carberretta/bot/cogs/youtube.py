@@ -150,7 +150,7 @@ class YouTube(commands.Cog):
                         "description": data["brandingSettings"]["channel"]["description"],
                         "color": DEFAULT_EMBED_COLOUR,
                         "thumbnail": {"url": data["snippet"]["thumbnails"]["high"]["url"]},
-                        "image": {"url": data["brandingSettings"]["image"]["bannerTvImageUrl"]},
+                        "image": {"url": data["brandingSettings"]["image"]["bannerExternalUrl"]},
                         "author": {"name": "Information"},
                         "footer": {
                             "text": f"Requested by {ctx.author.display_name}",
