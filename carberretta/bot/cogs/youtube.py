@@ -5,11 +5,11 @@ Handles YouTube content notifications and stats.
 """
 
 import datetime as dt
+import html
 import re
 
 import aiohttp
 import discord
-import html
 from discord.ext import commands
 
 from carberretta import Config
