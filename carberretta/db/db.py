@@ -1,5 +1,6 @@
 import os
 
+import aiofiles
 from aiosqlite import connect
 from apscheduler.triggers.cron import CronTrigger
 
@@ -71,7 +72,8 @@ class Database:
         return cur.rowcount
 
     async def executescript(self, path, **kwargs):
-        with open(path, "r", encoding="utf-8") as script:
-            await self.cxn.executescript(script.read().format(**kwargs))
+        async with aiofiles.open(path, "r", encoding="utf-8") as script:
+            text = await script.read()
+            await self.cxn.executescript(text.format(**kwargs))
 
         self._calls += 1
