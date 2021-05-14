@@ -9,8 +9,8 @@ import re
 
 import aiohttp
 import discord
-from discord.ext import commands
 import html
+from discord.ext import commands
 
 from carberretta import Config
 from carberretta.utils import DEFAULT_EMBED_COLOUR, chron, menu
