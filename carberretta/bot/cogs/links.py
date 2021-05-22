@@ -66,6 +66,13 @@ class Links(commands.Cog):
             return await ctx.send("Your query should be no longer than 500 characters.")
 
         await ctx.send(f"<https://letmegooglethat.com/?q={query.replace(' ', '+')}>")
+    
+    @commands.command(name="duckduckgo", aliases=["ddg"])
+    async def command_google(self, ctx: commands.Context, *, query: str) -> None:
+        if len(query) > 500:
+            return await ctx.send("Your query should be no longer than 500 characters.")
+
+        await ctx.send(f"<https://duckduckgo.com/?q={query.replace(' ', '+')}>")
 
 
 def setup(bot: commands.Bot) -> None:
