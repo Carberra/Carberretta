@@ -22,7 +22,7 @@ class Bot(commands.Bot):
         self._static = "./carberretta/data/static"
 
         self.scheduler = AsyncIOScheduler()
-        self.session = ClientSession()
+        self.session = ClientSession(trust_env=True)
         self.db = Database(self)
         self.emoji = utils.EmojiGetter(self)
         self.loc = utils.CodeCounter()
