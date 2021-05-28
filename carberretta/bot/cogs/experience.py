@@ -26,6 +26,9 @@ class Experience(commands.Cog):
             return
         # xp add values can change
         # 60 seconds can change
+        exp: int
+        lvl: int
+        lvl_msg: int
         exp, lvl, lvl_msg = await self.bot.db.record(
             (
                 "INSERT INTO members(UserID) "
@@ -40,6 +43,7 @@ class Experience(commands.Cog):
             randint(1, 20),
             message.author.id,
         )
+        new_lvl: int
         if (new_lvl := self.calc_lvl(exp)) > lvl:
             await self.bot.db.execute(
                 "UPDATE members SET Level = ? WHERE UserID = ?",
@@ -56,7 +60,7 @@ class Experience(commands.Cog):
     @commands.command(name="level", aliases=["lvl", "rank", "experience", "exp", "xp"])
     async def command_level(self, ctx: commands.Context, member: t.Optional[discord.Member]) -> None:
         member: discord.Member = member or ctx.author
-        exp: t.Union[int, None] = await self.bot.db.field("SELECT Experience FROM members WHERE UserID = ?", member.id)
+        exp: t.Optional[int] = await self.bot.db.field("SELECT Experience FROM members WHERE UserID = ?", member.id)
         if exp is None:
             return await ctx.send(f"{member.display_name} is not in the database.")
         lvl: int = self.calc_lvl(exp)
@@ -68,7 +72,7 @@ class Experience(commands.Cog):
         aliases=["togglelvlmsg", "lvluplog", "lvlupmsg"],
     )
     async def command_togglelevelmessage(self, ctx: commands.Context) -> None:
-        changed_to: t.Union[int, None] = await self.bot.db.field(
+        changed_to: t.Optional[int] = await self.bot.db.field(
             "UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE UserID = ? RETURNING LevelMessage",
             ctx.author.id,
         )
@@ -92,20 +96,20 @@ class Experience(commands.Cog):
         ],
     )
     async def command_leveltop(self, ctx: commands.Context) -> None:
-        leaderboard: tuple = await self.bot.db.records(
-            "SELECT UserID, Level, Experience FROM members ORDER BY Experience DESC LIMIT 10"
+        leaderboard: t.List[t.Tuple[int, int]] = await self.bot.db.records(
+            "SELECT UserID, Experience FROM members ORDER BY Experience DESC LIMIT 10"
         )
 
         if len(leaderboard) == 0:
             return await ctx.send("No one is in the database yet.")
 
-        embed = discord.Embed.from_dict(
+        embed: discord.Embed = discord.Embed.from_dict(
             {
                 "title": "Experience Leaderboard",
                 "color": DEFAULT_EMBED_COLOUR,
                 "description": "\n".join(
                     [
-                        f"{i + 1}. {self.bot.get_user(member[0]).display_name}, level {member[1]}, experience {member[2]}."
+                        f"{i + 1}. {self.bot.get_user(member[0]).display_name}, level {self.calc_lvl(member[1])}, experience {member[1]}."
                         for i, member in enumerate(leaderboard)
                     ]
                 ),
