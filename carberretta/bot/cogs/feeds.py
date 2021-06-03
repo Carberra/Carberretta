@@ -25,10 +25,10 @@ class Feeds(commands.Cog):
         url = f"https://www.youtube.com/feeds/videos.xml?channel_id={Config.YOUTUBE_CHANNEL_ID}&{dt.datetime.utcnow()}"
         async with self.bot.session.get(url) as response:
             if not 200 <= response.status <= 299:
-                return []
+                return {}
 
             if not (data := feedparser.parse(await response.text()).entries):
-                return []
+                return {}
 
         return data
 
