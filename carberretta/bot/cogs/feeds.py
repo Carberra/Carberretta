@@ -239,7 +239,11 @@ class Feeds(commands.Cog):
                                     "color": DEFAULT_EMBED_COLOUR,
                                     "url": item.link,
                                     "author": {"name": "Carberra Tutorials"},
-                                    "image": {"url": thumbnails["maxres"]["url"]},
+                                    "image": {
+                                        "url": thumbnails["maxres"]["url"]
+                                        if "maxres" in thumbnails.keys()
+                                        else thumbnails["high"]["url"]
+                                    },
                                     "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                                 }
                             ),
@@ -266,7 +270,11 @@ class Feeds(commands.Cog):
                                 "color": DEFAULT_EMBED_COLOUR,
                                 "url": item.link,
                                 "author": {"name": "Carberra Tutorials"},
-                                "image": {"url": thumbnails["maxres"]["url"]},
+                                "image": {
+                                    "url": thumbnails["maxres"]["url"]
+                                    if "maxres" in thumbnails.keys()
+                                    else thumbnails["high"]["url"]
+                                },
                                 "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                             }
                         ),
