@@ -217,7 +217,7 @@ class YouTube(commands.Cog):
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 if not (data := (await response.json())["items"]):
-                    return await ctx.send("Invalid video ID.")
+                    return await ctx.send(f"Invalid video ID. Did you mean `+yt search {id_}`?")
 
                 data = data[0]
 
