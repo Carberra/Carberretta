@@ -162,7 +162,7 @@ class Meta(commands.Cog):
     #     if command is None:
     #         pass
     #     else:
-    #         syntax = "{} {}".format("|".join([str(command), *command.aliases]), command.signature)
+    #         syntax = f"{'|'.join([str(command), *command.aliases])} {command.signature}"
 
     #         await ctx.send(
     #             embed=discord.Embed.from_dict(
