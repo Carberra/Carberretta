@@ -25,10 +25,10 @@ class Feeds(commands.Cog):
         url = f"https://www.youtube.com/feeds/videos.xml?channel_id={Config.YOUTUBE_CHANNEL_ID}&{dt.datetime.utcnow()}"
         async with self.bot.session.get(url) as response:
             if not 200 <= response.status <= 299:
-                return []
+                return {}
 
             if not (data := feedparser.parse(await response.text()).entries):
-                return []
+                return {}
 
         return data
 
@@ -36,10 +36,10 @@ class Feeds(commands.Cog):
         url = f"https://www.googleapis.com/youtube/v3/videos?part=contentDetails%2CliveStreamingDetails%2Csnippet&id={video_id}&key={Config.YOUTUBE_API_KEY}"
         async with self.bot.session.get(url) as response:
             if not 200 <= response.status <= 299:
-                return []
+                return {}
 
             if not (data := await response.json()):
-                return []
+                return {}
 
         return data["items"][0]
 
@@ -49,10 +49,10 @@ class Feeds(commands.Cog):
 
         async with self.bot.session.post(url=oauthurl) as response:
             if not 200 <= response.status <= 299:
-                return []
+                return {}
 
             if not (twitch_tok := (await response.json())["access_token"]):
-                return []
+                return {}
 
         headers = {
             "client-id": f"{Config.TWITCH_CLIENT_ID}",
@@ -61,10 +61,10 @@ class Feeds(commands.Cog):
 
         async with self.bot.session.get(url=url, headers=headers) as response:
             if not 200 <= response.status <= 299:
-                return []
+                return {}
 
             if not (data := await response.json()):
-                return []
+                return {}
 
         return data["data"][0]
 
@@ -89,13 +89,15 @@ class Feeds(commands.Cog):
         current_vod = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "vod")
 
         for item in await self.call_feed():
-            data = await self.call_yt_api(item.yt_videoid)
+            if not (data := await self.call_yt_api(item.yt_videoid)):
+                return ""
+
             thumbnails = data["snippet"]["thumbnails"]
             duration = data["contentDetails"]["duration"]
 
             if current_vod == item.yt_videoid:
                 # We announced this vod already
-                return
+                return ""
 
             elif "#VOD" in item.summary:
                 # This is a vod we havent announced
@@ -109,7 +111,11 @@ class Feeds(commands.Cog):
                             "color": VOD_EMBED_COLOUR,
                             "url": item.link,
                             "author": {"name": "Carberra Tutorials"},
-                            "image": {"url": thumbnails["maxres"]["url"]},
+                            "image": {
+                                "url": thumbnails["maxres"]["url"]
+                                if "maxres" in thumbnails.keys()
+                                else thumbnails["high"]["url"]
+                            },
                             "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                         }
                     ),
@@ -125,13 +131,15 @@ class Feeds(commands.Cog):
         current_vid = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "video")
 
         for item in await self.call_feed():
-            data = await self.call_yt_api(item.yt_videoid)
+            if not (data := await self.call_yt_api(item.yt_videoid)):
+                return ""
+
             thumbnails = data["snippet"]["thumbnails"]
             duration = data["contentDetails"]["duration"]
 
             if item.yt_videoid == current_vid:
                 # This is a video we already announced
-                return
+                return ""
 
             elif "liveStreamingDetails" not in data.keys():
                 # A new video is live and its was not a premiere
@@ -148,7 +156,11 @@ class Feeds(commands.Cog):
                                 "color": DEFAULT_EMBED_COLOUR,
                                 "url": item.link,
                                 "author": {"name": "Carberra Tutorials"},
-                                "image": {"url": thumbnails["maxres"]["url"]},
+                                "image": {
+                                    "url": thumbnails["maxres"]["url"]
+                                    if "maxres" in thumbnails.keys()
+                                    else thumbnails["high"]["url"]
+                                },
                                 "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                             }
                         ),
@@ -167,7 +179,9 @@ class Feeds(commands.Cog):
         }
 
         for item in await self.call_feed():
-            data = await self.call_yt_api(item.yt_videoid)
+            if not (data := await self.call_yt_api(item.yt_videoid)):
+                return ()
+
             thumbnails = data["snippet"]["thumbnails"]
             duration = data["contentDetails"]["duration"]
             live_content = data["snippet"]["liveBroadcastContent"]
@@ -194,7 +208,11 @@ class Feeds(commands.Cog):
                                     "color": DEFAULT_EMBED_COLOUR,
                                     "url": item.link,
                                     "author": {"name": "Carberra Tutorials"},
-                                    "image": {"url": thumbnails["maxres"]["url"]},
+                                    "image": {
+                                        "url": thumbnails["maxres"]["url"]
+                                        if "maxres" in thumbnails.keys()
+                                        else thumbnails["high"]["url"]
+                                    },
                                     "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                                 }
                             ),
@@ -221,7 +239,11 @@ class Feeds(commands.Cog):
                                     "color": DEFAULT_EMBED_COLOUR,
                                     "url": item.link,
                                     "author": {"name": "Carberra Tutorials"},
-                                    "image": {"url": thumbnails["maxres"]["url"]},
+                                    "image": {
+                                        "url": thumbnails["maxres"]["url"]
+                                        if "maxres" in thumbnails.keys()
+                                        else thumbnails["high"]["url"]
+                                    },
                                     "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                                 }
                             ),
@@ -248,7 +270,11 @@ class Feeds(commands.Cog):
                                 "color": DEFAULT_EMBED_COLOUR,
                                 "url": item.link,
                                 "author": {"name": "Carberra Tutorials"},
-                                "image": {"url": thumbnails["maxres"]["url"]},
+                                "image": {
+                                    "url": thumbnails["maxres"]["url"]
+                                    if "maxres" in thumbnails.keys()
+                                    else thumbnails["high"]["url"]
+                                },
                                 "footer": {"text": f"Runtime: {self.youtube.get_duration(duration, long=True)}"},
                             }
                         ),
@@ -260,77 +286,81 @@ class Feeds(commands.Cog):
 
                     return item.yt_videoid, True
 
+        return ()
+
     async def get_new_streams(self) -> tuple:
-        data = await self.call_twitch_api()
+        if not (data := await self.call_twitch_api()):
+            return ()
 
-        if data:
-            live_now = await self.bot.db.field("SELECT StreamLive FROM streams WHERE ID = 1")
+        live_now = await self.bot.db.field("SELECT StreamLive FROM streams WHERE ID = 1")
 
-            if data["is_live"] and not live_now:
-                # The stream is live and we havent announced it yet
+        if data["is_live"] and not live_now:
+            # The stream is live and we havent announced it yet
 
-                start = chron.from_iso(data["started_at"].strip("Z"))
+            start = chron.from_iso(data["started_at"].strip("Z"))
 
-                message = await self.videos_channel.send(
-                    f"Hey {self.streams_role.mention}, I'm live on Twitch now! Come watch!",
+            message = await self.videos_channel.send(
+                f"Hey {self.streams_role.mention}, I'm live on Twitch now! Come watch!",
+                embed=discord.Embed.from_dict(
+                    {
+                        "title": data["title"],
+                        "description": f"**Category: {data['game_name']}**",
+                        "color": LIVE_EMBED_COLOUR,
+                        "url": "https://www.twitch.tv/carberratutorials",
+                        "author": {"name": "Carberra Tutorials"},
+                        "thumbnail": {"url": data["thumbnail_url"]},
+                        "footer": {"text": f"Started: {chron.long_date_and_time(start)} UTC"},
+                    }
+                ),
+            )
+
+            await self.bot.db.execute(
+                "UPDATE streams SET StreamLive = ?, StreamStart = ?, StreamMessage= ? WHERE ID = 1",
+                1,
+                start,
+                message.id,
+            )
+
+            return data["title"], False
+
+        elif not data["is_live"] and live_now:
+            # The stream is not live and last we checked it was (stream is over)
+
+            await self.bot.db.execute(
+                "UPDATE streams SET StreamLive = ?, StreamEnd = ? WHERE ID = 1", 0, dt.datetime.utcnow()
+            )
+
+            start, stream_message, end = await self.bot.db.record(
+                "SELECT StreamStart, StreamMessage, StreamEnd FROM streams WHERE ID = 1"
+            )
+
+            duration = chron.from_iso(end) - chron.from_iso(start)
+
+            try:
+                message = await self.videos_channel.fetch_message(stream_message)
+
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                return ()
+
+            else:
+                await message.edit(
+                    content=f"Hey {self.streams_role.mention}, I'm live on Twitch now! Come watch!",
                     embed=discord.Embed.from_dict(
                         {
-                            "title": data["title"],
-                            "description": f"**Category: {data['game_name']}**",
+                            "title": "The stream has ended.",
+                            "description": "**Catch you in the next one!**",
                             "color": LIVE_EMBED_COLOUR,
                             "url": "https://www.twitch.tv/carberratutorials",
                             "author": {"name": "Carberra Tutorials"},
                             "thumbnail": {"url": data["thumbnail_url"]},
-                            "footer": {"text": f"Started: {chron.long_date_and_time(start)} UTC"},
+                            "footer": {"text": f"Runtime: {chron.long_delta(duration)}"},
                         }
                     ),
                 )
 
-                await self.bot.db.execute(
-                    "UPDATE streams SET StreamLive = ?, StreamStart = ?, StreamMessage= ? WHERE ID = 1",
-                    1,
-                    start,
-                    message.id,
-                )
+                return data["title"], True
 
-                return data["title"], False
-
-            elif not data["is_live"] and live_now:
-                # The stream is not live and last we checked it was (stream is over)
-
-                await self.bot.db.execute(
-                    "UPDATE streams SET StreamLive = ?, StreamEnd = ? WHERE ID = 1", 0, dt.datetime.utcnow()
-                )
-
-                start, stream_message, end = await self.bot.db.record(
-                    "SELECT StreamStart, StreamMessage, StreamEnd FROM streams WHERE ID = 1"
-                )
-
-                duration = chron.from_iso(end) - chron.from_iso(start)
-
-                try:
-                    message = await self.videos_channel.fetch_message(stream_message)
-
-                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-                    return
-
-                else:
-                    await message.edit(
-                        content=f"Hey {self.streams_role.mention}, I'm live on Twitch now! Come watch!",
-                        embed=discord.Embed.from_dict(
-                            {
-                                "title": "The stream has ended.",
-                                "description": "**Catch you in the next one!**",
-                                "color": LIVE_EMBED_COLOUR,
-                                "url": "https://www.twitch.tv/carberratutorials",
-                                "author": {"name": "Carberra Tutorials"},
-                                "thumbnail": {"url": data["thumbnail_url"]},
-                                "footer": {"text": f"Runtime: {chron.long_delta(duration)}"},
-                            }
-                        ),
-                    )
-
-                    return data["title"], True
+        return ()
 
     @commands.group(name="feed", invoke_without_command=True)
     @commands.is_owner()
