@@ -425,8 +425,8 @@ class Support(commands.Cog):
         async def culminate(messages) -> t.List[str]:
             big_message = "**Your previous messages:**"
             for message in reversed(messages):
-                content = f"`{message.created_at.strftime('%H:%M:%S')}`  {message.clean_content}"
-                big_message += f"\n{await string.binify(self.bot.session, content, only_codeblocks=True)}"
+                content = f"`{message.created_at.strftime('%H:%M:%S')}Z`  {message.clean_content}"
+                big_message += f"\n{await string.binify(self.bot.session, content)}"
 
             return [big_message[i : i + 2000] for i in range(0, len(big_message), 2000)]
 

@@ -2,15 +2,15 @@ import asyncio
 import datetime as dt
 import traceback
 from pathlib import Path
-from pytz import utc
 
 import aiohttp
 import discord
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
+from pytz import utc
 
-from carberretta import Config, utils
+from carberretta import Config, __version__, utils
 from carberretta.db import Database
 
 
@@ -22,7 +22,7 @@ class Bot(commands.Bot):
         self._static = "./carberretta/data/static"
 
         self.scheduler = AsyncIOScheduler()
-        self.session = ClientSession()
+        self.session = ClientSession(trust_env=True)
         self.db = Database(self)
         self.emoji = utils.EmojiGetter(self)
         self.loc = utils.CodeCounter()
@@ -208,8 +208,10 @@ class Bot(commands.Bot):
         else:
             print(f" bot reconnected (DWSP latency: {self.latency*1000:,.0f})")
 
-        presence = self.get_cog("Presence")
-        await presence.set()
+        await self.change_presence(
+            activity=discord.Activity(name=f"+help • Version {__version__}", type=discord.ActivityType.watching)
+        )
+        print(" presence set")
 
     async def on_message(self, message):
         if not message.author.bot and not isinstance(message.channel, discord.DMChannel):

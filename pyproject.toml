@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carberra-carberretta"
-version = "1.3.0"
+version = "1.4.0"
 description = "Discord bot designed to handle specific tasks in the Carberra Tutorials server."
 
 license = "BSD-3-Clause"
