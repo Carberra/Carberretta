@@ -10,7 +10,7 @@ from carberretta.utils import DEFAULT_EMBED_COLOUR
 
 class Experience(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
-        self.bot: commands.Bot = bot
+        self.bot = bot
 
     @staticmethod
     def calc_lvl(exp: int) -> int:
@@ -26,9 +26,6 @@ class Experience(commands.Cog):
             return
         # xp add values can change
         # 60 seconds can change
-        exp: int
-        lvl: int
-        lvl_msg: int
         exp, lvl, lvl_msg = await self.bot.db.record(
             (
                 "INSERT INTO members(UserID) "
@@ -43,7 +40,6 @@ class Experience(commands.Cog):
             randint(1, 20),
             message.author.id,
         )
-        new_lvl: int
         if (new_lvl := self.calc_lvl(exp)) > lvl:
             await self.bot.db.execute(
                 "UPDATE members SET Level = ? WHERE UserID = ?",
@@ -59,12 +55,12 @@ class Experience(commands.Cog):
 
     @commands.command(name="level", aliases=["lvl", "rank", "experience", "exp", "xp"])
     async def command_level(self, ctx: commands.Context, member: t.Optional[discord.Member]) -> None:
-        member: discord.Member = member or ctx.author
-        exp: t.Optional[int] = await self.bot.db.field("SELECT Experience FROM members WHERE UserID = ?", member.id)
+        member = member or ctx.author
+        exp = await self.bot.db.field("SELECT Experience FROM members WHERE UserID = ?", member.id)
         if exp is None:
             return await ctx.send(f"{member.display_name} is not in the database.")
-        lvl: int = self.calc_lvl(exp)
-        required_exp: int = self.calc_required_exp(lvl)
+        lvl = self.calc_lvl(exp)
+        required_exp = self.calc_required_exp(lvl)
         await ctx.send(f"{member.display_name} is on level {lvl}. Progress to next level: ({exp}/{required_exp}).")
 
     @commands.command(
@@ -72,7 +68,7 @@ class Experience(commands.Cog):
         aliases=["togglelvlmsg", "lvluplog", "lvlupmsg"],
     )
     async def command_togglelevelmessage(self, ctx: commands.Context) -> None:
-        changed_to: t.Optional[int] = await self.bot.db.field(
+        changed_to = await self.bot.db.field(
             "UPDATE members SET LevelMessage = (CASE LevelMessage WHEN 1 THEN 0 ELSE 1 END) WHERE UserID = ? RETURNING LevelMessage",
             ctx.author.id,
         )
@@ -96,14 +92,14 @@ class Experience(commands.Cog):
         ],
     )
     async def command_leveltop(self, ctx: commands.Context) -> None:
-        leaderboard: t.List[t.Tuple[int, int]] = await self.bot.db.records(
+        leaderboard = await self.bot.db.records(
             "SELECT UserID, Experience FROM members ORDER BY Experience DESC LIMIT 10"
         )
 
         if len(leaderboard) == 0:
             return await ctx.send("No one is in the database yet.")
 
-        embed: discord.Embed = discord.Embed.from_dict(
+        embed = discord.Embed.from_dict(
             {
                 "title": "Experience Leaderboard",
                 "color": DEFAULT_EMBED_COLOUR,
