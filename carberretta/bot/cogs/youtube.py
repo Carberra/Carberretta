@@ -5,6 +5,7 @@ Handles YouTube content notifications and stats.
 """
 
 import datetime as dt
+import html
 import re
 
 import aiohttp
@@ -26,7 +27,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
 
     async def display_video(self, name):
         for item in self.data["items"]:
-            if item["snippet"]["title"] == name:
+            if html.unescape(item["snippet"]["title"]) == name:
                 url = f"https://www.googleapis.com/youtube/v3/videos?part=contentDetails%2Csnippet%2Cstatistics&id={item['id']['videoId']}&key={Config.YOUTUBE_API_KEY}"
 
                 await self.message.clear_reactions()
@@ -45,7 +46,7 @@ class SearchMenu(menu.NumberedSelectionMenu):
                 await self.message.edit(
                     embed=discord.Embed.from_dict(
                         {
-                            "title": item["snippet"]["title"],
+                            "title": html.unescape(item["snippet"]["title"]),
                             "description": f"Click [here](https://youtube.com/watch?v={item['id']['videoId']}) to watch. Use `{Config.PREFIX}yt video {item['id']['videoId']}` for detailed video information.",
                             "color": DEFAULT_EMBED_COLOUR,
                             "author": {"name": "Query"},
@@ -112,7 +113,7 @@ class YouTube(commands.Cog):
             await ctx.send(
                 embed=discord.Embed.from_dict(
                     {
-                        "title": f"Channel statistics for {data['snippet']['title']}",
+                        "title": f"Channel statistics for {html.unescape(data['snippet']['title'])}",
                         "color": DEFAULT_EMBED_COLOUR,
                         "thumbnail": {"url": data["snippet"]["thumbnails"]["high"]["url"]},
                         "author": {"name": "Information"},
@@ -149,7 +150,7 @@ class YouTube(commands.Cog):
                         "description": data["brandingSettings"]["channel"]["description"],
                         "color": DEFAULT_EMBED_COLOUR,
                         "thumbnail": {"url": data["snippet"]["thumbnails"]["high"]["url"]},
-                        "image": {"url": data["brandingSettings"]["image"]["bannerTvImageUrl"]},
+                        "image": {"url": data["brandingSettings"]["image"]["bannerExternalUrl"]},
                         "author": {"name": "Information"},
                         "footer": {
                             "text": f"Requested by {ctx.author.display_name}",
@@ -199,7 +200,7 @@ class YouTube(commands.Cog):
             "author": {"name": "Query"},
             "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
         }
-        results = [f"{item['snippet']['title']}" for item in data["items"]]
+        results = [f"{html.unescape(item['snippet']['title'])}" for item in data["items"]]
 
         if not results:
             return await ctx.send("No results found. Are you sure Carberra made a video on that?")
@@ -216,7 +217,7 @@ class YouTube(commands.Cog):
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 if not (data := (await response.json())["items"]):
-                    return await ctx.send("Invalid video ID.")
+                    return await ctx.send(f"Invalid video ID. Did you mean `+yt search {id_}`?")
 
                 data = data[0]
 
@@ -233,7 +234,7 @@ class YouTube(commands.Cog):
                 embed=discord.Embed.from_dict(
                     {
                         "title": "Video information",
-                        "description": f"{data['snippet']['title']}. Click [here](https://youtube.com/watch?v={data['id']}) to watch.",
+                        "description": f"{html.unescape(data['snippet']['title'])}. Click [here](https://youtube.com/watch?v={data['id']}) to watch.",
                         "color": DEFAULT_EMBED_COLOUR,
                         "author": {"name": "Information"},
                         "footer": {
