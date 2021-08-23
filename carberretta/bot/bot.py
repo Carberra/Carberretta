@@ -8,8 +8,9 @@ import discord
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
+from pytz import utc
 
-from carberretta import Config, utils
+from carberretta import Config, __version__, utils
 from carberretta.db import Database
 
 
@@ -27,6 +28,7 @@ class Bot(commands.Bot):
         self.loc = utils.CodeCounter()
         self.ready = utils.Ready(self)
 
+        self.scheduler.configure(timezone=utc)
         self.loc.count()
 
         super().__init__(
@@ -34,6 +36,7 @@ class Bot(commands.Bot):
             case_insensitive=True,
             owner_ids=Config.OWNER_IDS,
             status=discord.Status.dnd,
+            intents=discord.Intents.all(),
         )
 
     def setup(self):
@@ -68,7 +71,7 @@ class Bot(commands.Bot):
     async def command_prefix(self, bot, message):
         return commands.when_mentioned_or(Config.PREFIX)(bot, message)
 
-    async def process_comamnds(self, message):
+    async def process_commands(self, message):
         ctx = await self.get_context(message, cls=commands.Context)
 
         if ctx.command is None:
@@ -80,14 +83,14 @@ class Bot(commands.Bot):
             )
 
         support = self.get_cog("Support")
-        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "open":
+        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "reopen":
             return await ctx.message.delete()
 
         await self.invoke(ctx)
 
     async def on_error(self, err, *args, **kwargs):
         async with self.session.post("https://mystb.in/documents", data=traceback.format_exc()) as response:
-            if response.status == 200:
+            if 200 <= response.status <= 299:
                 data = await response.json()
                 link = f"https://mystb.in/{data['key']}"
             else:
@@ -104,6 +107,10 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx, exc):
         if isinstance(exc, commands.CommandNotFound):
             pass
+
+        # Custom check failure handling.
+        elif hasattr(exc, "msg"):
+            await ctx.send(exc.msg)
 
         elif isinstance(exc, commands.MissingRequiredArgument):
             await ctx.send(f"No `{exc.param.name}` argument was passed, despite being required.")
@@ -201,9 +208,11 @@ class Bot(commands.Bot):
         else:
             print(f" bot reconnected (DWSP latency: {self.latency*1000:,.0f})")
 
-        presence = self.get_cog("Presence")
-        await presence.set()
+        await self.change_presence(
+            activity=discord.Activity(name=f"+help • Version {__version__}", type=discord.ActivityType.watching)
+        )
+        print(" presence set")
 
     async def on_message(self, message):
         if not message.author.bot and not isinstance(message.channel, discord.DMChannel):
-            await self.process_comamnds(message)
+            await self.process_commands(message)

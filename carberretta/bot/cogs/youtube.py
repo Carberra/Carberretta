@@ -5,6 +5,7 @@ Handles YouTube content notifications and stats.
 """
 
 import datetime as dt
+import html
 import re
 
 import aiohttp
@@ -26,39 +27,26 @@ class SearchMenu(menu.NumberedSelectionMenu):
 
     async def display_video(self, name):
         for item in self.data["items"]:
-            if item["snippet"]["title"] == name:
+            if html.unescape(item["snippet"]["title"]) == name:
                 url = f"https://www.googleapis.com/youtube/v3/videos?part=contentDetails%2Csnippet%2Cstatistics&id={item['id']['videoId']}&key={Config.YOUTUBE_API_KEY}"
 
                 await self.message.clear_reactions()
 
                 async with self.ctx.bot.session.get(url) as response:
-                    if response.status != 200:
+                    if not 200 <= response.status <= 299:
                         return await self.message.edit(
                             content=f"The YouTube API returned {response.status} {response.reason}.", embed=None
                         )
 
                     data = (await response.json())["items"][0]
 
-                if (
-                    match := re.match(
-                        r"PT(([0-9]{1,2})H)?(([0-9]{1,2})M)?(([0-9]{1,2})S)?", data["contentDetails"]["duration"]
-                    )
-                ) is not None:
-                    duration = chron.short_delta(
-                        dt.timedelta(
-                            seconds=(int(match.group(2) or 0) * 3600)
-                            + (int(match.group(4) or 0) * 60)
-                            + (int(match.group(6) or 0))
-                        )
-                    )
-                else:
-                    duration = "-"
+                duration = self.ctx.bot.get_cog("YouTube").get_duration(data["contentDetails"]["duration"])
                 published_at = chron.from_iso(data["snippet"]["publishedAt"][:-1])
 
                 await self.message.edit(
                     embed=discord.Embed.from_dict(
                         {
-                            "title": item["snippet"]["title"],
+                            "title": html.unescape(item["snippet"]["title"]),
                             "description": f"Click [here](https://youtube.com/watch?v={item['id']['videoId']}) to watch. Use `{Config.PREFIX}yt video {item['id']['videoId']}` for detailed video information.",
                             "color": DEFAULT_EMBED_COLOUR,
                             "author": {"name": "Query"},
@@ -89,6 +77,22 @@ class YouTube(commands.Cog):
         if not self.bot.ready.booted:
             self.bot.ready.up(self)
 
+    def get_duration(self, duration, long=False):
+        if (
+            match := re.match(r"PT(([0-9]{1,})D)?(([0-9]{1,2})H)?(([0-9]{1,2})M)?(([0-9]{1,2})S)?", duration)
+        ) is not None:
+            delta_func = chron.long_delta if long else chron.short_delta
+            return delta_func(
+                dt.timedelta(
+                    seconds=(int(match.group(2) or 0) * 86400)
+                    + (int(match.group(4) or 0) * 3600)
+                    + (int(match.group(6) or 0) * 60)
+                    + (int(match.group(8) or 0))
+                )
+            )
+        else:
+            return "-"
+
     @commands.group(name="yt", invoke_without_command=True)
     async def yt_group(self, ctx: commands.Context) -> None:
         await ctx.send("Use `yt stats`, `yt info`, `yt search`, or `yt video`.")
@@ -99,7 +103,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = (await response.json())["items"][0]
@@ -109,7 +113,7 @@ class YouTube(commands.Cog):
             await ctx.send(
                 embed=discord.Embed.from_dict(
                     {
-                        "title": f"Channel statistics for {data['snippet']['title']}",
+                        "title": f"Channel statistics for {html.unescape(data['snippet']['title'])}",
                         "color": DEFAULT_EMBED_COLOUR,
                         "thumbnail": {"url": data["snippet"]["thumbnails"]["high"]["url"]},
                         "author": {"name": "Information"},
@@ -118,7 +122,7 @@ class YouTube(commands.Cog):
                             "icon_url": f"{ctx.author.avatar_url}",
                         },
                         "fields": [
-                            {"name": "Subscribers", "value": f"{sub_count:,} - {sub_count+100:,}", "inline": False},
+                            {"name": "Subscribers", "value": f"About {sub_count:,}", "inline": False},
                             {"name": "Views", "value": f"{int(data['statistics']['viewCount']):,}", "inline": False},
                             {"name": "Videos", "value": f"{int(data['statistics']['videoCount']):,}", "inline": False},
                         ],
@@ -132,7 +136,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = (await response.json())["items"][0]
@@ -146,7 +150,7 @@ class YouTube(commands.Cog):
                         "description": data["brandingSettings"]["channel"]["description"],
                         "color": DEFAULT_EMBED_COLOUR,
                         "thumbnail": {"url": data["snippet"]["thumbnails"]["high"]["url"]},
-                        "image": {"url": data["brandingSettings"]["image"]["bannerTvImageUrl"]},
+                        "image": {"url": data["brandingSettings"]["image"]["bannerExternalUrl"]},
                         "author": {"name": "Information"},
                         "footer": {
                             "text": f"Requested by {ctx.author.display_name}",
@@ -184,7 +188,7 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
                 data = await response.json()
@@ -196,7 +200,7 @@ class YouTube(commands.Cog):
             "author": {"name": "Query"},
             "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
         }
-        results = [f"{item['snippet']['title']}" for item in data["items"]]
+        results = [f"{html.unescape(item['snippet']['title'])}" for item in data["items"]]
 
         if not results:
             return await ctx.send("No results found. Are you sure Carberra made a video on that?")
@@ -209,10 +213,13 @@ class YouTube(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.session.get(url) as response:
-                if response.status != 200:
+                if not 200 <= response.status <= 299:
                     return await ctx.send(f"The YouTube API returned {response.status} {response.reason}.")
 
-                data = (await response.json())["items"][0]
+                if not (data := (await response.json())["items"]):
+                    return await ctx.send("Invalid video ID.")
+
+                data = data[0]
 
             if data["snippet"]["channelId"] != Config.YOUTUBE_CHANNEL_ID:
                 return await ctx.send("That is not a Carberra video.")
@@ -221,33 +228,20 @@ class YouTube(commands.Cog):
                 published_at = chron.from_iso(data["liveStreamingDetails"]["actualStartTime"][:-1])
             else:
                 published_at = chron.from_iso(data["snippet"]["publishedAt"][:-1])
-            if (
-                match := re.match(
-                    r"PT(([0-9]{1,2})H)?(([0-9]{1,2})M)?(([0-9]{1,2})S)?", data["contentDetails"]["duration"]
-                )
-            ) is not None:
-                print(match.group(1), match.group(3), match.group(5))
-                duration = chron.short_delta(
-                    dt.timedelta(
-                        seconds=(int(match.group(2) or 0) * 3600)
-                        + (int(match.group(4) or 0) * 60)
-                        + (int(match.group(6) or 0))
-                    )
-                )
-            else:
-                duration = "-"
+            duration = self.get_duration(data["contentDetails"]["duration"])
 
             await ctx.send(
                 embed=discord.Embed.from_dict(
                     {
                         "title": "Video information",
-                        "description": f"{data['snippet']['title']}. Click [here](https://youtube.com/watch?v={data['id']}) to watch.",
+                        "description": f"{html.unescape(data['snippet']['title'])}. Click [here](https://youtube.com/watch?v={data['id']}) to watch.",
                         "color": DEFAULT_EMBED_COLOUR,
                         "author": {"name": "Information"},
                         "footer": {
                             "text": f"Requested by {ctx.author.display_name}",
                             "icon_url": f"{ctx.author.avatar_url}",
                         },
+                        "image": {"url": data["snippet"]["thumbnails"]["maxres"]["url"]},
                         "fields": [
                             {"name": "Duration", "value": duration, "inline": True},
                             {"name": "Views", "value": f"{int(data['statistics']['viewCount']):,}", "inline": True},

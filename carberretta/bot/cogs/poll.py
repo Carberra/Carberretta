@@ -76,7 +76,7 @@ class Poll(commands.Cog):
             self._cache.append(message)
 
         self.bot.scheduler.add_job(
-            self.resolve, "date", run_date=datetime.now() + timedelta(seconds=time), args=[message]
+            self.resolve, "date", run_date=datetime.utcnow() + timedelta(seconds=time), args=[message]
         )
 
     async def resolve(self, message: discord.Message) -> None:
@@ -96,6 +96,7 @@ class Poll(commands.Cog):
                 max_value = value
             elif value == max_value:
                 most_voted.append(r.emoji)
+        self._cache.remove(message)
 
         await message.channel.send(
             embed=discord.Embed.from_dict(
