@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "carberra-carberretta"
-version = "1.4.0"
+version = "1.5.0"
 description = "Discord bot designed to handle specific tasks in the Carberra Tutorials server."
 
 license = "BSD-3-Clause"
@@ -31,5 +31,5 @@ mypy = "^0.782"
 black = "^19.10b0"
 
 [tool.black]
-line-length = 119
+line-length = 79
 target-version = ["py38"]
