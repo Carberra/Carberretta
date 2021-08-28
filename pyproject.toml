@@ -31,5 +31,5 @@ mypy = "^0.782"
 black = "^19.10b0"
 
 [tool.black]
-line-length = 79
+line-length = 119
 target-version = ["py38"]
