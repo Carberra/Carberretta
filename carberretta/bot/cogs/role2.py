@@ -5,6 +5,7 @@ This is coded like shit in a rush, so don't use it. V2 will have a
 better one (:
 """
 
+import datetime as dt
 import json
 import os
 import typing as t
@@ -60,7 +61,10 @@ class Role2(commands.Cog):
                     "text": (
                         "You are limited to one role.",
                         "You can give yourself as many roles as you like."
-                    )[stack] + "\nIf the reaction gets removed, it worked."
+                    )[stack] + (
+                        "\nThis won't work if the ten minute "
+                        "verification timer is still ticking."
+                    )
                 },
             }
         )
