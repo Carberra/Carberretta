@@ -48,7 +48,7 @@ def ordinal(number: int) -> str:
 
 def possessive(user: t.Union[Member, User]) -> str:
     name = getattr(user, "display_name", user.name)
-    return f"{name}'{'s' if not name.lower().endswith('s') or name.lower().endswith('x') else ''}"
+    return f"{name}'{'s' if not name.lower().endswith('s') else ''}"
 
 
 async def binify(session: ClientSession, text: str, only_codeblocks=False) -> str:
