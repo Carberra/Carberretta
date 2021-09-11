@@ -21,25 +21,31 @@ class Supporter(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
         if self.bot.ready.supporter:
+            supporter_roles = (self.patron_role, self.sub_role, self.booster_role)
+
             added = set(after.roles) - set(before.roles)
-            if any(r in added for r in (self.patron_role, self.sub_role, self.booster_role)):
-                await after.add_roles(self.supporter_role, reason="Received supporting role.")
+            if any(r in added for r in supporter_roles):
+                if self.supporter_role not in after.roles:
+                    await after.add_roles(self.supporter_role, reason="Received supporting role.")
 
             removed = set(before.roles) - set(after.roles)
-            if any(r in removed for r in (self.patron_role, self.sub_role, self.booster_role)):
-                await after.remove_roles(self.supporter_role, reason="Lost supporting role.")
+            if any(r in removed for r in supporter_roles):
+                if all(r not in after.roles for r in supporter_roles):
+                    await after.remove_roles(self.supporter_role, reason="Lost supporting role.")
 
     @commands.command(name="syncroles")
     @commands.is_owner()
     async def command_syncroles(self, ctx: commands.Context) -> None:
         with ctx.typing():
+            supporter_roles = (self.patron_role, self.sub_role, self.booster_role)
+
             for member in self.bot.guild.members:
                 if self.supporter_role in member.roles:
-                    if not any(r in member.roles for r in (self.patron_role, self.sub_role, self.booster_role)):
+                    if not any(r in member.roles for r in supporter_roles):
                         await member.remove_roles(self.supporter_role, reason="Lost supporting role(s).")
 
                 else:
-                    if any(r in member.roles for r in (self.patron_role, self.sub_role, self.booster_role)):
+                    if any(r in member.roles for r in supporter_roles):
                         await member.add_roles(self.supporter_role, reason="Received supporting role(s).")
 
             await ctx.send("Done.")
