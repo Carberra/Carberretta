@@ -258,7 +258,7 @@ class Feeds(commands.Cog):
 
                         return item.yt_videoid, True
 
-                elif not announced:
+                elif not announced and live_content == "live":
                     # A premiere was upcoming, and is now live
 
                     await self.videos_channel.send(
