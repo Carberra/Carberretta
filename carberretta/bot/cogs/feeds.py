@@ -20,6 +20,7 @@ VOD_EMBED_COLOUR = 0x3498DB
 class Feeds(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.data = {}
 
     async def call_feed(self) -> dict:
         url = f"https://www.youtube.com/feeds/videos.xml?channel_id={Config.YOUTUBE_CHANNEL_ID}&{dt.datetime.utcnow()}"
@@ -88,7 +89,7 @@ class Feeds(commands.Cog):
     async def get_new_vods(self) -> str:
         current_vod = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "vod")
 
-        for item in await self.call_feed():
+        for item in self.data:
             if not (data := await self.call_yt_api(item.yt_videoid)):
                 return ""
 
@@ -129,8 +130,9 @@ class Feeds(commands.Cog):
 
     async def get_new_videos(self) -> str:
         current_vid = await self.bot.db.field("SELECT ContentValue FROM videos WHERE ContentType = ?", "video")
+        self.data = await self.call_feed()
 
-        for item in await self.call_feed():
+        for item in self.data:
             if not (data := await self.call_yt_api(item.yt_videoid)):
                 return ""
 
@@ -178,7 +180,7 @@ class Feeds(commands.Cog):
             for _id, _upcoming, _announced in await self.bot.db.records("SELECT * FROM premieres")
         }
 
-        for item in await self.call_feed():
+        for item in self.data:
             if not (data := await self.call_yt_api(item.yt_videoid)):
                 return ()
 
