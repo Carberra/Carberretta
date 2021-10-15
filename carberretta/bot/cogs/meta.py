@@ -246,40 +246,41 @@ class Meta(commands.Cog):
 
     @commands.command(name="issue")
     async def command_issue(self, ctx: commands.Context, *, issue_query: str) -> None:
-        try:
-            issue_number = int(issue_query.lstrip("#"))
-
+        async with ctx.typing():
             try:
-                issue = self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number)
-            except UnknownObjectException:
-                await ctx.send("Invalid issue number.")
-                return
+                issue_number = int(issue_query.lstrip("#"))
 
-            await ctx.send(embed=discord.Embed.from_dict(await issue_embed(issue, issue_number, ctx.author)))
+                try:
+                    issue = self.gh.get_repo("Carberra/Carberretta").get_issue(number=issue_number)
+                except UnknownObjectException:
+                    await ctx.send("Invalid issue number.")
+                    return
 
-        except ValueError:
-            data = self.gh.search_issues(f"{issue_query} is:issue repo:Carberra/Carberretta")
+                await ctx.send(embed=discord.Embed.from_dict(await issue_embed(issue, issue_number, ctx.author)))
 
-            pagemap = {
-                "title": "Search results",
-                "description": f"{data.totalCount} result(s).",
-                "color": DEFAULT_EMBED_COLOUR,
-                "author": {"name": "Query"},
-                "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
-            }
-            results = [f"{issue.title} (#{issue.number})" for issue in data if not issue.closed_at] + [
-                f"{issue.title} (#{issue.number})" for issue in data if issue.closed_at
-            ]
+            except ValueError:
+                data = self.gh.search_issues(f"{issue_query} is:issue repo:Carberra/Carberretta")
 
-            if not results:
-                return await ctx.send("No results found. Are you sure that's an issue for Carberretta?")
+                pagemap = {
+                    "title": "Search results",
+                    "description": f"{data.totalCount} result(s).",
+                    "color": DEFAULT_EMBED_COLOUR,
+                    "author": {"name": "Query"},
+                    "footer": {"text": f"Requested by {ctx.author.display_name}", "icon_url": f"{ctx.author.avatar_url}",},
+                }
+                results = [f"{issue.title} (#{issue.number})" for issue in data if not issue.closed_at] + [
+                    f"{issue.title} (#{issue.number})" for issue in data if issue.closed_at
+                ]
 
-            if not len(results) > 1:
-                return await ctx.send(
-                    embed=discord.Embed.from_dict(await issue_embed(data[0], data[0].number, ctx.author))
-                )
+                if not results:
+                    return await ctx.send("No results found. Are you sure that's an issue for Carberretta?")
 
-            await SearchMenu(ctx, data, results, pagemap).start()
+                if not len(results) > 1:
+                    return await ctx.send(
+                        embed=discord.Embed.from_dict(await issue_embed(data[0], data[0].number, ctx.author))
+                    )
+
+                await SearchMenu(ctx, data, results, pagemap).start()
 
     @commands.command(name="shutdown")
     @commands.is_owner()
