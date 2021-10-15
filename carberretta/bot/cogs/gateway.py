@@ -62,13 +62,12 @@ class Gateway(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
-        if member.pending:
-            try:
-                return self.bot.scheduler.get_job(f"{member.id}").remove()
-            except AttributeError:
-                pass
+        try:
+            return self.bot.scheduler.get_job(f"{member.id}").remove()
+        except AttributeError:
+            if member.pending:
+                return
 
-        else:
             await self.gateway_channel.send(
                 f"{member.display_name} is no longer in the server. "
                 f"(ID: {member.id})"
