@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - task/**
+      - hotfix/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        session:
+          - check_formatting
+          - check_imports
+          - check_typing
+          - check_line_lengths
+          - check_licensing
+          - check_spelling
+          - check_safety
+
+    name: Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: python -m pip install nox
+
+      - name: Run check
+        run: python -m nox -s ${{ matrix.session }}
