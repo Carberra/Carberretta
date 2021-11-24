@@ -26,43 +26,67 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import os
-import typing as t
 from pathlib import Path
 
-import dotenv
+import hikari
+import lightbulb
+from aiohttp import ClientSession
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from pytz import utc
 
-dotenv.load_dotenv()
+from carberretta import VERSION, Config
 
+log = logging.getLogger(__name__)
 
-class ConfigMeta(type):
-    def resolve_value(cls, value: str) -> t.Any:
-        _map: dict[str, t.Callable[[str], t.Any]] = {
-            "str": str,
-            "int": int,
-            "float": float,
-            "bool": bool,
-            "set": lambda x: set([cls.resolve_value(e.strip()) for e in x.split(",")]),
-            "file": lambda x: Path(x).read_text().strip("\n"),
-        }
+bot = lightbulb.app.BotApp(
+    Config.TOKEN,
+    prefix=Config.PREFIX,
+    default_enabled_guilds=[Config.GUILD_ID, Config.HUB_GUILD_ID],
+    owner_ids=Config.OWNER_IDS,
+    case_insensitive_prefix_commands=True,
+    intents=hikari.Intents.ALL,
+)
+bot.d.version = VERSION
+bot.d._dynamic = Path("./carberretta/data/dynamic")
+bot.d._static = bot.d._dynamic.parent / "static"
 
-        return _map[(v := value.split(":", maxsplit=1))[0]](v[1])
-
-    def resolve_key(cls, key: str) -> t.Any:
-        try:
-            return cls.resolve_key(os.environ[key])
-        except:
-            return cls.resolve_value(key)
-
-    def __getattr__(cls, name: str) -> t.Any:
-        try:
-            return cls.resolve_key(name)
-        except KeyError:
-            raise AttributeError(f"{name} is not a key in config.") from None
-
-    def __getitem__(cls, name: str) -> t.Any:
-        return cls.__getattr__(name)
+bot.d.scheduler = AsyncIOScheduler()
+bot.d.scheduler.configure(timezone=utc)
 
 
-class Config(metaclass=ConfigMeta):
-    pass
+@bot.listen(hikari.StartingEvent)
+async def on_starting(event: hikari.StartingEvent) -> None:
+    bot.d.scheduler.start()
+    bot.d.session = ClientSession(trust_env=True)
+    log.info("AIOHTTP session started")
+
+
+@bot.listen(hikari.StartedEvent)
+async def on_started(event: hikari.StartedEvent) -> None:
+    await bot.rest.create_message(
+        Config.HUB_STDOUT_CHANNEL_ID,
+        f"Carberretta is now online! (Version {VERSION})",
+    )
+
+
+@bot.listen(hikari.StoppingEvent)
+async def on_stopping(event: hikari.StoppingEvent) -> None:
+    bot.d.scheduler.shutdown()
+    await bot.d.session.close()
+    log.info("AIOHTTP session closed")
+
+    await bot.rest.create_message(
+        Config.HUB_STDOUT_CHANNEL_ID,
+        f"Carberretta is shutting down. (Version {VERSION})",
+    )
+
+
+def run() -> None:
+    if os.name != "nt":
+        import uvloop
+
+        uvloop.install()
+
+    bot.run()
