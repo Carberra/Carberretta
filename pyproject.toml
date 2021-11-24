@@ -1,4 +1,5 @@
 [tool.black]
+extend-exclude = "carberretta/__init__.py"
 line-length = 88
 
 [tool.isort]

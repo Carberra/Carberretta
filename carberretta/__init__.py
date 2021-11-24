@@ -26,8 +26,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = ("Config", "VERSION")
+__all__ = ("Config",)
 
 from .config import Config
 
-VERSION = "2.0.0.dev0"
+__productname__ = "Carberretta"
+__version__ = "2.0.0.dev0"
+__description__ = "A Discord bot designed for the Carberra Tutorials Discord server."
+__url__ = "https://github.com/Carberra/Carberretta"
+__authors__ = ("Ethan Henderson", "Max Shaughnessy")
+__license__ = "BSD-3-Clause"
+__bugtracker__ = "https://github.com/Carberra/Carberretta/issues"
+__ci__ = "https://github.com/Carberra/Carberretta/actions"

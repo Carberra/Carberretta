@@ -31,16 +31,17 @@ import os
 from pathlib import Path
 
 import hikari
-import lightbulb
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from lightbulb.app import BotApp
 from pytz import utc
 
-from carberretta import VERSION, Config
+import carberretta
+from carberretta import Config
 
 log = logging.getLogger(__name__)
 
-bot = lightbulb.app.BotApp(
+bot = BotApp(
     Config.TOKEN,
     prefix=Config.PREFIX,
     default_enabled_guilds=[Config.GUILD_ID, Config.HUB_GUILD_ID],
@@ -48,12 +49,13 @@ bot = lightbulb.app.BotApp(
     case_insensitive_prefix_commands=True,
     intents=hikari.Intents.ALL,
 )
-bot.d.version = VERSION
 bot.d._dynamic = Path("./carberretta/data/dynamic")
 bot.d._static = bot.d._dynamic.parent / "static"
 
 bot.d.scheduler = AsyncIOScheduler()
 bot.d.scheduler.configure(timezone=utc)
+
+bot.load_extensions_from("./carberretta/extensions")
 
 
 @bot.listen(hikari.StartingEvent)
@@ -67,7 +69,7 @@ async def on_starting(event: hikari.StartingEvent) -> None:
 async def on_started(event: hikari.StartedEvent) -> None:
     await bot.rest.create_message(
         Config.HUB_STDOUT_CHANNEL_ID,
-        f"Carberretta is now online! (Version {VERSION})",
+        f"Carberretta is now online! (Version {carberretta.__version__})",
     )
 
 
@@ -79,7 +81,7 @@ async def on_stopping(event: hikari.StoppingEvent) -> None:
 
     await bot.rest.create_message(
         Config.HUB_STDOUT_CHANNEL_ID,
-        f"Carberretta is shutting down. (Version {VERSION})",
+        f"Carberretta is shutting down. (Version {carberretta.__version__})",
     )
 
 
