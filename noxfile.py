@@ -62,13 +62,13 @@ def fetch_installs(*categories: str) -> list[str]:
     return installs
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_formatting(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Formatting"))
     session.run("black", ".", "--check")
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_imports(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Imports"))
     # flake8 doesn't use the gitignore so we have to be explicit.
@@ -85,19 +85,19 @@ def check_imports(session: nox.Session) -> None:
     session.run("isort", ".", "-cq")
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_typing(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Typing"), "-r", "requirements.txt")
     session.run("mypy", *CHECK_PATHS)
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_line_lengths(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Line lengths"))
     session.run("len8", *CHECK_PATHS, "-lx", "data")
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_licensing(session: nox.Session) -> None:
     missing = []
 
@@ -116,13 +116,13 @@ def check_licensing(session: nox.Session) -> None:
         )
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_spelling(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Spelling"))
     session.run("codespell", *CHECK_PATHS)
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True)  # type: ignore
 def check_safety(session: nox.Session) -> None:
     # Needed due to https://github.com/pypa/pip/pull/9827.
     session.install("-U", "pip")
