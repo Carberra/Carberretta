@@ -286,7 +286,7 @@ class Support(commands.Cog):
             claimant = "The"
         else:
             claimant = f"{sc.claimant.display_name}'{'s' if not sc.claimant.display_name.endswith('s') else ''}"
-        await self.determine_channel_destination(sc)
+        await sc.send_to_available()
         await sc.channel.send(f"{claimant} support case timed out.")
 
     async def load_states(self) -> t.Mapping[str, int]:
