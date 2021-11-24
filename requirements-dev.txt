@@ -1,0 +1,28 @@
+# Meta
+-r requirements.txt
+
+# Sessions
+nox==2021.10.1
+
+# Docs
+furo==2021.10.9
+sphinx<5,>=4
+
+# Formatting
+black==21.11b1
+
+# Imports
+flake8~=4.0
+isort~=5.9
+
+# Typing
+mypy==0.910
+
+# Line lengths
+len8~=0.5
+
+# Spelling
+codespell~=2.1.0
+
+# Safety
+safety~=1.10.0
