@@ -26,9 +26,20 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import datetime as dt
+import platform
+import time
 import typing as t
+from dataclasses import dataclass
 
+import hikari
 from lightbulb import commands, context, decorators, plugins
+from psutil import Process, virtual_memory
+from pygount import SourceAnalysis
+
+import carberretta
+from carberretta import Config
+from carberretta.utils import chron, helpers
 
 if t.TYPE_CHECKING:
     from lightbulb.app import BotApp
@@ -36,16 +47,107 @@ if t.TYPE_CHECKING:
 plugin = plugins.Plugin("Meta")
 
 
+@dataclass
+class CodeCounter:
+    code: int = 0
+    docs: int = 0
+    empty: int = 0
+
+    def count(self) -> "CodeCounter":
+        for file in carberretta.ROOT_DIR.rglob("*.py"):
+            analysis = SourceAnalysis.from_file(file, "pygount", encoding="utf-8")
+            self.code += analysis.code_count
+            self.docs += analysis.documentation_count
+            self.empty += analysis.empty_count
+
+        return self
+
+
 @plugin.command
 @decorators.command("ping", "Get the average DWSP latency for the bot.")
 @decorators.implements(commands.slash.SlashCommand)
 async def cmd_ping(ctx: context.base.Context) -> None:
     await ctx.respond(
-        f"Pong! DWSP latency: {ctx.bot.heartbeat_latency * 1_000:.0f} ms."
+        f"Pong! DWSP latency: {ctx.bot.heartbeat_latency * 1_000:,.0f} ms."
+    )
+
+
+@plugin.command
+@decorators.command("about", "View information about Carberretta.")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_about(ctx: context.base.Context) -> None:
+    await ctx.respond(
+        hikari.Embed(
+            title="About Carberretta",
+            description="Type `/stats` for bot runtime stats.",
+            colour=helpers.choose_colour(),
+            timestamp=dt.datetime.now().astimezone(),
+        )
+        .set_thumbnail(ctx.get_guild().get_my_member().avatar_url)
+        .set_author(name="Information")
+        .set_footer(
+            f"Requested by {ctx.member.display_name}", icon=ctx.member.avatar_url
+        )
+        .add_field("Authors", "\n".join(f"<@{i}>" for i in Config.OWNER_IDS))
+        .add_field(
+            "Contributors",
+            f"View on [GitHub]({carberretta.__url__}/graphs/contributors)",
+        )
+        .add_field(
+            "License",
+            '[BSD 3-Clause "New" or "Revised" License]'
+            f"({carberretta.__url__}/blob/main/LICENSE)",
+        )
+    )
+
+
+@plugin.command
+@decorators.command("stats", "View runtime stats for Carberretta.")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_stats(ctx: context.base.Context) -> None:
+    with (proc := Process()).oneshot():
+        uptime = chron.short_delta(
+            dt.timedelta(seconds=time.time() - proc.create_time())
+        )
+        cpu_time = chron.short_delta(
+            dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
+            milliseconds=True,
+        )
+        mem_total = virtual_memory().total / (1024 ** 2)
+        mem_of_total = proc.memory_percent()
+        mem_usage = mem_total * (mem_of_total / 100)
+
+    await ctx.respond(
+        hikari.Embed(
+            title="Runtime statistics for Carberretta",
+            description="Type `/about` for general bot information.",
+            colour=helpers.choose_colour(),
+            timestamp=dt.datetime.now().astimezone(),
+        )
+        .set_thumbnail(ctx.get_guild().get_my_member().avatar_url)
+        .set_author(name="Information")
+        .set_footer(
+            f"Requested by {ctx.member.display_name}", icon=ctx.member.avatar_url
+        )
+        .add_field("Bot version", carberretta.__version__, inline=True)
+        .add_field("Python version", platform.python_version(), inline=True)
+        .add_field("Hikari version", hikari.__version__, inline=True)
+        .add_field("Uptime", uptime, inline=True)
+        .add_field("CPU time", cpu_time, inline=True)
+        .add_field(
+            "Memory usage",
+            f"{mem_usage:,.3f}/{mem_total:,.0f} MiB ({mem_of_total:,.0f}%)",
+            inline=True,
+        )
+        .add_field("Code lines", f"{ctx.bot.d.loc.code:,}", inline=True)
+        .add_field("Docs lines", f"{ctx.bot.d.loc.docs:,}", inline=True)
+        .add_field("Blank lines", f"{ctx.bot.d.loc.empty:,}", inline=True)
     )
 
 
 def load(bot: "BotApp") -> None:
+    if not bot.d.loc:
+        bot.d.loc = CodeCounter().count()
     bot.add_plugin(plugin)
 
 
