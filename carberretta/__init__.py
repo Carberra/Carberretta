@@ -28,6 +28,8 @@
 
 __all__ = ("Config",)
 
+from pathlib import Path
+
 from .config import Config
 
 __productname__ = "Carberretta"
@@ -38,3 +40,5 @@ __authors__ = ("Ethan Henderson", "Max Shaughnessy")
 __license__ = "BSD-3-Clause"
 __bugtracker__ = "https://github.com/Carberra/Carberretta/issues"
 __ci__ = "https://github.com/Carberra/Carberretta/actions"
+
+ROOT_DIR = Path(__file__).parent
