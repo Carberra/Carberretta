@@ -59,14 +59,14 @@ bot.load_extensions_from("./carberretta/extensions")
 
 
 @bot.listen(hikari.StartingEvent)
-async def on_starting(event: hikari.StartingEvent) -> None:
+async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.scheduler.start()
     bot.d.session = ClientSession(trust_env=True)
     log.info("AIOHTTP session started")
 
 
 @bot.listen(hikari.StartedEvent)
-async def on_started(event: hikari.StartedEvent) -> None:
+async def on_started(_: hikari.StartedEvent) -> None:
     await bot.rest.create_message(
         Config.HUB_STDOUT_CHANNEL_ID,
         f"Carberretta is now online! (Version {carberretta.__version__})",
@@ -74,7 +74,7 @@ async def on_started(event: hikari.StartedEvent) -> None:
 
 
 @bot.listen(hikari.StoppingEvent)
-async def on_stopping(event: hikari.StoppingEvent) -> None:
+async def on_stopping(_: hikari.StoppingEvent) -> None:
     bot.d.scheduler.shutdown()
     await bot.d.session.close()
     log.info("AIOHTTP session closed")
@@ -82,6 +82,16 @@ async def on_stopping(event: hikari.StoppingEvent) -> None:
     await bot.rest.create_message(
         Config.HUB_STDOUT_CHANNEL_ID,
         f"Carberretta is shutting down. (Version {carberretta.__version__})",
+    )
+
+
+@bot.listen(hikari.DMMessageCreateEvent)
+async def on_dm_message_create(event: hikari.DMMessageCreateEvent) -> None:
+    if event.message.author.is_bot:
+        return
+
+    await event.message.respond(
+        f"You need to DM <@{795985066530439229}> to send a message to moderators."
     )
 
 
