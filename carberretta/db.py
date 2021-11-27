@@ -40,16 +40,7 @@ STRFTIME_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 
 log = logging.getLogger(__name__)
 
-ValueT = int | float | dt.datetime | str | None
-
-
-def with_call(func) -> None:
-    async def wrapper(*args, **kwargs) -> t.Any:
-        result = await func(*args, **kwargs)
-        Database.calls += 1
-        return result
-
-    return wrapper
+ValueT = t.Union[int, float, dt.datetime, str, None]
 
 
 class RowData(dict[str, t.Any]):
@@ -83,20 +74,19 @@ class RowData(dict[str, t.Any]):
 
 
 class Database:
-    __slots__ = ("db_path", "sql_path", "cxn")
-
-    calls = 0
+    __slots__ = ("db_path", "sql_path", "calls", "cxn")
 
     def __init__(self, dynamic: Path, static: Path) -> None:
         self.db_path = (dynamic / "database.sqlite3").resolve()
         self.sql_path = (static / "build.sql").resolve()
+        self.calls = 0
 
     async def connect(self) -> None:
         os.makedirs(self.db_path.parent, exist_ok=True)
         self.cxn = await aiosqlite.connect(self.db_path)
         log.info(f"Connected to database at {self.db_path}")
 
-        self.cxn.row_factory = RowData.from_selection
+        self.cxn.row_factory = t.cast(t.Any, RowData.from_selection)
         await self.cxn.execute("pragma journal_mode=wal")
         await self.executescript(self.sql_path)
         log.info(f"Built database using {self.sql_path}")
@@ -111,43 +101,40 @@ class Database:
         await self.cxn.close()
         log.info("Closed database connection")
 
-    @with_call
     async def try_get_field(self, command: str, *values: ValueT) -> ValueT:
-        cur = await self.cxn.execute(command, tuple(values))
+        cur = await self.execute(command, *values)
         return row[0] if (row := await cur.fetchone()) is not None else None
 
-    @with_call
-    async def get_record(self, command: str, *values: ValueT) -> RowData:
-        cur = await self.cxn.execute(command, tuple(values))
-        return await cur.fetchone()
+    async def get_record(self, command: str, *values: ValueT) -> RowData | None:
+        cur = await self.execute(command, *values)
+        return t.cast(t.Optional[RowData], await cur.fetchone())
 
-    @with_call
-    async def get_records(self, command: str, *values: ValueT) -> list[RowData]:
-        cur = await self.cxn.execute(command, tuple(values))
-        return await cur.fetchall()
+    async def get_records(self, command: str, *values: ValueT) -> t.Iterable[RowData]:
+        cur = await self.execute(command, *values)
+        return t.cast(t.Iterable[RowData], await cur.fetchall())
 
-    @with_call
     async def get_column(
         self, command: str, *values: ValueT, index: int = 0
     ) -> list[ValueT]:
-        cur = await self.cxn.execute(command, tuple(values))
+        cur = await self.execute(command, *values)
         return [row[index] for row in await cur.fetchall()]
 
-    @with_call
-    async def execute(self, command: str, *values: ValueT) -> int:
+    async def execute(self, command: str, *values: ValueT) -> aiosqlite.Cursor:
+        val_list = list(values)
+
         for i, v in enumerate(values):
             if isinstance(v, dt.datetime):
-                values[i] = v.strftime("%Y-%m-%d %H:%M:%S")
+                val_list[i] = v.strftime("%Y-%m-%d %H:%M:%S")
 
-        cur = await self.cxn.execute(command, tuple(values))
-        return cur.rowcount
+        self.calls += 1
+        return await self.cxn.execute(command, tuple(values))
 
-    @with_call
-    async def executemany(self, command: str, *values: tuple[ValueT, ...]) -> int:
-        cur = await self.cxn.executemany(command, tuple(values))
-        return cur.rowcount
+    async def executemany(
+        self, command: str, *values: tuple[ValueT, ...]
+    ) -> aiosqlite.Cursor:
+        self.calls += 1
+        return await self.cxn.executemany(command, tuple(values))
 
-    @with_call
     async def executescript(self, path: Path | str) -> None:
         async with aiofiles.open(path, encoding="utf-8") as f:
             await self.cxn.executescript(await f.read())
