@@ -66,9 +66,9 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.session = ClientSession(trust_env=True)
     log.info("AIOHTTP session started")
 
-    bot.d.database = Database(bot.d._dynamic, bot.d._static)
-    await bot.d.database.connect()
-    bot.d.scheduler.add_job(bot.d.database.commit, CronTrigger(second=0))
+    bot.d.db = Database(bot.d._dynamic, bot.d._static)
+    await bot.d.db.connect()
+    bot.d.scheduler.add_job(bot.d.db.commit, CronTrigger(second=0))
 
 
 @bot.listen(hikari.StartedEvent)
@@ -81,7 +81,7 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
 @bot.listen(hikari.StoppingEvent)
 async def on_stopping(_: hikari.StoppingEvent) -> None:
-    await bot.d.database.close()
+    await bot.d.db.close()
     await bot.d.session.close()
     log.info("AIOHTTP session closed")
     bot.d.scheduler.shutdown()

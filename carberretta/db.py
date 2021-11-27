@@ -101,23 +101,31 @@ class Database:
         await self.cxn.close()
         log.info("Closed database connection")
 
-    async def try_get_field(self, command: str, *values: ValueT) -> ValueT:
+    async def try_fetch_field(self, command: str, *values: ValueT) -> ValueT:
         cur = await self.execute(command, *values)
-        return row[0] if (row := await cur.fetchone()) is not None else None
 
-    async def get_record(self, command: str, *values: ValueT) -> RowData | None:
+        if (row := await cur.fetchone()) is None:
+            return
+
+        return row[0]
+
+    async def try_fetch_record(self, command: str, *values: ValueT) -> RowData | None:
         cur = await self.execute(command, *values)
         return t.cast(t.Optional[RowData], await cur.fetchone())
 
-    async def get_records(self, command: str, *values: ValueT) -> t.Iterable[RowData]:
+    async def fetch_records(self, command: str, *values: ValueT) -> t.Iterable[RowData]:
         cur = await self.execute(command, *values)
         return t.cast(t.Iterable[RowData], await cur.fetchall())
 
-    async def get_column(
+    async def fetch_column(
         self, command: str, *values: ValueT, index: int = 0
     ) -> list[ValueT]:
         cur = await self.execute(command, *values)
-        return [row[index] for row in await cur.fetchall()]
+
+        if not (rows := await cur.fetchall()):
+            return
+
+        return [row[index] for row in rows]
 
     async def execute(self, command: str, *values: ValueT) -> aiosqlite.Cursor:
         val_list = list(values)
