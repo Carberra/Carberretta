@@ -34,6 +34,7 @@ import hikari
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from lightbulb import errors, events
 from lightbulb.app import BotApp
 from pytz import utc
 
@@ -100,6 +101,20 @@ async def on_dm_message_create(event: hikari.DMMessageCreateEvent) -> None:
     await event.message.respond(
         f"You need to DM <@{795985066530439229}> to send a message to moderators."
     )
+
+
+@bot.listen(events.CommandErrorEvent)
+async def on_command_error(event: events.CommandErrorEvent) -> None:
+    exc = getattr(event.exception, "__cause__", event.exception)
+
+    if isinstance(exc, errors.NotOwner):
+        await event.context.respond("You need to be an owner to do that.")
+        return
+
+    await event.context.respond(
+        "Something went wrong. Open an issue on the GitHub repository."
+    )
+    raise event.exception
 
 
 def run() -> None:
