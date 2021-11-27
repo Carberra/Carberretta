@@ -38,7 +38,7 @@ from carberretta.utils import helpers
 if t.TYPE_CHECKING:
     from lightbulb.app import BotApp
 
-plugin = plugins.Plugin("Misc")
+plugin = plugins.Plugin("Text")
 
 
 @plugin.command
