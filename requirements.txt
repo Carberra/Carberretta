@@ -8,4 +8,4 @@ psutil<6,>=5.8
 pygithub<2,>=1.55
 pygount<2,>=1.2
 python-dotenv~=0.19
-uvloop~=0.16
+uvloop~=0.16; os_name != "nt"
