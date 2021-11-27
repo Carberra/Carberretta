@@ -89,7 +89,7 @@ class Database:
         self.cxn.row_factory = t.cast(t.Any, RowData.from_selection)
         await self.cxn.execute("pragma journal_mode=wal")
         await self.executescript(self.sql_path)
-        log.info(f"Built database using {self.sql_path}")
+        log.info(f"Built database ({self.db_path.parts[-1]})")
 
         await self.cxn.commit()
 
@@ -136,7 +136,12 @@ class Database:
 
         self.calls += 1
         cur = await self.cxn.execute(command, tuple(values))
-        log.info(f"Executed query '{command}' ({cur.rowcount} rows modified)")
+        # fmt: off
+        log.info(
+            f"Executed query '{command}' ({cur.rowcount} rows modified)"
+            .replace("-1", "unknown")
+        )
+        # fmt: on
         return cur
 
     async def executemany(
@@ -144,7 +149,12 @@ class Database:
     ) -> aiosqlite.Cursor:
         self.calls += 1
         cur = await self.cxn.executemany(command, tuple(values))
-        log.info(f"Executed multiquery '{command}' ({cur.rowcount} rows modified)")
+        # fmt: off
+        log.info(
+            f"Executed multiquery '{command}' ({cur.rowcount} rows modified)"
+            .replace("-1", "unknown")
+        )
+        # fmt: on
         return cur
 
     async def executescript(self, path: Path | str) -> aiosqlite.Cursor:
