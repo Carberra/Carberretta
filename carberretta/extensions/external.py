@@ -57,6 +57,50 @@ async def cmd_link(ctx: context.base.Context) -> None:
     await ctx.respond(f"<https://{ctx.options.target.lower()}.carberra.xyz>")
 
 
+@plugin.command
+@decorators.option("number", "The PEP number to search for.")
+@decorators.command("pep", "Retrieve info on a Python Extension Protocol.")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_pep(ctx: context.base.Context) -> None:
+    n = ctx.options.number
+    url = f"https://python.org/dev/peps/pep-{n:>04}"
+
+    async with ctx.bot.d.session.get(url) as r:
+        if not r.ok:
+            await ctx.respond(f"PEP {n:04} could not be found.")
+            return
+
+    await ctx.respond(f"PEP {n:>04}: <{url}>")
+
+
+@plugin.command
+@decorators.option("query", "The thing to search.")
+@decorators.command("google", "Let me Google that for you...")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_google(ctx: context.base.Context) -> None:
+    q = ctx.options.query
+
+    if len(q) > 500:
+        await ctx.send("Your query should be no longer than 500 characters.")
+        return
+
+    await ctx.respond(f"<https://letmegooglethat.com/?q={q.replace(' ', '+')}>")
+
+
+@plugin.command
+@decorators.option("query", "The thing to search.")
+@decorators.command("duckduckgo", "Let me Duck Duck Go that for you...")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_google(ctx: context.base.Context) -> None:
+    q = ctx.options.query
+
+    if len(q) > 500:
+        await ctx.send("Your query should be no longer than 500 characters.")
+        return
+
+    await ctx.respond(f"<https://lmddgtfy.net/?q={q.replace(' ', '+')}>")
+
+
 def load(bot: "BotApp") -> None:
     bot.add_plugin(plugin)
 
