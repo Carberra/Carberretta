@@ -105,9 +105,9 @@ class Database:
         cur = await self.execute(command, *values)
 
         if (row := await cur.fetchone()) is None:
-            return
+            return None
 
-        return row[0]
+        return t.cast(ValueT, row[0])
 
     async def try_fetch_record(self, command: str, *values: ValueT) -> RowData | None:
         cur = await self.execute(command, *values)
@@ -123,7 +123,7 @@ class Database:
         cur = await self.execute(command, *values)
 
         if not (rows := await cur.fetchall()):
-            return
+            return []
 
         return [row[index] for row in rows]
 

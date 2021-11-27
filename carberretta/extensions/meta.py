@@ -33,7 +33,7 @@ import typing as t
 from dataclasses import dataclass
 
 import hikari
-from lightbulb import checks, commands, context, decorators, plugins
+from lightbulb import commands, context, decorators, plugins
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 

@@ -119,7 +119,7 @@ def check_licensing(session: nox.Session) -> None:
 @nox.session(reuse_venv=True)  # type: ignore
 def check_spelling(session: nox.Session) -> None:
     session.install("-U", *fetch_installs("Spelling"))
-    session.run("codespell", *CHECK_PATHS)
+    session.run("codespell", *CHECK_PATHS, "-L", "nd")
 
 
 @nox.session(reuse_venv=True)  # type: ignore
