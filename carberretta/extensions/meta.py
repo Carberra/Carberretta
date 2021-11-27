@@ -122,9 +122,8 @@ async def cmd_stats(ctx: context.base.Context) -> None:
         return
 
     with (proc := Process()).oneshot():
-        uptime = chron.short_delta(
-            dt.timedelta(seconds=time.time() - proc.create_time())
-        )
+        uptime = time.time() - proc.create_time()
+        uptime_str = chron.short_delta(dt.timedelta(seconds=uptime))
         cpu_time = chron.short_delta(
             dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
             ms=True,
@@ -146,7 +145,7 @@ async def cmd_stats(ctx: context.base.Context) -> None:
         .add_field("Bot version", carberretta.__version__, inline=True)
         .add_field("Python version", platform.python_version(), inline=True)
         .add_field("Hikari version", hikari.__version__, inline=True)
-        .add_field("Uptime", uptime, inline=True)
+        .add_field("Uptime", uptime_str, inline=True)
         .add_field("CPU time", cpu_time, inline=True)
         .add_field(
             "Memory usage",
@@ -156,6 +155,10 @@ async def cmd_stats(ctx: context.base.Context) -> None:
         .add_field("Code lines", f"{ctx.bot.d.loc.code:,}", inline=True)
         .add_field("Docs lines", f"{ctx.bot.d.loc.docs:,}", inline=True)
         .add_field("Blank lines", f"{ctx.bot.d.loc.empty:,}", inline=True)
+        .add_field(
+            "Database calls",
+            f"{(c := ctx.bot.d.db.calls):,} ({c/uptime:,.3f} per second)",
+        )
     )
 
 
