@@ -26,10 +26,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import hashlib
 import logging
 import os
-import time
 import traceback
 from pathlib import Path
 
@@ -44,6 +42,7 @@ from pytz import utc
 
 import carberretta
 from carberretta import Config, Database
+from carberretta.utils import helpers
 
 log = logging.getLogger(__name__)
 
@@ -122,7 +121,7 @@ async def on_command_error(event: events.CommandErrorEvent) -> None:
     # Add more errors when needed.
 
     try:
-        err_id = hashlib.md5(f"{time.time()}".encode()).hexdigest()
+        err_id = helpers.generate_id()
         await bot.d.db.execute(
             "INSERT INTO errors (err_id, err_cmd, err_text) VALUES (?, ?, ?)",
             err_id,

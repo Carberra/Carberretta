@@ -26,7 +26,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import hashlib
 import random
+import time
 
 
 def choose_colour() -> int:
@@ -54,3 +56,7 @@ def choose_colour() -> int:
             # 0x546e7a,
         )
     )
+
+
+def generate_id() -> str:
+    return hashlib.md5(f"{time.time()}".encode()).hexdigest()
