@@ -119,16 +119,19 @@ async def on_command_error(event: events.CommandErrorEvent) -> None:
         await event.context.respond("You need to be an owner to do that.")
         return
 
+    # Add more errors when needed.
+
     try:
         err_id = hashlib.md5(f"{time.time()}".encode()).hexdigest()
         await bot.d.db.execute(
-            "INSERT INTO errors VALUES (?, ?, ?)",
+            "INSERT INTO errors (err_id, err_cmd, err_text) VALUES (?, ?, ?)",
             err_id,
             event.context.invoked_with,
             "".join(traceback.format_exception(event.exception)),  # type: ignore
         )
         await event.context.respond(
-            f"Something went wrong. An error report has been created (ID: {err_id})."
+            "Something went wrong. An error report has been created "
+            f"(ID: {err_id[:7]})."
         )
     finally:
         raise event.exception
