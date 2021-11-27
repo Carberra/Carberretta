@@ -33,27 +33,29 @@ from pathlib import Path
 import hikari
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from lightbulb.app import BotApp
 from pytz import utc
 
 import carberretta
-from carberretta import Config
+from carberretta import Config, Database
 
 log = logging.getLogger(__name__)
 
 bot = BotApp(
     Config.TOKEN,
     prefix=Config.PREFIX,
-    default_enabled_guilds=[Config.GUILD_ID, Config.HUB_GUILD_ID],
+    default_enabled_guilds=Config.GUILD_ID,
     owner_ids=Config.OWNER_IDS,
     case_insensitive_prefix_commands=True,
     intents=hikari.Intents.ALL,
 )
-bot.d._dynamic = Path("./carberretta/data/dynamic")
+bot.d._dynamic = Path("./data/dynamic")
 bot.d._static = bot.d._dynamic.parent / "static"
 
 bot.d.scheduler = AsyncIOScheduler()
 bot.d.scheduler.configure(timezone=utc)
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
 bot.load_extensions_from("./carberretta/extensions")
 
@@ -64,23 +66,28 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.session = ClientSession(trust_env=True)
     log.info("AIOHTTP session started")
 
+    bot.d.database = Database(bot.d._dynamic, bot.d._static)
+    await bot.d.database.connect()
+    bot.d.scheduler.add_job(bot.d.database.commit, CronTrigger(second=0))
+
 
 @bot.listen(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
     await bot.rest.create_message(
-        Config.HUB_STDOUT_CHANNEL_ID,
+        Config.STDOUT_CHANNEL_ID,
         f"Carberretta is now online! (Version {carberretta.__version__})",
     )
 
 
 @bot.listen(hikari.StoppingEvent)
 async def on_stopping(_: hikari.StoppingEvent) -> None:
-    bot.d.scheduler.shutdown()
+    await bot.d.database.close()
     await bot.d.session.close()
     log.info("AIOHTTP session closed")
+    bot.d.scheduler.shutdown()
 
     await bot.rest.create_message(
-        Config.HUB_STDOUT_CHANNEL_ID,
+        Config.STDOUT_CHANNEL_ID,
         f"Carberretta is shutting down. (Version {carberretta.__version__})",
     )
 
@@ -101,4 +108,9 @@ def run() -> None:
 
         uvloop.install()
 
-    bot.run()
+    bot.run(
+        activity=hikari.Activity(
+            name=f"/help • Version {carberretta.__version__}",
+            type=hikari.ActivityType.WATCHING,
+        )
+    )
