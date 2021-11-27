@@ -28,14 +28,15 @@
 
 from __future__ import annotations
 
+import typing as t
 from pathlib import Path
 
 import nox
 
-PROJECT_DIR = Path(__file__).parent
-PROJECT_NAME = Path(__file__).parent.stem.lower()
+PROJECT_DIR: t.Final = Path(__file__).parent
+PROJECT_NAME: t.Final = Path(__file__).parent.stem.lower()
 
-CHECK_PATHS = (
+CHECK_PATHS: t.Final = (
     str(PROJECT_DIR / PROJECT_NAME),
     str(PROJECT_DIR / "noxfile.py"),
 )
@@ -106,7 +107,11 @@ def check_licensing(session: nox.Session) -> None:
         *PROJECT_DIR.glob("*.py"),
     ]:
         with open(p) as f:
-            if not f.read().startswith("# Copyright (c)"):
+            header = f.read().split("\n")[0]
+            if not (
+                header.startswith("# Copyright (c) 2020-")
+                or header.endswith(", Carberra Tutorials\n")
+            ):
                 missing.append(p)
 
     if missing:

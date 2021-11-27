@@ -76,7 +76,7 @@ class RowData(dict[str, t.Any]):
 class Database:
     __slots__ = ("db_path", "sql_path", "calls", "cxn")
 
-    def __init__(self, dynamic: "Path", static: "Path") -> None:
+    def __init__(self, dynamic: Path, static: Path) -> None:
         self.db_path = (dynamic / "database.sqlite3").resolve()
         self.sql_path = (static / "build.sql").resolve()
         self.calls = 0

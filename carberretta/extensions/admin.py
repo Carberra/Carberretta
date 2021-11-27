@@ -1,4 +1,4 @@
-# Copyright (c) 2021, Carberra Tutorials
+# Copyright (c) 2020-2021, Carberra Tutorials
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import io
 import logging
 import typing as t
+from io import BytesIO
 
 import hikari
 from lightbulb import checks, commands, context, decorators, plugins
@@ -78,7 +78,7 @@ async def cmd_error(ctx: context.base.Context) -> None:
         return
 
     message = await ctx.respond("Error found. Standby...")
-    b = io.BytesIO(
+    b = BytesIO(
         f"Command: /{row.err_cmd}\nAt: {row.err_time}\n\n{row.err_text}".encode()
     )
     b.seek(0)
