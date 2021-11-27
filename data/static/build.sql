@@ -4,3 +4,9 @@
 --     time_or_date NUMERIC,
 --     now NUMERIC DEFAULT CURRENT_TIMESTAMP
 -- );
+
+CREATE TABLE IF NOT EXISTS errors (
+    err_id TEXT PRIMARY KEY,
+    err_cmd TEXT,
+    err_text TEXT
+);
