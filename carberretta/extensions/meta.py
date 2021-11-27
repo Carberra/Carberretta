@@ -33,7 +33,7 @@ import typing as t
 from dataclasses import dataclass
 
 import hikari
-from lightbulb import commands, context, decorators, plugins
+from lightbulb import checks, commands, context, decorators, plugins
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
@@ -76,6 +76,15 @@ async def cmd_ping(ctx: context.base.Context) -> None:
 @decorators.command("about", "View information about Carberretta.")
 @decorators.implements(commands.slash.SlashCommand)
 async def cmd_about(ctx: context.base.Context) -> None:
+    if not (guild := ctx.get_guild()):
+        return
+
+    if not (me := guild.get_my_member()):
+        return
+
+    if not (member := ctx.member):
+        return
+
     await ctx.respond(
         hikari.Embed(
             title="About Carberretta",
@@ -83,10 +92,10 @@ async def cmd_about(ctx: context.base.Context) -> None:
             colour=helpers.choose_colour(),
             timestamp=dt.datetime.now().astimezone(),
         )
-        .set_thumbnail(ctx.get_guild().get_my_member().avatar_url)
+        .set_thumbnail(me.avatar_url)
         .set_author(name="Information")
         .set_footer(
-            f"Requested by {ctx.member.display_name}", icon=ctx.member.avatar_url
+            f"Requested by {member.display_name}", icon=member.avatar_url
         )
         .add_field("Authors", "\n".join(f"<@{i}>" for i in Config.OWNER_IDS))
         .add_field(
@@ -105,13 +114,22 @@ async def cmd_about(ctx: context.base.Context) -> None:
 @decorators.command("stats", "View runtime stats for Carberretta.")
 @decorators.implements(commands.slash.SlashCommand)
 async def cmd_stats(ctx: context.base.Context) -> None:
+    if not (guild := ctx.get_guild()):
+        return
+
+    if not (me := guild.get_my_member()):
+        return
+
+    if not (member := ctx.member):
+        return
+
     with (proc := Process()).oneshot():
         uptime = chron.short_delta(
             dt.timedelta(seconds=time.time() - proc.create_time())
         )
         cpu_time = chron.short_delta(
             dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
-            milliseconds=True,
+            ms=True,
         )
         mem_total = virtual_memory().total / (1024 ** 2)
         mem_of_total = proc.memory_percent()
@@ -124,10 +142,10 @@ async def cmd_stats(ctx: context.base.Context) -> None:
             colour=helpers.choose_colour(),
             timestamp=dt.datetime.now().astimezone(),
         )
-        .set_thumbnail(ctx.get_guild().get_my_member().avatar_url)
+        .set_thumbnail(me.avatar_url)
         .set_author(name="Information")
         .set_footer(
-            f"Requested by {ctx.member.display_name}", icon=ctx.member.avatar_url
+            f"Requested by {member.display_name}", icon=member.avatar_url
         )
         .add_field("Bot version", carberretta.__version__, inline=True)
         .add_field("Python version", platform.python_version(), inline=True)
