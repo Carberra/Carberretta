@@ -27,39 +27,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import typing as t
-from string import Formatter
 
 import hikari
 
 ORDINAL_ENDINGS: t.Final = {"1": "st", "2": "nd", "3": "rd"}
 
 
-class MessageFormatter(Formatter):
-    def get_value(
-        self, key: int | str, *args: t.Sequence[t.Any], kwargs: dict[str, t.Any]
-    ) -> str:
-        if isinstance(key, str):
-            try:
-                return kwargs[key]
-            except KeyError:
-                return "<BAD_VARIABLE>"
-        else:
-            return super().get_value(key, args, kwargs)
-
-
-def safe_format(text: str, *args, **kwargs) -> str:
-    formatter = MessageFormatter()
-    return formatter.format(text, *args, **kwargs)
-
-
-def text_is_formattible(text: str) -> t.Union[str, bool]:
-    try:
-        return safe_format(text)
-    except:
-        return False
-
-
-def list_of(items: list, sep: str = "and") -> str:
+def list_of(items: list[str], sep: str = "and") -> str:
     if len(items) > 2:
         return f"{', '.join(items[:-1])}, {sep} {items[-1]}"
 
@@ -74,5 +48,5 @@ def ordinal(number: int) -> str:
 
 
 def possessive(user: hikari.Member | hikari.User) -> str:
-    name = getattr(user, "display_name", user.name)
+    name = getattr(user, "display_name", user.username)
     return f"{name}'{'s' if not name.endswith('s') else ''}"
