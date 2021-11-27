@@ -17,6 +17,7 @@ isort~=5.9
 
 # Typing
 mypy==0.910
+types-aiofiles~=0.7.0
 types-pytz==2021.3.1
 
 # Line lengths
