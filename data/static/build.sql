@@ -1,0 +1,6 @@
+-- CREATE TABLE IF NOT EXISTS example (
+--     user_id INTEGER PRIMARY KEY,
+--     some_string TEXT,
+--     time_or_date NUMERIC,
+--     now NUMERIC DEFAULT CURRENT_TIMESTAMP
+-- );
