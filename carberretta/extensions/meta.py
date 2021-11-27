@@ -94,9 +94,7 @@ async def cmd_about(ctx: context.base.Context) -> None:
         )
         .set_thumbnail(me.avatar_url)
         .set_author(name="Information")
-        .set_footer(
-            f"Requested by {member.display_name}", icon=member.avatar_url
-        )
+        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
         .add_field("Authors", "\n".join(f"<@{i}>" for i in Config.OWNER_IDS))
         .add_field(
             "Contributors",
@@ -144,9 +142,7 @@ async def cmd_stats(ctx: context.base.Context) -> None:
         )
         .set_thumbnail(me.avatar_url)
         .set_author(name="Information")
-        .set_footer(
-            f"Requested by {member.display_name}", icon=member.avatar_url
-        )
+        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
         .add_field("Bot version", carberretta.__version__, inline=True)
         .add_field("Python version", platform.python_version(), inline=True)
         .add_field("Hikari version", hikari.__version__, inline=True)
