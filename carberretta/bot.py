@@ -26,14 +26,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import hashlib
 import logging
 import os
+import time
+import traceback
 from pathlib import Path
 
 import hikari
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from hikari.events.base_events import FailedEventT
 from lightbulb import errors, events
 from lightbulb.app import BotApp
 from pytz import utc
@@ -102,6 +106,11 @@ async def on_dm_message_create(event: hikari.DMMessageCreateEvent) -> None:
     )
 
 
+@bot.listen(hikari.ExceptionEvent)
+async def on_error(event: hikari.ExceptionEvent[FailedEventT]) -> None:
+    raise event.exception
+
+
 @bot.listen(events.CommandErrorEvent)
 async def on_command_error(event: events.CommandErrorEvent) -> None:
     exc = getattr(event.exception, "__cause__", event.exception)
@@ -110,10 +119,19 @@ async def on_command_error(event: events.CommandErrorEvent) -> None:
         await event.context.respond("You need to be an owner to do that.")
         return
 
-    await event.context.respond(
-        "Something went wrong. Open an issue on the GitHub repository."
-    )
-    raise event.exception
+    try:
+        err_id = hashlib.md5(f"{time.time()}".encode()).hexdigest()
+        await bot.d.db.execute(
+            "INSERT INTO errors VALUES (?, ?, ?)",
+            err_id,
+            event.context.invoked_with,
+            "".join(traceback.format_exception(event.exception)),  # type: ignore
+        )
+        await event.context.respond(
+            f"Something went wrong. An error report has been created (ID: {err_id})."
+        )
+    finally:
+        raise event.exception
 
 
 def run() -> None:
