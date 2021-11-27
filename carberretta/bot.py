@@ -58,7 +58,6 @@ bot.d._static = bot.d._dynamic.parent / "static"
 
 bot.d.scheduler = AsyncIOScheduler()
 bot.d.scheduler.configure(timezone=utc)
-logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 
 bot.load_extensions_from("./carberretta/extensions")
 

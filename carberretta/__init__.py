@@ -31,6 +31,7 @@ __all__ = ("Config", "Database")
 import typing as t
 from pathlib import Path
 
+import logging
 from .config import Config
 from .db import Database
 
@@ -44,3 +45,6 @@ __bugtracker__ = "https://github.com/Carberra/Carberretta/issues"
 __ci__ = "https://github.com/Carberra/Carberretta/actions"
 
 ROOT_DIR: t.Final = Path(__file__).parent
+
+logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
+logging.getLogger("py.warnings").setLevel(logging.ERROR)
