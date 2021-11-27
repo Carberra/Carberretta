@@ -26,9 +26,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import io
 import logging
 import typing as t
 
+import hikari
 from lightbulb import checks, commands, context, decorators, plugins
 
 if t.TYPE_CHECKING:
@@ -47,6 +49,42 @@ async def cmd_shutdown(ctx: context.base.Context) -> None:
     log.info("Shutdown signal received")
     await ctx.respond("Now shutting down.")
     await ctx.bot.close()
+
+
+@plugin.command
+@decorators.add_checks(checks.owner_only)
+@decorators.option("id", "The error reference ID.")
+@decorators.command("error", "View an error.")
+@decorators.implements(commands.slash.SlashCommand)
+async def cmd_error(ctx: context.base.Context) -> None:
+    if len(search_id := ctx.options.id) < 5:
+        await ctx.respond("Your search should be at least 5 characters long.")
+        return
+
+    if not plugin.bot:
+        # Remove on next Lightbulb release.
+        return
+
+    row = await plugin.bot.d.db.try_fetch_record(
+        "SELECT * FROM errors "
+        "WHERE instr(err_id, ?) > 0 "
+        "ORDER BY err_time DESC "
+        "LIMIT 1",
+        search_id,
+    )
+
+    if not row:
+        await ctx.respond("No errors matching that reference were found.")
+        return
+
+    message = await ctx.respond("Error found. Standby...")
+    b = io.BytesIO(
+        f"Command: /{row.err_cmd}\nAt: {row.err_time}\n\n{row.err_text}".encode()
+    )
+    b.seek(0)
+    await message.edit(
+        content=None, attachment=hikari.files.Bytes(b, f"err{row.err_id}.txt")
+    )
 
 
 def load(bot: "BotApp") -> None:
