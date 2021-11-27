@@ -67,7 +67,7 @@ async def cmd_pep(ctx: context.base.Context) -> None:
 
     async with ctx.bot.d.session.get(url) as r:
         if not r.ok:
-            await ctx.respond(f"PEP {n:04} could not be found.")
+            await ctx.respond(f"PEP {n:>04} could not be found.")
             return
 
     await ctx.respond(f"PEP {n:>04}: <{url}>")
@@ -81,7 +81,7 @@ async def cmd_google(ctx: context.base.Context) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
-        await ctx.send("Your query should be no longer than 500 characters.")
+        await ctx.respond("Your query should be no longer than 500 characters.")
         return
 
     await ctx.respond(f"<https://letmegooglethat.com/?q={q.replace(' ', '+')}>")
@@ -91,11 +91,11 @@ async def cmd_google(ctx: context.base.Context) -> None:
 @decorators.option("query", "The thing to search.")
 @decorators.command("duckduckgo", "Let me Duck Duck Go that for you...")
 @decorators.implements(commands.slash.SlashCommand)
-async def cmd_google(ctx: context.base.Context) -> None:
+async def cmd_duckduckgo(ctx: context.base.Context) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
-        await ctx.send("Your query should be no longer than 500 characters.")
+        await ctx.respond("Your query should be no longer than 500 characters.")
         return
 
     await ctx.respond(f"<https://lmddgtfy.net/?q={q.replace(' ', '+')}>")

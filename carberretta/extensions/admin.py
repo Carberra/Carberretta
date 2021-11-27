@@ -61,11 +61,7 @@ async def cmd_error(ctx: context.base.Context) -> None:
         await ctx.respond("Your search should be at least 5 characters long.")
         return
 
-    if not plugin.bot:
-        # Remove on next Lightbulb release.
-        return
-
-    row = await plugin.bot.d.db.try_fetch_record(
+    row = await ctx.bot.d.db.try_fetch_record(
         "SELECT * FROM errors "
         "WHERE err_id LIKE ? || '%' "
         "ORDER BY err_time DESC "
