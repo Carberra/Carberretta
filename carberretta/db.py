@@ -26,19 +26,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import annotations
-
 import datetime as dt
 import logging
 import os
 import re
 import typing as t
+from pathlib import Path
 
 import aiofiles
 import aiosqlite
-
-if t.TYPE_CHECKING:
-    from pathlib import Path
 
 STRFTIME_PATTERN: t.Final = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 
@@ -139,14 +135,29 @@ class Database:
                 val_list[i] = v.strftime("%Y-%m-%d %H:%M:%S")
 
         self.calls += 1
-        return await self.cxn.execute(command, tuple(values))
+        cur = await self.cxn.execute(command, tuple(values))
+        log.info(f"Executed query '{command}' ({cur.rowcount} rows modified)")
+        return cur
 
     async def executemany(
         self, command: str, *values: tuple[ValueT, ...]
     ) -> aiosqlite.Cursor:
         self.calls += 1
-        return await self.cxn.executemany(command, tuple(values))
+        cur = await self.cxn.executemany(command, tuple(values))
+        log.info(f"Executed multiquery '{command}' ({cur.rowcount} rows modified)")
+        return cur
 
-    async def executescript(self, path: "Path" | str) -> None:
+    async def executescript(self, path: Path | str) -> aiosqlite.Cursor:
+        if not isinstance(path, Path):
+            path = Path(path)
+        path = path.resolve()
+
         async with aiofiles.open(path, encoding="utf-8") as f:
-            await self.cxn.executescript(await f.read())
+            cur = await self.cxn.executescript(await f.read())
+            # fmt: off
+            log.info(
+                f"Executed script query from {path} ({cur.rowcount} rows modified)"
+                .replace("-1", "unknown")
+            )
+            # fmt: on
+            return cur
