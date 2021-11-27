@@ -28,6 +28,7 @@
 
 __all__ = ("Config", "Database")
 
+import typing as t
 from pathlib import Path
 
 from .config import Config
@@ -42,4 +43,4 @@ __license__ = "BSD-3-Clause"
 __bugtracker__ = "https://github.com/Carberra/Carberretta/issues"
 __ci__ = "https://github.com/Carberra/Carberretta/actions"
 
-ROOT_DIR = Path(__file__).parent
+ROOT_DIR: t.Final = Path(__file__).parent

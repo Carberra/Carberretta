@@ -26,9 +26,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import typing as t
 
-import hikari
+if t.TYPE_CHECKING:
+    from hikari import Member, User
 
 ORDINAL_ENDINGS: t.Final = {"1": "st", "2": "nd", "3": "rd"}
 
@@ -47,6 +50,6 @@ def ordinal(number: int) -> str:
     return f"{number:,}th"
 
 
-def possessive(user: hikari.Member | hikari.User) -> str:
+def possessive(user: "Member" | "User") -> str:
     name = getattr(user, "display_name", user.username)
     return f"{name}'{'s' if not name.endswith('s') else ''}"

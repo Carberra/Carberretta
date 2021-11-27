@@ -26,17 +26,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import datetime as dt
 import logging
 import os
 import re
 import typing as t
-from pathlib import Path
 
 import aiofiles
 import aiosqlite
 
-STRFTIME_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+if t.TYPE_CHECKING:
+    from pathlib import Path
+
+STRFTIME_PATTERN: t.Final = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +80,7 @@ class RowData(dict[str, t.Any]):
 class Database:
     __slots__ = ("db_path", "sql_path", "calls", "cxn")
 
-    def __init__(self, dynamic: Path, static: Path) -> None:
+    def __init__(self, dynamic: "Path", static: "Path") -> None:
         self.db_path = (dynamic / "database.sqlite3").resolve()
         self.sql_path = (static / "build.sql").resolve()
         self.calls = 0
@@ -143,6 +147,6 @@ class Database:
         self.calls += 1
         return await self.cxn.executemany(command, tuple(values))
 
-    async def executescript(self, path: Path | str) -> None:
+    async def executescript(self, path: "Path" | str) -> None:
         async with aiofiles.open(path, encoding="utf-8") as f:
             await self.cxn.executescript(await f.read())
