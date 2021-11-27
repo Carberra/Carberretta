@@ -62,7 +62,7 @@ The database utility is now very different. Examples below:
 await plugin.bot.d.db.execute("INSERT INTO ... VALUES ...", ...)
 
 # Selecting data (from plugin)
-row = await plugin.bot.d.db.try_fetch_row("SELECT user_id, points FROM experience WHERE user_id = ?", ...)
+row = await plugin.bot.d.db.try_fetch_record("SELECT user_id, points FROM experience WHERE user_id = ?", ...)
 print(row.user_id)
 print(row.points)
 ```
