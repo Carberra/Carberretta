@@ -67,7 +67,7 @@ async def cmd_error(ctx: context.base.Context) -> None:
 
     row = await plugin.bot.d.db.try_fetch_record(
         "SELECT * FROM errors "
-        "WHERE instr(err_id, ?) > 0 "
+        "WHERE err_id LIKE ? || '%' "
         "ORDER BY err_time DESC "
         "LIMIT 1",
         search_id,
