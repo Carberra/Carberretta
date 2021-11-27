@@ -1,6 +1,9 @@
-FROM python:3-slim
+FROM python:3.10-slim
 
 WORKDIR /app
+
+RUN apt-get update
+RUN apt-get install -y sqlite3 gcc build-essential python3-dev libxslt-dev libffi-dev libssl-dev
 
 COPY requirements.txt ./
 RUN pip install -U pip
