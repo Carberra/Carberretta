@@ -49,7 +49,7 @@ The list of cogs that are NOT to be ported:
 
 This is because the planned reimplementation of the cog is too different from the original, or because the cog is being removed entirely.
 
-If you want to port the **misc** cog, it should be renamed **text**. The **meta** cog is part complete -- feel free to finish it, or have at the file for pointers (specifically the `/ping`, `/about` and `/stats` commands).
+If you want to port the **misc** cog, it should be renamed **text**. The **meta** cog is part complete -- feel free to finish it, or have a look at the file for pointers (specifically the `/ping`, `/about` and `/stats` commands).
 
 ### Using the database
 
