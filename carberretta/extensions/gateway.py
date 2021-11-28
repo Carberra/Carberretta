@@ -69,7 +69,7 @@ async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
 
 
 @plugin.listener(hikari.StartedEvent)
-async def on_started(event: hikari.StartedEvent) -> None:
+async def on_started(_: hikari.StartedEvent) -> None:
     async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID):
         if (secs := (dt.datetime.utcnow() - m.joined_at).seconds) <= TIMEOUT:
             await schedule_action(m, secs=TIMEOUT - secs)
@@ -90,8 +90,13 @@ async def on_member_join(event: hikari.MemberCreateEvent) -> None:
 @plugin.listener(hikari.MemberDeleteEvent)
 async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
     member = event.old_member
+
+    if not member:
+        return
+
     try:
-        return plugin.bot.d.scheduler.get_job(f"{member.id}").remove()
+        plugin.bot.d.scheduler.get_job(f"{member.id}").remove()
+        return
     except AttributeError:
         if member.is_pending:
             return
@@ -104,6 +109,9 @@ async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
 
 @plugin.listener(hikari.MemberUpdateEvent)
 async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
+    if not event.old_member or not event.member:
+        return
+
     if event.old_member.is_pending != event.member.is_pending:
         humans = len(
             [
