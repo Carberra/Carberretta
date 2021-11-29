@@ -70,8 +70,10 @@ async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
+    now = dt.datetime.now().astimezone()
+    
     async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID):
-        if (secs := (dt.datetime.utcnow() - m.joined_at).seconds) <= TIMEOUT:
+        if (secs := (now - m.joined_at).seconds) <= TIMEOUT:
             await schedule_action(m, secs=TIMEOUT - secs)
         elif m.is_pending:
             await m.kick(
@@ -84,6 +86,9 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
 @plugin.listener(hikari.MemberCreateEvent)
 async def on_member_join(event: hikari.MemberCreateEvent) -> None:
+    if event.member.guild_id != Config.GUILD_ID:
+        return
+    
     await schedule_action(event.member)
 
 
@@ -94,6 +99,9 @@ async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
     if not member:
         return
 
+    if member.guild_id != Config.GUILD_ID:
+        return
+
     try:
         plugin.bot.d.scheduler.get_job(f"{member.id}").remove()
         return
@@ -102,13 +110,16 @@ async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
             return
 
         await plugin.bot.rest.create_message(
-            Config.GATEWAY_ID,
+            Config.GATEWAY_CHANNEL_ID,
             f"{member.display_name} is no longer in the server. " f"(ID: {member.id})",
         )
 
 
 @plugin.listener(hikari.MemberUpdateEvent)
 async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
+    if event.member.guild_id != Config.GUILD_ID:
+        return
+
     if not event.old_member or not event.member:
         return
 
@@ -121,7 +132,7 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
             ]
         )
         await plugin.bot.rest.create_message(
-            Config.GATEWAY_ID,
+            Config.GATEWAY_CHANNEL_ID,
             f"Welcome {event.member.mention}! You are member nº {humans:,} of "
             "Carberra Tutorials (excluding bots). Make yourself at home "
             "in <#626608699942764548>, and look at <#739572184745377813> "
