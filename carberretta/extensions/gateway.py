@@ -117,7 +117,7 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
             [
                 m
                 async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID)
-                if not m.bot
+                if not m.is_bot
             ]
         )
         await plugin.bot.rest.create_message(
