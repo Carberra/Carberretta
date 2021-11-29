@@ -43,7 +43,10 @@ plugin = plugins.Plugin("Gateway")
 
 
 async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
-    async def _take_action(member: hikari.Member) -> None:
+    async def _take_action(member_id: int) -> None:
+        if not (member := plugin.bot.cache.get_member(Config.GUILD_ID, member_id)):
+            return
+
         if member.is_pending:
             return await member.kick(
                 reason=(
@@ -64,14 +67,14 @@ async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
         _take_action,
         id=f"{member.id}",
         next_run_time=dt.datetime.utcnow() + dt.timedelta(seconds=secs),
-        args=[member],
+        args=[member.id],
     )
 
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
     now = dt.datetime.now().astimezone()
-    
+
     async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID):
         if (secs := (now - m.joined_at).seconds) <= TIMEOUT:
             await schedule_action(m, secs=TIMEOUT - secs)
@@ -88,7 +91,7 @@ async def on_started(_: hikari.StartedEvent) -> None:
 async def on_member_join(event: hikari.MemberCreateEvent) -> None:
     if event.member.guild_id != Config.GUILD_ID:
         return
-    
+
     await schedule_action(event.member)
 
 
