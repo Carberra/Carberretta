@@ -58,10 +58,16 @@ class Gateway(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
+        if member.guild.id != Config.GUILD_ID:
+            return
+
         await self.schedule_action(member)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
+        if member.guild.id != Config.GUILD_ID:
+            return
+
         try:
             return self.bot.scheduler.get_job(f"{member.id}").remove()
         except AttributeError:
@@ -75,6 +81,9 @@ class Gateway(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        if after.guild.id != Config.GUILD_ID:
+            return
+
         if before.pending != after.pending:
             humans = len([m for m in after.guild.members if not m.bot])
             await self.gateway_channel.send(
