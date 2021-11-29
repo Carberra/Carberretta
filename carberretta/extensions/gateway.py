@@ -27,6 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime as dt
+import logging
 import typing as t
 
 import hikari
@@ -41,6 +42,8 @@ TIMEOUT = 600
 
 plugin = plugins.Plugin("Gateway")
 
+log = logging.getLogger(__name__)
+
 
 async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
     async def _take_action(member_id: int) -> None:
@@ -48,19 +51,23 @@ async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
             return
 
         if member.is_pending:
+            log.info(
+                f"Member '{member.display_name}' kicked for not accepting "
+                "the guidelines"
+            )
             return await member.kick(
-                reason=(
-                    "Member failed to accept the server rules before "
-                    "being timed out."
-                )
+                reason="Member failed to accept the guidelines before being timed out."
             )
 
+        log.info(
+            f"Member '{member.display_name}' given roles for accepting the guidelines"
+        )
         for role in [Config.ANNOUNCEMENTS_ROLE_ID, Config.VIDEOS_ROLE_ID]:
             await plugin.bot.rest.add_role_to_member(
                 Config.GUILD_ID,
                 member,
                 role,
-                reason="Member accepted the server rules.",
+                reason="Member accepted the guidelines.",
             )
 
     plugin.bot.d.scheduler.add_job(
@@ -77,13 +84,19 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
     async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID):
         if (secs := (now - m.joined_at).seconds) <= TIMEOUT:
+            log.info(
+                f"Member '{m.display_name}' joined while offline, scheduling action "
+                f"in {TIMEOUT-secs} seconds..."
+            )
             await schedule_action(m, secs=TIMEOUT - secs)
+
         elif m.is_pending:
+            log.info(
+                f"Member '{m.display_name}' kicked for not accepting the guidelines "
+                "(on boot)"
+            )
             await m.kick(
-                reason=(
-                    "Member failed to accept the server rules before "
-                    "being timed out."
-                )
+                reason="Member failed to accept the guidelines before being timed out."
             )
 
 
@@ -92,6 +105,7 @@ async def on_member_join(event: hikari.MemberCreateEvent) -> None:
     if event.member.guild_id != Config.GUILD_ID:
         return
 
+    log.info(f"Member '{event.member.display_name}' joined")
     await schedule_action(event.member)
 
 
@@ -110,11 +124,13 @@ async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
         return
     except AttributeError:
         if member.is_pending:
+            log.info(f"Member '{member.display_name}' left (was pending)")
             return
 
+        log.info(f"Member '{member.display_name}'' left")
         await plugin.bot.rest.create_message(
             Config.GATEWAY_CHANNEL_ID,
-            f"{member.display_name} is no longer in the server. " f"(ID: {member.id})",
+            f"{member.display_name} is no longer in the server. (ID: {member.id})",
         )
 
 
@@ -127,6 +143,10 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
         return
 
     if event.old_member.is_pending != event.member.is_pending:
+        log.info(
+            f"Member '{event.member.display_name}' accepted rules. "
+            "Waiting to give roles..."
+        )
         humans = len(
             [
                 m
