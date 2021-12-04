@@ -26,14 +26,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import typing as t
 
-from lightbulb import commands, context, decorators, plugins
+import lightbulb
 
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
-
-plugin = plugins.Plugin("External")
+plugin = lightbulb.Plugin("External")
 
 LINKS: t.Final = (
     "Docs",
@@ -50,18 +49,18 @@ LINKS: t.Final = (
 
 
 @plugin.command
-@decorators.option("target", "The link to show.", choices=LINKS)
-@decorators.command("link", "Retrieve a Carberra link.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_link(ctx: context.base.Context) -> None:
+@lightbulb.option("target", "The link to show.", choices=LINKS)
+@lightbulb.command("link", "Retrieve a Carberra link.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_link(ctx: lightbulb.Context) -> None:
     await ctx.respond(f"<https://{ctx.options.target.lower()}.carberra.xyz>")
 
 
 @plugin.command
-@decorators.option("number", "The PEP number to search for.")
-@decorators.command("pep", "Retrieve info on a Python Extension Protocol.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_pep(ctx: context.base.Context) -> None:
+@lightbulb.option("number", "The PEP number to search for.")
+@lightbulb.command("pep", "Retrieve info on a Python Extension Protocol.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_pep(ctx: lightbulb.Context) -> None:
     n = ctx.options.number
     url = f"https://python.org/dev/peps/pep-{n:>04}"
 
@@ -74,10 +73,10 @@ async def cmd_pep(ctx: context.base.Context) -> None:
 
 
 @plugin.command
-@decorators.option("query", "The thing to search.")
-@decorators.command("google", "Let me Google that for you...")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_google(ctx: context.base.Context) -> None:
+@lightbulb.option("query", "The thing to search.")
+@lightbulb.command("google", "Let me Google that for you...")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_google(ctx: lightbulb.Context) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
@@ -88,10 +87,10 @@ async def cmd_google(ctx: context.base.Context) -> None:
 
 
 @plugin.command
-@decorators.option("query", "The thing to search.")
-@decorators.command("duckduckgo", "Let me Duck Duck Go that for you...")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_duckduckgo(ctx: context.base.Context) -> None:
+@lightbulb.option("query", "The thing to search.")
+@lightbulb.command("duckduckgo", "Let me Duck Duck Go that for you...")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_duckduckgo(ctx: lightbulb.Context) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
@@ -101,9 +100,9 @@ async def cmd_duckduckgo(ctx: context.base.Context) -> None:
     await ctx.respond(f"<https://lmddgtfy.net/?q={q.replace(' ', '+')}>")
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)

@@ -26,14 +26,15 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import datetime as dt
 import platform
 import time
-import typing as t
 from dataclasses import dataclass
 
 import hikari
-from lightbulb import commands, context, decorators, plugins
+import lightbulb
 from psutil import Process, virtual_memory
 from pygount import SourceAnalysis
 
@@ -41,10 +42,7 @@ import carberretta
 from carberretta import Config
 from carberretta.utils import chron, helpers
 
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
-
-plugin = plugins.Plugin("Meta")
+plugin = lightbulb.Plugin("Meta")
 
 
 @dataclass
@@ -53,7 +51,7 @@ class CodeCounter:
     docs: int = 0
     empty: int = 0
 
-    def count(self) -> "CodeCounter":
+    def count(self) -> CodeCounter:
         for file in carberretta.ROOT_DIR.rglob("*.py"):
             analysis = SourceAnalysis.from_file(file, "pygount", encoding="utf-8")
             self.code += analysis.code_count
@@ -64,18 +62,18 @@ class CodeCounter:
 
 
 @plugin.command
-@decorators.command("ping", "Get the average DWSP latency for the bot.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_ping(ctx: context.base.Context) -> None:
+@lightbulb.command("ping", "Get the average DWSP latency for the bot.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_ping(ctx: lightbulb.Context) -> None:
     await ctx.respond(
         f"Pong! DWSP latency: {ctx.bot.heartbeat_latency * 1_000:,.0f} ms."
     )
 
 
 @plugin.command
-@decorators.command("about", "View information about Carberretta.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_about(ctx: context.base.Context) -> None:
+@lightbulb.command("about", "View information about Carberretta.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_about(ctx: lightbulb.Context) -> None:
     if not (guild := ctx.get_guild()):
         return
 
@@ -109,9 +107,9 @@ async def cmd_about(ctx: context.base.Context) -> None:
 
 
 @plugin.command
-@decorators.command("stats", "View runtime stats for Carberretta.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_stats(ctx: context.base.Context) -> None:
+@lightbulb.command("stats", "View runtime stats for Carberretta.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_stats(ctx: lightbulb.Context) -> None:
     if not (guild := ctx.get_guild()):
         return
 
@@ -162,11 +160,11 @@ async def cmd_stats(ctx: context.base.Context) -> None:
     )
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     if not bot.d.loc:
         bot.d.loc = CodeCounter().count()
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)
