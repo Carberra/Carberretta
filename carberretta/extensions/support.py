@@ -35,13 +35,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import hikari
-from lightbulb import commands, context, decorators, plugins
+import lightbulb
 
 from carberretta import Config
 from carberretta.utils import helpers
-
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
 
 INACTIVE_TIME: t.Final = 3600
 NAMES: t.Final = [
@@ -71,7 +68,7 @@ NAMES: t.Final = [
     "omega",
 ]
 
-plugin = plugins.Plugin("Support")
+plugin = lightbulb.Plugin("Support")
 
 log = logging.getLevelName(__name__)
 
@@ -124,10 +121,7 @@ class SupportChannel(hikari.GuildTextChannel):
 
     @property
     def state(self) -> SupportState:
-        return (
-            STATE_MAPPING.get(self.parent_id, SupportState.UNAVAILABLE)
-            or SupportState.UNAVAILABLE
-        )
+        return STATE_MAPPING.get(self.parent_id, SupportState.UNAVAILABLE)
 
     async def send_to(self, category: hikari.GuildCategory) -> None:
         ...
@@ -148,77 +142,77 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
 
 
 @plugin.command
-@decorators.command("client", "Check the client of a support case.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_client(ctx: context.base.Context) -> None:
+@lightbulb.command("client", "Check the client of a support case.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_client(ctx: lightbulb.SlashContext) -> None:
     ...
 
 
 @plugin.command
-@decorators.command(
+@lightbulb.command(
     "call",
     "Call for helpers. Carberretta will automatically work out whose help you need.",
 )
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_call(ctx: context.base.Context) -> None:
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_call(ctx: lightbulb.SlashContext) -> None:
     ...
 
 
 @plugin.command
-@decorators.option(
+@lightbulb.option(
     "delay",
     "Close the case in this many minutes if there is no further activity.",
     type=int,
     default=0,
 )
-@decorators.command("close", "Close a support case.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_close(ctx: context.base.Context) -> None:
+@lightbulb.command("close", "Close a support case.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_close(ctx: lightbulb.SlashContext) -> None:
     ...
 
 
 @plugin.command
-@decorators.option(
+@lightbulb.option(
     "member",
     "Re-open the last case this member opened.",
     type=hikari.Member,
     default=None,
 )
-@decorators.option(
+@lightbulb.option(
     "case_id",
     "Re-open the case with this ID.",
     default=None,
 )
-@decorators.command(
+@lightbulb.command(
     "reopen",
     "Re-open a support case. Re-opens the last case in this channel by default.",
 )
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_reopen(ctx: context.base.Context) -> None:
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_reopen(ctx: lightbulb.SlashContext) -> None:
     ...
 
 
 @plugin.command
-@decorators.option(
+@lightbulb.option(
     "channel",
     "The channel to redirect the member to.",
     type=hikari.TextableGuildChannel,
     default=None,
 )
-@decorators.option(
+@lightbulb.option(
     "member",
     "The member to redirect.",
     type=hikari.Member,
 )
-@decorators.command("redirect", "Redirect a member to another support channel.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_redirect(ctx: context.base.Context) -> None:
+@lightbulb.command("redirect", "Redirect a member to another support channel.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_redirect(ctx: lightbulb.SlashContext) -> None:
     ...
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)
