@@ -43,7 +43,7 @@ plugin = lightbulb.Plugin("Text")
 @lightbulb.option("characters", "The characters to get the information on.")
 @lightbulb.command("charinfo", "Get character information.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_charinfo(ctx: lightbulb.Context) -> None:
+async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
     characters = ctx.options.characters
     if len(characters) > 15:
         await ctx.respond("You can only pass 15 characters at a time.")

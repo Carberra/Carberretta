@@ -64,7 +64,7 @@ class CodeCounter:
 @plugin.command
 @lightbulb.command("ping", "Get the average DWSP latency for the bot.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_ping(ctx: lightbulb.Context) -> None:
+async def cmd_ping(ctx: lightbulb.SlashContext) -> None:
     await ctx.respond(
         f"Pong! DWSP latency: {ctx.bot.heartbeat_latency * 1_000:,.0f} ms."
     )
@@ -73,7 +73,7 @@ async def cmd_ping(ctx: lightbulb.Context) -> None:
 @plugin.command
 @lightbulb.command("about", "View information about Carberretta.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_about(ctx: lightbulb.Context) -> None:
+async def cmd_about(ctx: lightbulb.SlashContext) -> None:
     if not (guild := ctx.get_guild()):
         return
 
@@ -109,7 +109,7 @@ async def cmd_about(ctx: lightbulb.Context) -> None:
 @plugin.command
 @lightbulb.command("stats", "View runtime stats for Carberretta.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_stats(ctx: lightbulb.Context) -> None:
+async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
     if not (guild := ctx.get_guild()):
         return
 
