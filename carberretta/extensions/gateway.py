@@ -26,21 +26,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import datetime as dt
 import logging
-import typing as t
 
 import hikari
-from lightbulb import plugins
-
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
+import lightbulb
 
 from carberretta import Config
 
 TIMEOUT = 600
 
-plugin = plugins.Plugin("Gateway")
+plugin = lightbulb.Plugin("Gateway")
 
 log = logging.getLogger(__name__)
 
@@ -163,9 +161,9 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
         )
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)

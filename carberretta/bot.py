@@ -32,12 +32,11 @@ import traceback
 from pathlib import Path
 
 import hikari
+import lightbulb
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from hikari.events.base_events import FailedEventT
-from lightbulb import errors, events
-from lightbulb.app import BotApp
 from pytz import utc
 
 import carberretta
@@ -46,7 +45,7 @@ from carberretta.utils import helpers
 
 log = logging.getLogger(__name__)
 
-bot = BotApp(
+bot = lightbulb.BotApp(
     Config.TOKEN,
     default_enabled_guilds=Config.GUILD_ID,
     owner_ids=Config.OWNER_IDS,
@@ -109,11 +108,11 @@ async def on_error(event: hikari.ExceptionEvent[FailedEventT]) -> None:
     raise event.exception
 
 
-@bot.listen(events.CommandErrorEvent)
-async def on_command_error(event: events.CommandErrorEvent) -> None:
+@bot.listen(lightbulb.CommandErrorEvent)
+async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
     exc = getattr(event.exception, "__cause__", event.exception)
 
-    if isinstance(exc, errors.NotOwner):
+    if isinstance(exc, lightbulb.NotOwner):
         await event.context.respond("You need to be an owner to do that.")
         return
 

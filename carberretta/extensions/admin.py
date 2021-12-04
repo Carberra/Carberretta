@@ -26,37 +26,35 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import logging
-import typing as t
 from io import BytesIO
 
 import hikari
-from lightbulb import checks, commands, context, decorators, plugins
-
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
+import lightbulb
 
 log = logging.getLogger(__name__)
 
-plugin = plugins.Plugin("Admin")
+plugin = lightbulb.Plugin("Admin")
 
 
 @plugin.command
-@decorators.add_checks(checks.owner_only)
-@decorators.command("shutdown", "Shut Carberretta down.", ephemeral=True)
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_shutdown(ctx: context.base.Context) -> None:
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.command("shutdown", "Shut Carberretta down.", ephemeral=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_shutdown(ctx: lightbulb.Context) -> None:
     log.info("Shutdown signal received")
     await ctx.respond("Now shutting down.")
     await ctx.bot.close()
 
 
 @plugin.command
-@decorators.add_checks(checks.owner_only)
-@decorators.option("id", "The error reference ID.")
-@decorators.command("error", "View an error.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_error(ctx: context.base.Context) -> None:
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.option("id", "The error reference ID.")
+@lightbulb.command("error", "View an error.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_error(ctx: lightbulb.Context) -> None:
     if len(search_id := ctx.options.id) < 5:
         await ctx.respond("Your search should be at least 5 characters long.")
         return
@@ -78,14 +76,12 @@ async def cmd_error(ctx: context.base.Context) -> None:
         f"Command: /{row.err_cmd}\nAt: {row.err_time}\n\n{row.err_text}".encode()
     )
     b.seek(0)
-    await message.edit(
-        content=None, attachment=hikari.files.Bytes(b, f"err{row.err_id}.txt")
-    )
+    await message.edit(content=None, attachment=hikari.Bytes(b, f"err{row.err_id}.txt"))
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)
