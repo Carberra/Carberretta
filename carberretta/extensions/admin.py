@@ -43,7 +43,7 @@ plugin = lightbulb.Plugin("Admin")
 @lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.command("shutdown", "Shut Carberretta down.", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_shutdown(ctx: lightbulb.Context) -> None:
+async def cmd_shutdown(ctx: lightbulb.SlashContext) -> None:
     log.info("Shutdown signal received")
     await ctx.respond("Now shutting down.")
     await ctx.bot.close()
@@ -54,7 +54,7 @@ async def cmd_shutdown(ctx: lightbulb.Context) -> None:
 @lightbulb.option("id", "The error reference ID.")
 @lightbulb.command("error", "View an error.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_error(ctx: lightbulb.Context) -> None:
+async def cmd_error(ctx: lightbulb.SlashContext) -> None:
     if len(search_id := ctx.options.id) < 5:
         await ctx.respond("Your search should be at least 5 characters long.")
         return

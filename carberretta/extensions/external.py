@@ -52,7 +52,7 @@ LINKS: t.Final = (
 @lightbulb.option("target", "The link to show.", choices=LINKS)
 @lightbulb.command("link", "Retrieve a Carberra link.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_link(ctx: lightbulb.Context) -> None:
+async def cmd_link(ctx: lightbulb.SlashContext) -> None:
     await ctx.respond(f"<https://{ctx.options.target.lower()}.carberra.xyz>")
 
 
@@ -60,7 +60,7 @@ async def cmd_link(ctx: lightbulb.Context) -> None:
 @lightbulb.option("number", "The PEP number to search for.")
 @lightbulb.command("pep", "Retrieve info on a Python Extension Protocol.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_pep(ctx: lightbulb.Context) -> None:
+async def cmd_pep(ctx: lightbulb.SlashContext) -> None:
     n = ctx.options.number
     url = f"https://python.org/dev/peps/pep-{n:>04}"
 
@@ -76,7 +76,7 @@ async def cmd_pep(ctx: lightbulb.Context) -> None:
 @lightbulb.option("query", "The thing to search.")
 @lightbulb.command("google", "Let me Google that for you...")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_google(ctx: lightbulb.Context) -> None:
+async def cmd_google(ctx: lightbulb.SlashContext) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
@@ -90,7 +90,7 @@ async def cmd_google(ctx: lightbulb.Context) -> None:
 @lightbulb.option("query", "The thing to search.")
 @lightbulb.command("duckduckgo", "Let me Duck Duck Go that for you...")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_duckduckgo(ctx: lightbulb.Context) -> None:
+async def cmd_duckduckgo(ctx: lightbulb.SlashContext) -> None:
     q = ctx.options.query
 
     if len(q) > 500:
