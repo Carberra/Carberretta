@@ -16,7 +16,7 @@ flake8~=4.0
 isort~=5.9
 
 # Typing
-mypy==0.910
+git+https://github.com/python/mypy
 types-aiofiles~=0.7.0
 types-pytz==2021.3.1
 

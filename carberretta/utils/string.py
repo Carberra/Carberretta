@@ -50,6 +50,6 @@ def ordinal(number: int) -> str:
     return f"{number:,}th"
 
 
-def possessive(user: "Member" | "User") -> str:
+def possessive(user: Member | User) -> str:
     name = getattr(user, "display_name", user.username)
     return f"{name}'{'s' if not name.endswith('s') else ''}"

@@ -26,26 +26,24 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import datetime as dt
-import typing as t
 import unicodedata
 
 import hikari
-from lightbulb import commands, context, decorators, plugins
+import lightbulb
 
 from carberretta.utils import helpers
 
-if t.TYPE_CHECKING:
-    from lightbulb.app import BotApp
-
-plugin = plugins.Plugin("Text")
+plugin = lightbulb.Plugin("Text")
 
 
 @plugin.command
-@decorators.option("characters", "The characters to get the information on.")
-@decorators.command("charinfo", "Get character information.")
-@decorators.implements(commands.slash.SlashCommand)
-async def cmd_charinfo(ctx: context.base.Context) -> None:
+@lightbulb.option("characters", "The characters to get the information on.")
+@lightbulb.command("charinfo", "Get character information.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
     characters = ctx.options.characters
     if len(characters) > 15:
         await ctx.respond("You can only pass 15 characters at a time.")
@@ -77,9 +75,9 @@ async def cmd_charinfo(ctx: context.base.Context) -> None:
     )
 
 
-def load(bot: "BotApp") -> None:
+def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: "BotApp") -> None:
+def unload(bot: lightbulb.BotApp) -> None:
     bot.remove_plugin(plugin)
