@@ -41,7 +41,7 @@ from carberretta.utils import chron
 
 plugin = lightbulb.Plugin("Profanity")
 
-FILTER_CONVERSION: t.Final = {
+FILTER_CONVERSION: t.Final[dict[str, str | None]] = {
     '"': None,
     ",": None,
     ".": None,
@@ -65,7 +65,7 @@ class Profanity:
 
     async def setup(self) -> None:
         if not Path(self.file).is_file():
-            filter_file_template = {
+            file_template: dict[str, list[t.Any] | None] = {
                 "mainFilter": [],
                 "dontFilter": None,
                 "conditionFilter": [],
@@ -73,15 +73,16 @@ class Profanity:
 
             async with aiofiles.open(self.file, "w", encoding="utf-8") as f:
                 await f.write(
-                    json_dumps(filter_file_template, cls=chron.DateTimeEncoder)
+                    json_dumps(file_template, cls=chron.DateTimeEncoder)
                 )
 
 
-async def into_filter_format(text: str):
-    return text.translate(str.maketrans(FILTER_CONVERSION))
+async def into_filter_format(text: str) -> str:
+    table: dict[int, str | None] = str.maketrans(FILTER_CONVERSION)
+    return text.translate(table)
 
 
-async def from_filter_format(text: str):
+async def from_filter_format(text: str) -> str:
     return text.replace("#", "*")
 
 

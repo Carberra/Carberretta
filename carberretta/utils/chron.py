@@ -28,12 +28,14 @@
 
 import datetime as dt
 import time
+import typing as t
 from json import JSONEncoder
 
 from carberretta.utils import string
 
+
 class DateTimeEncoder(JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: t.Any) -> t.Any:
         if isinstance(obj, (dt.date, dt.datetime)):
             return obj.isoformat()
 
