@@ -28,9 +28,14 @@
 
 import datetime as dt
 import time
+from json import JSONEncoder
 
 from carberretta.utils import string
 
+class DateTimeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (dt.date, dt.datetime)):
+            return obj.isoformat()
 
 def sys_time() -> str:
     return time.strftime("%H:%M:%S")
