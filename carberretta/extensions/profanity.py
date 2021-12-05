@@ -28,6 +28,7 @@
 
 from __future__ import annotations
 
+import typing as t
 from dataclasses import dataclass
 from json import dumps as json_dumps
 from pathlib import Path
@@ -39,6 +40,22 @@ from content_filter import Filter
 from carberretta.utils import chron
 
 plugin = lightbulb.Plugin("Profanity")
+
+FILTER_CONVERSION: t.Final = {
+    '"': None,
+    ",": None,
+    ".": None,
+    "-": None,
+    "'": None,
+    "+": "t",
+    "!": "i",
+    "@": "a",
+    "1": "i",
+    "0": "o",
+    "3": "e",
+    "$": "s",
+    "*": "#",
+}
 
 
 @dataclass
@@ -58,6 +75,14 @@ class Profanity:
                 await f.write(
                     json_dumps(filter_file_template, cls=chron.DateTimeEncoder)
                 )
+
+
+async def into_filter_format(text: str):
+    return text.translate(str.maketrans(FILTER_CONVERSION))
+
+
+async def from_filter_format(text: str):
+    return text.replace("#", "*")
 
 
 def load(bot: lightbulb.BotApp) -> None:
