@@ -28,12 +28,42 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from json import dumps as json_dumps
+from pathlib import Path
+
+import aiofiles
 import lightbulb
+from content_filter import Filter
+
+from carberretta.utils import chron
 
 plugin = lightbulb.Plugin("Profanity")
 
 
+@dataclass
+class Profanity:
+    file: str = ""
+    filter: Filter = Filter(list_file=file)
+
+    async def setup(self) -> None:
+        if not Path(self.file).is_file():
+            filter_file_template = {
+                "mainFilter": [],
+                "dontFilter": None,
+                "conditionFilter": [],
+            }
+
+            async with aiofiles.open(self.file, "w", encoding="utf-8") as f:
+                await f.write(
+                    json_dumps(filter_file_template, cls=chron.DateTimeEncoder)
+                )
+
+
 def load(bot: lightbulb.BotApp) -> None:
+    if not bot.d.profanity:
+        bot.d.profanity = Profanity(file=f"{bot.d._dynamic}/filter.json")
+
     bot.add_plugin(plugin)
 
 
