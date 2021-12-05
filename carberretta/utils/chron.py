@@ -39,6 +39,7 @@ class DateTimeEncoder(JSONEncoder):
         if isinstance(obj, (dt.date, dt.datetime)):
             return obj.isoformat()
 
+
 def sys_time() -> str:
     return time.strftime("%H:%M:%S")
 

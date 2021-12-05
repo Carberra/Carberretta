@@ -72,9 +72,7 @@ class Profanity:
             }
 
             async with aiofiles.open(self.file, "w", encoding="utf-8") as f:
-                await f.write(
-                    json_dumps(file_template, cls=chron.DateTimeEncoder)
-                )
+                await f.write(json_dumps(file_template, cls=chron.DateTimeEncoder))
 
 
 async def into_filter_format(text: str) -> str:
