@@ -32,7 +32,6 @@ import logging
 import typing as t
 from pathlib import Path
 
-import logging
 from .config import Config
 from .db import Database
 
