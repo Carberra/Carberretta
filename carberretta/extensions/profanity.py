@@ -28,20 +28,26 @@
 
 from __future__ import annotations
 
+import json
 import typing as t
-from dataclasses import dataclass
-from json import dumps as json_dumps
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import aiofiles
+import hikari
 import lightbulb
 from content_filter import Filter
 
+from carberretta.config import Config
 from carberretta.utils import chron
 
 plugin = lightbulb.Plugin("Profanity")
 
-FILTER_CONVERSION: t.Final[dict[str, str | None]] = {
+
+# ==== CONSTANTS ====
+
+
+FILTER_CONVERSION: t.Final[t.Dict[str, str | None]] = {
     '"': None,
     ",": None,
     ".": None,
@@ -57,31 +63,100 @@ FILTER_CONVERSION: t.Final[dict[str, str | None]] = {
     "*": "#",
 }
 
+# actions should be in order of greatest to least in term of weight
+AUTOMOD_ACTIONS: t.Final = ("ban", "kick", "warn", "verbal")
+
+# ==== SETUP ====
+
+
+async def on_started(event: hikari.StartedEvent) -> None:
+    await plugin.bot.d.profanity.setup()
+
+    plugin.d.log_channel = await plugin.bot.rest.fetch_channel(Config.MODLOG_CHANNEL_ID)
+
+
+# ==== MANAGE FILTER ====
+
 
 @dataclass
 class Profanity:
-    file: str = ""
-    filter: Filter = Filter(list_file=file)
+    file: str
+    filter: Filter = field(default_factory=Filter)
+    data: t.Dict[str, t.List[t.Dict[str, str | int | bool | None]] | t.Any] = field(
+        default_factory=dict
+    )
 
     async def setup(self) -> None:
         if not Path(self.file).is_file():
-            file_template: dict[str, list[t.Any] | None] = {
+            self.data = {
                 "mainFilter": [],
                 "dontFilter": None,
                 "conditionFilter": [],
             }
 
             async with aiofiles.open(self.file, "w", encoding="utf-8") as f:
-                await f.write(json_dumps(file_template, cls=chron.DateTimeEncoder))
+                await f.write(json.dumps(self.data, cls=chron.DateTimeEncoder))
+
+        async with aiofiles.open(self.file, "r", encoding="utf-8") as f:
+            self.data = json.loads(await f.read())
+
+        self.filter = Filter(list_file=self.file)
+
+    async def process(self, msg: str) -> t.List[bool | str | t.Dict[str, t.List[str]]]:
+        res_raw: t.List[t.Dict[str, t.Any]] = self.filter.check(msg).as_list
+        res: t.Dict[str, t.List[str]] = {"raw": [], "found": [], "count": []}
+        actions: t.List[str] = []
+        action: str = ""
+
+        if not res_raw:
+            return [False]
+
+        for word in res_raw:
+            res["raw"].append(word["find"] + "\n")
+            res["found"].append(word["word"] + "\n")
+            res["count"].append(str(word["count"]) + "\n")
+
+            for w in self.data[word["filter"]]:
+                if w["find"] == word["find"]:
+                    actions.append(word["action"])
+
+        for a in AUTOMOD_ACTIONS:
+            if a in actions:
+                action = a
+
+        return [True, res, action]
+
+
+# ==== CUSTOM CONVERSIONS ====
 
 
 async def into_filter_format(text: str) -> str:
-    table: dict[int, str | None] = str.maketrans(FILTER_CONVERSION)
+    table: t.Dict[int, str | None] = str.maketrans(FILTER_CONVERSION)
     return text.translate(table)
 
 
 async def from_filter_format(text: str) -> str:
     return text.replace("#", "*")
+
+
+# ==== LISTENERS ====
+
+
+@plugin.listener(hikari.GuildMessageCreateEvent)
+async def on_guild_message_create(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.message.author.is_bot:
+        return
+
+    if event.message.channel_id == Config.MODERATOR_CHANNEL_ID:
+        return
+
+    res = await plugin.bot.d.profanity.process(event.message.content)
+
+    if not res[0]:
+        return
+
+
+# ==== LOADING ====
 
 
 def load(bot: lightbulb.BotApp) -> None:
