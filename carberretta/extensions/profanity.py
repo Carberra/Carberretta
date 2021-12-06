@@ -28,6 +28,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import typing as t
 from dataclasses import dataclass, field
@@ -39,9 +40,9 @@ import lightbulb
 from content_filter import Filter
 
 from carberretta.config import Config
-from carberretta.utils import chron
+from carberretta.utils import chron, helpers
 
-plugin = lightbulb.Plugin("Profanity")
+plugin = lightbulb.Plugin("Profanity", include_datastore=True)
 
 
 # ==== CONSTANTS ====
@@ -69,6 +70,7 @@ AUTOMOD_ACTIONS: t.Final = ("ban", "kick", "warn", "verbal")
 # ==== SETUP ====
 
 
+@plugin.listener(hikari.StartedEvent)
 async def on_started(event: hikari.StartedEvent) -> None:
     await plugin.bot.d.profanity.setup()
 
@@ -118,7 +120,7 @@ class Profanity:
 
             for w in self.data[word["filter"]]:
                 if w["find"] == word["find"]:
-                    actions.append(word["action"])
+                    actions.append(str(w["action"]))
 
         for a in AUTOMOD_ACTIONS:
             if a in actions:
@@ -150,10 +152,38 @@ async def on_guild_message_create(event: hikari.GuildMessageCreateEvent) -> None
     if event.message.channel_id == Config.MODERATOR_CHANNEL_ID:
         return
 
+    if not (guild := event.get_guild()):
+        return
+
+    if not (member := guild.get_member(event.author.id)):
+        return
+
+    if not (channel := event.get_channel()):
+        return
+
     res = await plugin.bot.d.profanity.process(event.message.content)
 
     if not res[0]:
         return
+
+    await event.message.delete()
+    msg = await channel.send(f"{member.mention}, please do not use offensive language.")
+
+    await plugin.d.log_channel.send(
+        hikari.Embed(
+            title="Filtered Message",
+            colour=helpers.choose_colour(),
+            timestamp=dt.datetime.now().astimezone(),
+        )
+        .set_author(name="Modlog")
+        .set_footer(f"{member.display_name}", icon=member.avatar_url)
+        .add_field("Message", f"{event.message.content}")
+        .add_field("Identified", f"{''.join(res[1]['raw'])}", inline=True)
+        .add_field("Found", f"{''.join(res[1]['found'])}", inline=True)
+        .add_field("Count", f"{''.join(res[1]['count'])}", inline=True)
+        .add_field("Context", f"[Jump]({msg.make_link(guild)})", inline=True)
+        .add_field("Action", f"{res[2].capitalize()}", inline=True)
+    )
 
 
 # ==== LOADING ====
