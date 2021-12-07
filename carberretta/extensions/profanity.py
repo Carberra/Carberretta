@@ -65,13 +65,22 @@ FILTER_CONVERSION: t.Final[t.Dict[str, str | None]] = {
 }
 
 # actions should be in order of greatest to least in term of weight
-AUTOMOD_ACTIONS: t.Final = ("ban", "kick", "warn", "verbal")
+# the callables for each action should accept a member object and reason
+AUTOMOD_ACTIONS: t.Final[
+    t.Dict[str, t.Callable[[hikari.Member, str], t.Any] | None]
+] = {
+    "ban": None,
+    "kick": None,
+    "warn": None,
+    "verbal": None,
+}
+
 
 # ==== SETUP ====
 
 
 @plugin.listener(hikari.StartedEvent)
-async def on_started(event: hikari.StartedEvent) -> None:
+async def on_started(_: hikari.StartedEvent) -> None:
     await plugin.bot.d.profanity.setup()
 
     plugin.d.log_channel = await plugin.bot.rest.fetch_channel(Config.MODLOG_CHANNEL_ID)
@@ -108,7 +117,7 @@ class Profanity:
         res_raw: t.List[t.Dict[str, t.Any]] = self.filter.check(msg).as_list
         res: t.Dict[str, t.List[str]] = {"raw": [], "found": [], "count": []}
         actions: t.List[str] = []
-        action: str = ""
+        action: str = list(AUTOMOD_ACTIONS.keys())[-1]
 
         if not res_raw:
             return [False]
@@ -122,11 +131,19 @@ class Profanity:
                 if w["find"] == word["find"]:
                     actions.append(str(w["action"]))
 
-        for a in AUTOMOD_ACTIONS:
+        for a in list(AUTOMOD_ACTIONS.keys()):
             if a in actions:
                 action = a
 
         return [True, res, action]
+
+    async def take_action(self, action: str, member: hikari.Member) -> None:
+        if not AUTOMOD_ACTIONS[action]:
+            return
+
+        await {key: call for (key, call) in AUTOMOD_ACTIONS.items() if call}[action](
+            member, "Using offensive language (automod)"
+        )
 
 
 # ==== CUSTOM CONVERSIONS ====
@@ -183,7 +200,10 @@ async def on_guild_message_create(event: hikari.GuildMessageCreateEvent) -> None
         .add_field("Count", f"{''.join(res[1]['count'])}", inline=True)
         .add_field("Context", f"[Jump]({msg.make_link(guild)})", inline=True)
         .add_field("Action", f"{res[2].capitalize()}", inline=True)
+        .add_field("Member", f"{event.message.author.mention}", inline=True)
     )
+
+    await plugin.bot.d.profanity.take_action(res[2], member)
 
 
 # ==== LOADING ====
