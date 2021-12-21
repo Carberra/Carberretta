@@ -61,6 +61,12 @@ class Gateway(commands.Cog):
         if member.guild.id != Config.GUILD_ID:
             return
 
+        if member.bot:
+            await self.gateway_channel.send(
+                f"A new bot, {member.mention}, has joined the server."
+            )
+            return
+
         await self.schedule_action(member)
 
     @commands.Cog.listener()
