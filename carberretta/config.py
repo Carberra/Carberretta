@@ -51,7 +51,7 @@ class ConfigMeta(type):
     def resolve_key(cls, key: str) -> t.Any:
         try:
             return cls.resolve_key(os.environ[key])
-        except:
+        except Exception:
             return cls.resolve_value(key)
 
     def __getattr__(cls, name: str) -> t.Any:
