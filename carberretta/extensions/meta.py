@@ -171,7 +171,7 @@ async def rtfm_group(ctx) -> None:
 @lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
 @lightbulb.command("hikari", description="Searches the docs of hikari.", auto_defer=True)
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def hikari_rtfm(ctx):
+async def hikari_rtfm(ctx) -> None:
     matches = await rtfm.get_autocomplete(ctx.options.query, "hikari")
     embed = hikari.Embed(title="RTFM", color=color.default)
     embed.description = ""
@@ -186,7 +186,7 @@ async def hikari_rtfm(ctx):
 @lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
 @lightbulb.command("lightbulb", description="Searches the docs of lightbulb.", auto_defer=True)
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def lightbulb_rtfm(ctx):
+async def lightbulb_rtfm(ctx) -> None:
     matches = await rtfm.get_autocomplete(ctx.options.query, "lightbulb")
     embed = hikari.Embed(title="RTFM", color=0x2f3136) #I just put no color, idk what you want
     embed.description = ""
