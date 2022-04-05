@@ -52,7 +52,7 @@ def decode_object_inv(stream):
         raise RuntimeError("Invalid object.inv file")
     regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)") #this thing is scary af
     def decompress_chunks(bytes_obj):
-        def decomepress(bytes_obj):
+        def decompress(bytes_obj):
             decompressor = zlib.decompressobj()
             for chunk in bytes_obj:
                 chunk = decompressor.decompress(chunk) #decompresses to somethign
