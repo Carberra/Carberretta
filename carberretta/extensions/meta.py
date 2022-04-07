@@ -175,7 +175,11 @@ async def rtfm_group(_: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
 async def hikari_rtfm(ctx: lightbulb.Context) -> None:
     matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.hikari_cache)
-    embed = hikari.Embed(title="RTFM", color=helpers.choose_color())
+    embed = hikari.Embed(
+        title="RTFM", 
+        color=helpers.choose_color(), 
+        timestamp=dt.datetime.now().astimezone()
+        )
     embed.description = ""
 
     for match in matches:
@@ -198,7 +202,11 @@ async def hikari_rtfm(ctx: lightbulb.Context) -> None:
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
 async def lightbulb_rtfm(ctx: lightbulb.Context) -> None:
     matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.lightbulb_cache)
-    embed = hikari.Embed(title="RTFM", color=helpers.choose_color())
+    embed = hikari.Embed(
+        title="RTFM", 
+        color=helpers.choose_color(), 
+        timestamp=dt.datetime.now().astimezone()
+        )
     embed.description = ""
 
     for match in matches:
