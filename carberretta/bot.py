@@ -41,11 +41,7 @@ from pytz import utc
 
 import carberretta
 from carberretta import Config, Database
-<<<<<<< HEAD
-from carberretta.utils import helpers
-=======
 from carberretta.utils import helpers, rtfm
->>>>>>> b651126 (Updated pr for RTFM command)
 
 log = logging.getLogger(__name__)
 
@@ -71,8 +67,6 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.session = ClientSession(trust_env=True)
     log.info("AIOHTTP session started")
 
-<<<<<<< HEAD
-=======
     response = await bot.d.session.get("https://www.hikari-py.dev/" + "objects.inv")
     cache = rtfm.decode_object_inv(await response.read())  # decodes it
     bot.d.hikari_cache = cache
@@ -83,7 +77,6 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     cache = rtfm.decode_object_inv(await response.read())  # decodes it
     bot.d.lightbulb_cache = cache
 
->>>>>>> b651126 (Updated pr for RTFM command)
     bot.d.db = Database(bot.d._dynamic, bot.d._static)
     await bot.d.db.connect()
     bot.d.scheduler.add_job(bot.d.db.commit, CronTrigger(second=0))
