@@ -67,15 +67,11 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.session = ClientSession(trust_env=True)
     log.info("AIOHTTP session started")
 
-    response = await bot.d.session.get("https://www.hikari-py.dev/" + "objects.inv")
-    cache = rtfm.decode_object_inv(await response.read())  # decodes it
-    bot.d.hikari_cache = cache
+    hk = await bot.d.session.get(carberretta.HIKARI_DOCS_URL + "objects.inv")
+    bot.d.hikari_cache = rtfm.decode_object_inv(await hk.read())
 
-    response = await bot.d.session.get(
-        "https://hikari-lightbulb.readthedocs.io/en/latest/" + "objects.inv"
-    )
-    cache = rtfm.decode_object_inv(await response.read())  # decodes it
-    bot.d.lightbulb_cache = cache
+    lb = await bot.d.session.get(carberretta.LIGHTBULB_DOCS_URL + "objects.inv")
+    bot.d.lightbulb_cache = rtfm.decode_object_inv(await lb.read())
 
     bot.d.db = Database(bot.d._dynamic, bot.d._static)
     await bot.d.db.connect()
@@ -126,6 +122,9 @@ async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
         await event.context.respond("You need to be an owner to do that.")
         return
 
+    if isinstance(exc, lightbulb.CommandNotFound):
+        return
+
     # Add more errors when needed.
 
     try:
@@ -134,7 +133,7 @@ async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
             "INSERT INTO errors (err_id, err_cmd, err_text) VALUES (?, ?, ?)",
             err_id,
             event.context.invoked_with,
-            "".join(traceback.format_exception(event.exception)),  # type: ignore
+            "".join(traceback.format_exception(event.exception)),
         )
         await event.context.respond(
             "Something went wrong. An error report has been created "

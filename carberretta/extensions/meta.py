@@ -163,7 +163,7 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
 @plugin.command
 @lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
 @lightbulb.implements(lightbulb.SlashCommandGroup, lightbulb.PrefixCommandGroup)
-async def rtfm_group(ctx: lightbulb.context.Context) -> None:
+async def rtfm_group(_: lightbulb.Context) -> None:
     pass
 
 
@@ -173,18 +173,20 @@ async def rtfm_group(ctx: lightbulb.context.Context) -> None:
     "hikari", description="Searches the docs of hikari.", auto_defer=True
 )
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def hikari_rtfm(ctx: lightbulb.context.Context) -> None:
+async def hikari_rtfm(ctx: lightbulb.Context) -> None:
     matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.hikari_cache)
     embed = hikari.Embed(title="RTFM", color=0x2F3136)
     embed.description = ""
+
     for match in matches:
         try:
-            url = "https://www.hikari-py.dev/"
             embed.description += (
-                f"[`{match}`]({url}{plugin.bot.d.hikari_cache[match][1]})\n"
+                f"[`{match}`]({carberretta.HIKARI_DOCS_URL}"
+                f"{plugin.bot.d.hikari_cache[match][1]})\n"
             )
         except:
             continue
+
     await ctx.respond(embed=embed)
 
 
@@ -194,18 +196,20 @@ async def hikari_rtfm(ctx: lightbulb.context.Context) -> None:
     "lightbulb", description="Searches the docs of lightbulb.", auto_defer=True
 )
 @lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def lightbulb_rtfm(ctx: lightbulb.context.Context) -> None:
+async def lightbulb_rtfm(ctx: lightbulb.Context) -> None:
     matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.lightbulb_cache)
     embed = hikari.Embed(title="RTFM", color=0x2F3136)
     embed.description = ""
+
     for match in matches:
         try:
-            url = "https://hikari-lightbulb.readthedocs.io/en/latest/"
             embed.description += (
-                f"[`{match}`]({url}{plugin.bot.d.lightbulb_cache[match][1]})\n"
+                f"[`{match}`]({carberretta.LIGHTBULB_DOCS_URL}"
+                f"{plugin.bot.d.lightbulb_cache[match][1]})\n"
             )
         except:
             continue
+
     await ctx.respond(embed=embed)
 
 
@@ -213,6 +217,7 @@ async def lightbulb_rtfm(ctx: lightbulb.context.Context) -> None:
 async def hikari_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
+    assert isinstance(opt.value, str)
     return await rtfm.get_rtfm(opt.value, plugin.bot.d.hikari_cache)
 
 
@@ -220,10 +225,16 @@ async def hikari_autocomplete(
 async def lightbulb_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
+    assert isinstance(opt.value, str)
     return await rtfm.get_rtfm(opt.value, plugin.bot.d.lightbulb_cache)
 
 
 def load(bot: lightbulb.BotApp) -> None:
     if not bot.d.loc:
         bot.d.loc = CodeCounter().count()
+
     bot.add_plugin(plugin)
+
+
+def unload(bot: lightbulb.BotApp) -> None:
+    bot.remove_plugin(plugin)
