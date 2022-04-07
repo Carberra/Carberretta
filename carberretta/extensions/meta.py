@@ -42,8 +42,11 @@ import carberretta
 from carberretta import Config
 from carberretta.utils import chron, helpers, rtfm
 
+<<<<<<< HEAD
 import requests
 
+=======
+>>>>>>> b651126 (Updated pr for RTFM command)
 plugin = lightbulb.Plugin("Meta", include_datastore=True)
 
 
@@ -128,7 +131,11 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
             dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
             ms=True,
         )
+<<<<<<< HEAD
         mem_total = virtual_memory().total / (1024 ** 2)
+=======
+        mem_total = virtual_memory().total / (1024**2)
+>>>>>>> b651126 (Updated pr for RTFM command)
         mem_of_total = proc.memory_percent()
         mem_usage = mem_total * (mem_of_total / 100)
 
@@ -161,6 +168,7 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
         )
     )
 
+<<<<<<< HEAD
 @plugin.command
 @lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
 @lightbulb.implements(lightbulb.SlashCommandGroup, lightbulb.PrefixCommandGroup)
@@ -178,10 +186,37 @@ async def hikari_rtfm(ctx: context.Context) -> None:
     for match in matches:
         try:
             embed.description += f"[`{match}`](https://www.hikari-py.dev/{plugin.d.hikari_cache[match][1]})\n"
+=======
+
+@plugin.command
+@lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
+@lightbulb.implements(lightbulb.SlashCommandGroup, lightbulb.PrefixCommandGroup)
+async def rtfm_group(ctx: lightbulb.context.Context) -> None:
+    pass
+
+
+@rtfm_group.child
+@lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
+@lightbulb.command(
+    "hikari", description="Searches the docs of hikari.", auto_defer=True
+)
+@lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
+async def hikari_rtfm(ctx: lightbulb.context.Context) -> None:
+    matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.hikari_cache)
+    embed = hikari.Embed(title="RTFM", color=0x2F3136)
+    embed.description = ""
+    for match in matches:
+        try:
+            url = "https://www.hikari-py.dev/"
+            embed.description += (
+                f"[`{match}`]({url}{plugin.bot.d.hikari_cache[match][1]})\n"
+            )
+>>>>>>> b651126 (Updated pr for RTFM command)
         except:
             continue
     await ctx.respond(embed=embed)
 
+<<<<<<< HEAD
 @rtfm.child
 @lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
 @lightbulb.command("lightbulb", description="Searches the docs of lightbulb.", auto_defer=True)
@@ -193,20 +228,57 @@ async def lightbulb_rtfm(ctx: context.Context) -> None:
     for match in matches:
         try:
             embed.description += f"[`{match}`](https://hikari-lightbulb.readthedocs.io/en/latest/{plugin.d.lightbulb_cache[match][1]})\n" #I didn't know you can make these things clickible. Cool.
+=======
+
+@rtfm_group.child
+@lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
+@lightbulb.command(
+    "lightbulb", description="Searches the docs of lightbulb.", auto_defer=True
+)
+@lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
+async def lightbulb_rtfm(ctx: lightbulb.context.Context) -> None:
+    matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.lightbulb_cache)
+    embed = hikari.Embed(title="RTFM", color=0x2F3136)
+    embed.description = ""
+    for match in matches:
+        try:
+            url = "https://hikari-lightbulb.readthedocs.io/en/latest/"
+            embed.description += (
+                f"[`{match}`]({url}{plugin.bot.d.lightbulb_cache[match][1]})\n"
+            )
+>>>>>>> b651126 (Updated pr for RTFM command)
         except:
             continue
     await ctx.respond(embed=embed)
 
+<<<<<<< HEAD
 @hikari_rtfm.autocomplete("query")
 async def hikari_autocomplete(opt: hikari.AutocompleteInteractionOption, inter: hikari.AutocompleteInteraction): return await rtfm.get_rtfm(opt.value, plugin.d.hikari_cache)
 
 @lightbulb_rtfm.autocomplete("query")
 async def lightbulb_autocomplete(opt: hikari.AutocompleteInteractionOption, inter: hikari.AutocompleteInteraction): return await rtfm.get_rtfm(opt.value, plugin.d.lightbulb_cache)
+=======
+
+@hikari_rtfm.autocomplete("query")
+async def hikari_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    return await rtfm.get_rtfm(opt.value, plugin.bot.d.hikari_cache)
+
+
+@lightbulb_rtfm.autocomplete("query")
+async def lightbulb_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    return await rtfm.get_rtfm(opt.value, plugin.bot.d.lightbulb_cache)
+
+>>>>>>> b651126 (Updated pr for RTFM command)
 
 def load(bot: lightbulb.BotApp) -> None:
     if not bot.d.loc:
         bot.d.loc = CodeCounter().count()
     bot.add_plugin(plugin)
+<<<<<<< HEAD
     # This just gets the docs stuff
     response = requests.get("https://www.hikari-py.dev/" + "objects.inv")
     cache = rtfm.decode_object_inv(response.content) #decodes it
@@ -214,6 +286,8 @@ def load(bot: lightbulb.BotApp) -> None:
     response = requests.get("https://hikari-lightbulb.readthedocs.io/en/latest/" + "objects.inv")
     cache = rtfm.decode_object_inv(response.content) #decodes it
     plugin.d.lightbulb_cache = cache
+=======
+>>>>>>> b651126 (Updated pr for RTFM command)
 
 
 def unload(bot: lightbulb.BotApp) -> None:

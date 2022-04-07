@@ -65,4 +65,11 @@ class ConfigMeta(type):
 
 
 class Config(metaclass=ConfigMeta):
+<<<<<<< HEAD
     pass
+=======
+    TOKEN = "ODgyOTk0NDUzNjU1MjA3OTg4.YTDeqg.zKod7EPnyJkAfz60fvKykrE0K7Q"
+    GUILD_ID = 727195918180548728
+    STDOUT_CHANNEL_ID = 727196459518263437
+    OWNER_IDS = (674629871074279434, 385807530913169426)
+>>>>>>> b651126 (Updated pr for RTFM command)

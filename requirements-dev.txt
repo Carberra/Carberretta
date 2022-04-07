@@ -9,19 +9,31 @@ furo==2021.10.9
 sphinx<5,>=4
 
 # Formatting
+<<<<<<< HEAD
 black==21.11b1
+=======
+black==22.3.0
+>>>>>>> b651126 (Updated pr for RTFM command)
 
 # Imports
 flake8~=4.0
 isort~=5.9
 
 # Typing
+<<<<<<< HEAD
 git+https://github.com/python/mypy
+=======
+mypy==0.942
+>>>>>>> b651126 (Updated pr for RTFM command)
 types-aiofiles~=0.7.0
 types-pytz==2021.3.1
 
 # Line lengths
+<<<<<<< HEAD
 len8~=0.5
+=======
+len8~=0.7.3
+>>>>>>> b651126 (Updated pr for RTFM command)
 
 # Spelling
 codespell~=2.1.0
