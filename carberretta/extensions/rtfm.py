@@ -38,22 +38,23 @@ import hikari
 import lightbulb
 from rapidfuzz import fuzz, process
 
-import carberretta
 from carberretta.utils import helpers
 
 if t.TYPE_CHECKING:
     CachedObjT = dict[str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any]]
 
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
-regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
+CHUNK_REGEX = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
+HIKARI_DOCS_URL: t.Final = "https://www.hikari-py.dev/"
+LIGHTBULB_DOCS_URL: t.Final = "https://hikari-lightbulb.readthedocs.io/en/latest/"
 
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
-    hk = await plugin.bot.d.session.get(carberretta.HIKARI_DOCS_URL + "objects.inv")
+    hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
     plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
 
-    lb = await plugin.bot.d.session.get(carberretta.LIGHTBULB_DOCS_URL + "objects.inv")
+    lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
     plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
 
 
@@ -82,7 +83,7 @@ async def hikari_rtfm(ctx: lightbulb.SlashContext) -> None:
     for match in matches:
         try:
             embed.description += (
-                f"[`{match}`]({carberretta.HIKARI_DOCS_URL}"
+                f"[`{match}`]({HIKARI_DOCS_URL}"
                 f"{plugin.bot.d.hikari_cache[match][1]})\n"
             )
         except:
@@ -109,7 +110,7 @@ async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
     for match in matches:
         try:
             embed.description += (
-                f"[`{match}`]({carberretta.LIGHTBULB_DOCS_URL}"
+                f"[`{match}`]({LIGHTBULB_DOCS_URL}"
                 f"{plugin.bot.d.lightbulb_cache[match][1]})\n"
             )
         except:
@@ -175,7 +176,7 @@ def decode_object_inv(
                 pos = cache.find(b"\n")
 
     for line in decompress_chunks(bytes_obj):
-        if not (match := regex.match(line.rstrip())):
+        if not (match := CHUNK_REGEX.match(line.rstrip())):
             continue
 
         if match in cache:
