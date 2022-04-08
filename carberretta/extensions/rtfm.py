@@ -47,6 +47,15 @@ if t.TYPE_CHECKING:
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
 
 
+@plugin.listener(hikari.StartedEvent)
+async def on_started(_: hikari.StartedEvent) -> None:
+    hk = await plugin.bot.d.session.get(carberretta.HIKARI_DOCS_URL + "objects.inv")
+    plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
+
+    lb = await plugin.bot.d.session.get(carberretta.LIGHTBULB_DOCS_URL + "objects.inv")
+    plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
+
+
 @plugin.command
 @lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
 @lightbulb.implements(lightbulb.SlashCommandGroup)
@@ -134,6 +143,7 @@ def decode_object_inv(
 ) -> CachedObjT:
     cache: CachedObjT = {}
     bytes_obj = io.BytesIO(stream)
+    regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
 
     if bytes_obj.readline().decode("utf-8").rstrip() != "# Sphinx inventory version 2":
         raise RuntimeError("Invalid object inv version")
@@ -144,8 +154,6 @@ def decode_object_inv(
 
     if "zlib" not in bytes_obj.readline().decode("utf-8"):
         raise RuntimeError("Invalid object.inv file")
-
-    regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
 
     def decompress_chunks(bytes_obj: io.BytesIO) -> t.Generator[str, None, None]:
         def decompress(bytes_obj: io.BytesIO) -> t.Generator[bytes, None, None]:
