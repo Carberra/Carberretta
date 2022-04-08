@@ -2,7 +2,7 @@ aiofiles~=0.7
 aiosqlite~=0.17
 apscheduler<4,>=3.8
 feedparser<7,>=6.0
-hikari[speedups]==2.0.0.dev108
+hikari==2.0.0.dev108
 git+https://github.com/tandemdude/hikari-lightbulb@2da693a459e225e646495357e65a75498c3f2637
 psutil<6,>=5.8
 pygithub<2,>=1.55

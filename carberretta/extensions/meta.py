@@ -40,7 +40,7 @@ from pygount import SourceAnalysis
 
 import carberretta
 from carberretta import Config
-from carberretta.utils import chron, helpers, rtfm
+from carberretta.utils import chron, helpers
 
 plugin = lightbulb.Plugin("Meta", include_datastore=True)
 
@@ -158,83 +158,6 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
             f"{(c := ctx.bot.d.db.calls):,} ({c/uptime:,.3f} per second)",
         )
     )
-
-
-@plugin.command
-@lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
-@lightbulb.implements(lightbulb.SlashCommandGroup, lightbulb.PrefixCommandGroup)
-async def rtfm_group(_: lightbulb.Context) -> None:
-    pass
-
-
-@rtfm_group.child
-@lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
-@lightbulb.command(
-    "hikari", description="Searches the docs of hikari.", auto_defer=True
-)
-@lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def hikari_rtfm(ctx: lightbulb.Context) -> None:
-    matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.hikari_cache)
-    embed = hikari.Embed(
-        title="RTFM", 
-        color=helpers.choose_color(), 
-        timestamp=dt.datetime.now().astimezone()
-        )
-    embed.description = ""
-
-    for match in matches:
-        try:
-            embed.description += (
-                f"[`{match}`]({carberretta.HIKARI_DOCS_URL}"
-                f"{plugin.bot.d.hikari_cache[match][1]})\n"
-            )
-        except:
-            continue
-
-    await ctx.respond(embed=embed)
-
-
-@rtfm_group.child
-@lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
-@lightbulb.command(
-    "lightbulb", description="Searches the docs of lightbulb.", auto_defer=True
-)
-@lightbulb.implements(lightbulb.SlashSubCommand, lightbulb.PrefixSubCommand)
-async def lightbulb_rtfm(ctx: lightbulb.Context) -> None:
-    matches = await rtfm.get_rtfm(ctx.options.query, plugin.bot.d.lightbulb_cache)
-    embed = hikari.Embed(
-        title="RTFM", 
-        color=helpers.choose_color(), 
-        timestamp=dt.datetime.now().astimezone()
-        )
-    embed.description = ""
-
-    for match in matches:
-        try:
-            embed.description += (
-                f"[`{match}`]({carberretta.LIGHTBULB_DOCS_URL}"
-                f"{plugin.bot.d.lightbulb_cache[match][1]})\n"
-            )
-        except:
-            continue
-
-    await ctx.respond(embed=embed)
-
-
-@hikari_rtfm.autocomplete("query")
-async def hikari_autocomplete(
-    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
-) -> list[str]:
-    assert isinstance(opt.value, str)
-    return await rtfm.get_rtfm(opt.value, plugin.bot.d.hikari_cache)
-
-
-@lightbulb_rtfm.autocomplete("query")
-async def lightbulb_autocomplete(
-    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
-) -> list[str]:
-    assert isinstance(opt.value, str)
-    return await rtfm.get_rtfm(opt.value, plugin.bot.d.lightbulb_cache)
 
 
 def load(bot: lightbulb.BotApp) -> None:

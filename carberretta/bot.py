@@ -41,7 +41,8 @@ from pytz import utc
 
 import carberretta
 from carberretta import Config, Database
-from carberretta.utils import helpers, rtfm
+from carberretta.extensions import rtfm
+from carberretta.utils import helpers
 
 log = logging.getLogger(__name__)
 
@@ -120,9 +121,6 @@ async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
 
     if isinstance(exc, lightbulb.NotOwner):
         await event.context.respond("You need to be an owner to do that.")
-        return
-
-    if isinstance(exc, lightbulb.CommandNotFound):
         return
 
     # Add more errors when needed.
