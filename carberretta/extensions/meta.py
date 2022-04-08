@@ -42,7 +42,7 @@ import carberretta
 from carberretta import Config
 from carberretta.utils import chron, helpers
 
-plugin = lightbulb.Plugin("Meta", include_datastore=True)
+plugin = lightbulb.Plugin("Meta")
 
 
 @dataclass

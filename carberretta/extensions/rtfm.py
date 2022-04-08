@@ -45,6 +45,7 @@ if t.TYPE_CHECKING:
     CachedObjT = dict[str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any]]
 
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
+regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
 
 
 @plugin.listener(hikari.StartedEvent)
@@ -143,7 +144,6 @@ def decode_object_inv(
 ) -> CachedObjT:
     cache: CachedObjT = {}
     bytes_obj = io.BytesIO(stream)
-    regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
 
     if bytes_obj.readline().decode("utf-8").rstrip() != "# Sphinx inventory version 2":
         raise RuntimeError("Invalid object inv version")
