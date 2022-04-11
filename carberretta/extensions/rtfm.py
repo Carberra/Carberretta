@@ -44,9 +44,10 @@ if t.TYPE_CHECKING:
     CachedObjT = dict[str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any]]
 
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
-CHUNK_REGEX = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
+CHUNK_REGEX: t.Final = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
 HIKARI_DOCS_URL: t.Final = "https://www.hikari-py.dev/"
 LIGHTBULB_DOCS_URL: t.Final = "https://hikari-lightbulb.readthedocs.io/en/latest/"
+PYTHON_DOCS_URL: t.Final = "https://docs.python.org/3/"
 
 
 @plugin.listener(hikari.StartedEvent)
@@ -57,9 +58,11 @@ async def on_started(_: hikari.StartedEvent) -> None:
     lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
     plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
 
+    py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
+    plugin.bot.d.python_cache = decode_object_inv(await py.read())
 
 @plugin.command
-@lightbulb.command("rtfm", description="Searches the docs of hikari and lightbulb.")
+@lightbulb.command("rtfm", description="Searches the docs of hikari, lightbulb and python.")
 @lightbulb.implements(lightbulb.SlashCommandGroup)
 async def rtfm_group(_: lightbulb.SlashContext) -> None:
     pass
@@ -119,6 +122,33 @@ async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
     await ctx.respond(embed=embed)
 
 
+@rtfm_group.child
+@lightbulb.option("query", "The query to search for", autocomplete=True, required=True)
+@lightbulb.command(
+    "python", description="Searches the docs of python.", auto_defer=True
+)
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
+    matches = await get_rtfm(ctx.options.query, plugin.bot.d.python_cache)
+    embed = hikari.Embed(
+        title="RTFM",
+        color=helpers.choose_colour(),
+        timestamp=dt.datetime.now().astimezone(),
+    )
+    embed.description = ""
+
+    for match in matches:
+        try:
+            embed.description += (
+                f"[`{match}`]({PYTHON_DOCS_URL}"
+                f"{plugin.bot.d.python_cache[match][1]})\n"
+            )
+        except:
+            continue
+
+    await ctx.respond(embed=embed)
+
+
 @hikari_rtfm.autocomplete("query")
 async def hikari_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
@@ -133,6 +163,14 @@ async def lightbulb_autocomplete(
 ) -> list[str]:
     assert isinstance(opt.value, str)
     return await get_rtfm(opt.value, plugin.bot.d.lightbulb_cache)
+
+
+@python_rtfm.autocomplete("query")
+async def python_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    assert isinstance(opt.value, str)
+    return await get_rtfm(opt.value, plugin.bot.d.python_cache)
 
 
 async def get_rtfm(value: str, cache: dict[str, str]) -> list[str]:
