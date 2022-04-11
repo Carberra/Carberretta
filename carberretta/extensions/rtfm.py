@@ -61,8 +61,11 @@ async def on_started(_: hikari.StartedEvent) -> None:
     py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
     plugin.bot.d.python_cache = decode_object_inv(await py.read())
 
+
 @plugin.command
-@lightbulb.command("rtfm", description="Searches the docs of hikari, lightbulb and python.")
+@lightbulb.command(
+    "rtfm", description="Searches the docs of hikari, lightbulb and python."
+)
 @lightbulb.implements(lightbulb.SlashCommandGroup)
 async def rtfm_group(_: lightbulb.SlashContext) -> None:
     pass
