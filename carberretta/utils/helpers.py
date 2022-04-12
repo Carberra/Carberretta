@@ -32,7 +32,7 @@ import time
 
 
 def choose_colour() -> int:
-    return random.choice(
+    return random.choice(  # nosec B311
         (
             0x1ABC9C,
             0x11806A,
@@ -59,4 +59,4 @@ def choose_colour() -> int:
 
 
 def generate_id() -> str:
-    return hashlib.md5(f"{time.time()}".encode()).hexdigest()
+    return hashlib.md5(f"{time.time()}".encode(), usedforsecurity=False).hexdigest()
