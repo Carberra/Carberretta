@@ -1,5 +1,4 @@
 [tool.black]
-extend-exclude = "carberretta/__init__.py"
 line-length = 88
 
 [tool.isort]
@@ -8,3 +7,7 @@ profile = "black"
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+
+[tool.len8]
+exclude = ["data"]
+code-length = 88

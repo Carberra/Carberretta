@@ -2,10 +2,10 @@
 -r requirements.txt
 
 # Sessions
-nox==2021.10.1
+nox==2022.1.7
 
 # Docs
-furo==2021.10.9
+furo
 sphinx<5,>=4
 
 # Formatting
@@ -17,8 +17,8 @@ isort~=5.9
 
 # Typing
 mypy==0.942
-types-aiofiles~=0.7.0
-types-pytz==2021.3.1
+types-aiofiles~=0.8.6
+types-pytz==2021.3.6
 
 # Line lengths
 len8~=0.7.3
@@ -28,3 +28,9 @@ codespell~=2.1.0
 
 # Safety
 safety~=1.10.0
+
+# Security
+bandit~=1.7.2
+
+# Dependencies
+deputil~=0.2.0
