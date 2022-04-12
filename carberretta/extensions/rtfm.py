@@ -62,6 +62,32 @@ async def on_started(_: hikari.StartedEvent) -> None:
     plugin.bot.d.python_cache = decode_object_inv(await py.read())
 
 
+async def get_rtfm(value: str, cache: CachedObjT) -> list[str]:
+    matches = process.extract(value, cache.keys(), scorer=fuzz.QRatio, limit=15)
+    return [result for result, _, _ in matches]
+
+
+async def build_rtfm_output(query: str, cache: CachedObjT) -> hikari.Embed:
+    matches = await get_rtfm(query, cache)
+
+    embed = hikari.Embed(
+        title="RTFM",
+        color=helpers.choose_colour(),
+        timestamp=dt.datetime.now().astimezone(),
+    )
+    description = []
+
+    for match in matches:
+        if match in cache:
+            description.append(
+                f"[`{match}`]({HIKARI_DOCS_URL}"
+                f"{plugin.bot.d.hikari_cache[match][1]})\n"
+            )
+
+    embed.description = "\n".join(description)
+    return embed
+
+
 @plugin.command
 @lightbulb.command(
     "rtfm", description="Searches the docs of hikari, lightbulb and python."
@@ -78,23 +104,7 @@ async def rtfm_group(_: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def hikari_rtfm(ctx: lightbulb.SlashContext) -> None:
-    matches = await get_rtfm(ctx.options.query, plugin.bot.d.hikari_cache)
-    embed = hikari.Embed(
-        title="RTFM",
-        color=helpers.choose_colour(),
-        timestamp=dt.datetime.now().astimezone(),
-    )
-    embed.description = ""
-
-    for match in matches:
-        try:
-            embed.description += (
-                f"[`{match}`]({HIKARI_DOCS_URL}"
-                f"{plugin.bot.d.hikari_cache[match][1]})\n"
-            )
-        except:
-            continue
-
+    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.hikari_cache)
     await ctx.respond(embed=embed)
 
 
@@ -105,23 +115,7 @@ async def hikari_rtfm(ctx: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
-    matches = await get_rtfm(ctx.options.query, plugin.bot.d.lightbulb_cache)
-    embed = hikari.Embed(
-        title="RTFM",
-        color=helpers.choose_colour(),
-        timestamp=dt.datetime.now().astimezone(),
-    )
-    embed.description = ""
-
-    for match in matches:
-        try:
-            embed.description += (
-                f"[`{match}`]({LIGHTBULB_DOCS_URL}"
-                f"{plugin.bot.d.lightbulb_cache[match][1]})\n"
-            )
-        except:
-            continue
-
+    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.lightbulb_cache)
     await ctx.respond(embed=embed)
 
 
@@ -132,23 +126,7 @@ async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
-    matches = await get_rtfm(ctx.options.query, plugin.bot.d.python_cache)
-    embed = hikari.Embed(
-        title="RTFM",
-        color=helpers.choose_colour(),
-        timestamp=dt.datetime.now().astimezone(),
-    )
-    embed.description = ""
-
-    for match in matches:
-        try:
-            embed.description += (
-                f"[`{match}`]({PYTHON_DOCS_URL}"
-                f"{plugin.bot.d.python_cache[match][1]})\n"
-            )
-        except:
-            continue
-
+    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.python_cache)
     await ctx.respond(embed=embed)
 
 
@@ -174,11 +152,6 @@ async def python_autocomplete(
 ) -> list[str]:
     assert isinstance(opt.value, str)
     return await get_rtfm(opt.value, plugin.bot.d.python_cache)
-
-
-async def get_rtfm(value: str, cache: dict[str, str]) -> list[str]:
-    matches = process.extract(value, cache.keys(), scorer=fuzz.QRatio, limit=15)
-    return [result for result, _, _ in matches]
 
 
 def decode_object_inv(
