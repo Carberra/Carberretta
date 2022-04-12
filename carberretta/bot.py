@@ -124,7 +124,7 @@ async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
             "INSERT INTO errors (err_id, err_cmd, err_text) VALUES (?, ?, ?)",
             err_id,
             event.context.invoked_with,
-            "".join(traceback.format_exception(event.exception)),  # type: ignore
+            "".join(traceback.format_exception(event.exception)),
         )
         await event.context.respond(
             "Something went wrong. An error report has been created "

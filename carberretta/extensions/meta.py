@@ -126,7 +126,7 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
             dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
             ms=True,
         )
-        mem_total = virtual_memory().total / (1024 ** 2)
+        mem_total = virtual_memory().total / (1024**2)
         mem_of_total = proc.memory_percent()
         mem_usage = mem_total * (mem_of_total / 100)
 
@@ -163,6 +163,7 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
 def load(bot: lightbulb.BotApp) -> None:
     if not bot.d.loc:
         bot.d.loc = CodeCounter().count()
+
     bot.add_plugin(plugin)
 
 

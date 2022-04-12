@@ -9,19 +9,19 @@ furo==2021.10.9
 sphinx<5,>=4
 
 # Formatting
-black==21.11b1
+black==22.3.0
 
 # Imports
 flake8~=4.0
 isort~=5.9
 
 # Typing
-git+https://github.com/python/mypy
+mypy==0.942
 types-aiofiles~=0.7.0
 types-pytz==2021.3.1
 
 # Line lengths
-len8~=0.5
+len8~=0.7.3
 
 # Spelling
 codespell~=2.1.0
