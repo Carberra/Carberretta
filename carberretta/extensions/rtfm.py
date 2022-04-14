@@ -41,7 +41,9 @@ from rapidfuzz import fuzz, process
 from carberretta.utils import helpers
 
 if t.TYPE_CHECKING:
-    CachedObjT = dict[str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any]]
+    CachedObjT = dict[
+        str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any, str | t.Any]
+    ]
 
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
 CHUNK_REGEX: t.Final = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
@@ -64,10 +66,17 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
 async def get_rtfm(value: str, cache: CachedObjT) -> list[str]:
     matches = process.extract(value, cache.keys(), scorer=fuzz.QRatio, limit=15)
-    return [result for result, _, _ in matches]
+    match = []
+    pure_matches = []
+    for result, _, _ in matches:
+        if value in result:
+            pure_matches.append(result)
+        else:
+            match.append(result)
+    return pure_matches + match
 
 
-async def build_rtfm_output(query: str, cache: CachedObjT) -> hikari.Embed:
+async def build_rtfm_output(query: str, cache: CachedObjT, url: str) -> hikari.Embed:
     matches = await get_rtfm(query, cache)
 
     embed = hikari.Embed(
@@ -79,11 +88,12 @@ async def build_rtfm_output(query: str, cache: CachedObjT) -> hikari.Embed:
 
     for match in matches:
         if match in cache:
-            description.append(
-                f"[`{match}`]({HIKARI_DOCS_URL}"
-                f"{plugin.bot.d.hikari_cache[match][1]})\n"
-            )
-
+            if cache[match][1][-1:] == "$":
+                description.append(
+                    f"[`{match}`]({url}{cache[match][1][:-1] + cache[match][0][0]})"
+                )
+            else:
+                description.append(f"[`{match}`]({url}{cache[match][1]})")
     embed.description = "\n".join(description)
     return embed
 
@@ -104,7 +114,9 @@ async def rtfm_group(_: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def hikari_rtfm(ctx: lightbulb.SlashContext) -> None:
-    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.hikari_cache)
+    embed = await build_rtfm_output(
+        ctx.options.query, plugin.bot.d.hikari_cache, HIKARI_DOCS_URL
+    )
     await ctx.respond(embed=embed)
 
 
@@ -115,7 +127,9 @@ async def hikari_rtfm(ctx: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
-    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.lightbulb_cache)
+    embed = await build_rtfm_output(
+        ctx.options.query, plugin.bot.d.lightbulb_cache, LIGHTBULB_DOCS_URL
+    )
     await ctx.respond(embed=embed)
 
 
@@ -126,7 +140,9 @@ async def lightbulb_rtfm(ctx: lightbulb.SlashContext) -> None:
 )
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
-    embed = await build_rtfm_output(ctx.options.query, plugin.bot.d.python_cache)
+    embed = await build_rtfm_output(
+        ctx.options.query, plugin.bot.d.python_cache, PYTHON_DOCS_URL
+    )
     await ctx.respond(embed=embed)
 
 
@@ -196,9 +212,8 @@ def decode_object_inv(
         if match in cache:
             continue
 
-        direct, _, _, link, _ = match.groups()
-        cache[direct] = (match.groups(), link)
-
+        direct, type, _, link, _ = match.groups()
+        cache[direct] = (match.groups(), link, type)
     return cache
 
 
