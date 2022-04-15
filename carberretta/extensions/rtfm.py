@@ -33,6 +33,7 @@ import io
 import re
 import typing as t
 import zlib
+from dataclasses import dataclass
 
 import hikari
 import lightbulb
@@ -40,10 +41,16 @@ from rapidfuzz import fuzz, process
 
 from carberretta.utils import helpers
 
+
+@dataclass
+class NamedCache:
+    direct: str
+    link: str
+    type: str
+
+
 if t.TYPE_CHECKING:
-    CachedObjT = dict[
-        str | t.Any, tuple[tuple[str | t.Any, ...], str | t.Any, str | t.Any]
-    ]
+    CachedObjT = dict[str, NamedCache]
 
 plugin = lightbulb.Plugin("RTFM", include_datastore=True)
 CHUNK_REGEX: t.Final = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
@@ -65,37 +72,35 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
 
 async def get_rtfm(value: str, cache: CachedObjT) -> list[str]:
-    matches = process.extract(value, cache.keys(), scorer=fuzz.QRatio, limit=15)
-    match = []
+    extracted = process.extract(value, cache.keys(), scorer=fuzz.QRatio, limit=15)
+    matches = []
     pure_matches = []
-    for result, _, _ in matches:
+    for result, _, _ in extracted:
         if value in result:
             pure_matches.append(result)
         else:
-            match.append(result)
-    return pure_matches + match
+            matches.append(result)
+    return pure_matches + matches
 
 
 async def build_rtfm_output(query: str, cache: CachedObjT, url: str) -> hikari.Embed:
     matches = await get_rtfm(query, cache)
-
-    embed = hikari.Embed(
-        title="RTFM",
-        color=helpers.choose_colour(),
-        timestamp=dt.datetime.now().astimezone(),
-    )
     description = []
 
     for match in matches:
         if match in cache:
-            if cache[match][1][-1:] == "$":
+            if cache[match].link[-1:] == "$":
                 description.append(
-                    f"[`{match}`]({url}{cache[match][1][:-1] + cache[match][0][0]})"
+                    f"[`{match}`]({url}{cache[match].link[:-1] + cache[match].direct})"
                 )
             else:
-                description.append(f"[`{match}`]({url}{cache[match][1]})")
-    embed.description = "\n".join(description)
-    return embed
+                description.append(f"[`{match}`]({url}{cache[match].link})")
+    return hikari.Embed(
+        title="RTFM",
+        description="\n".join(description),
+        color=helpers.choose_colour(),
+        timestamp=dt.datetime.now().astimezone(),
+    )
 
 
 @plugin.command
@@ -209,11 +214,10 @@ def decode_object_inv(
         if not (match := CHUNK_REGEX.match(line.rstrip())):
             continue
 
-        if match in cache:
+        if match.group(0) in cache:
             continue
-
         direct, type, _, link, _ = match.groups()
-        cache[direct] = (match.groups(), link, type)
+        cache[direct] = NamedCache(direct, link, type)
     return cache
 
 
