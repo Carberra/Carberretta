@@ -214,9 +214,9 @@ def decode_object_inv(
         if not (match := CHUNK_REGEX.match(line.rstrip())):
             continue
 
-        if match.group(0) in cache:
-            continue
         direct, type, _, link, _ = match.groups()
+        if direct in cache.keys():
+            continue
         cache[direct] = NamedCache(direct, link, type)
     return cache
 
