@@ -215,7 +215,7 @@ def decode_object_inv(
             continue
 
         direct, type, _, link, _ = match.groups()
-        if direct in cache.keys():
+        if direct in cache:
             continue
         cache[direct] = NamedCache(direct, link, type)
     return cache
