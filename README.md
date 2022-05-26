@@ -26,7 +26,7 @@ Currently, only ports of cogs from v1 are being accepted.
 pip install -r requirements-dev.txt
 ```
 
-Contact Carberra to obtain the .env file required.
+The environment file you need is provided as `.env.example`. Rename this file to `.env`, then paste your token into the correct field.
 
 ### Checks
 
