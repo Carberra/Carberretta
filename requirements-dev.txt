@@ -16,9 +16,9 @@ flake8~=4.0
 isort~=5.9
 
 # Typing
-mypy==0.942
+mypy==0.960
 types-aiofiles~=0.8.6
-types-pytz==2021.3.6
+types-pytz==2021.3.8
 
 # Line lengths
 len8~=0.7.3
