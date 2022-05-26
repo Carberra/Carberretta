@@ -65,7 +65,9 @@ class RowData(dict[str, t.Any]):
         raise ValueError("row data cannot be modified")
 
     @classmethod
-    def from_selection(cls, cur: aiosqlite.Cursor, row: aiosqlite.Row) -> RowData:
+    def from_selection(
+        cls, cur: aiosqlite.Cursor, row: aiosqlite.Row[int | float | str]
+    ) -> RowData:
         def _resolve(field: int | float | str) -> t.Any:
             if isinstance(field, (int, float)) or not STRFTIME_PATTERN.match(field):
                 return field
