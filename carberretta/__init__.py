@@ -1,4 +1,4 @@
-# Copyright (c) 2020-present, Carberra Tutorials
+# Copyright (c) 2020-present, Carberra
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ from .db import Database
 
 __productname__ = "Carberretta"
 __version__ = "2.0.0.dev0"
-__description__ = "A Discord bot designed for the Carberra Tutorials Discord server."
+__description__ = "A Discord bot designed for the Carberra Discord server."
 __url__ = "https://github.com/Carberra/Carberretta"
 __authors__ = ("Ethan Henderson", "Max Shaughnessy")
 __license__ = "BSD-3-Clause"

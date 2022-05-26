@@ -1,4 +1,4 @@
-# Copyright (c) 2020-present, Carberra Tutorials
+# Copyright (c) 2020-present, Carberra
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -110,7 +110,7 @@ def licensing(session: nox.Session) -> None:
             header = f.read().split("\n")[0]
             if not (
                 header.startswith("# Copyright (c) 2020-")
-                or header.endswith(", Carberra Tutorials\n")
+                or header.endswith(", Carberra\n")
             ):
                 missing.append(p)
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2020-present, Carberra Tutorials
+# Copyright (c) 2020-present, Carberra
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -155,7 +155,7 @@ async def on_member_update(event: hikari.MemberUpdateEvent) -> None:
         await plugin.bot.rest.create_message(
             Config.GATEWAY_CHANNEL_ID,
             f"Welcome {event.member.mention}! You are member nº {humans:,} of "
-            "Carberra Tutorials (excluding bots). Make yourself at home "
+            "the Carberra server (excluding bots). Make yourself at home "
             "in <#626608699942764548>, and look at <#739572184745377813> "
             "to find out how to get support.",
         )
