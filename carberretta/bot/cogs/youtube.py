@@ -229,6 +229,7 @@ class YouTube(commands.Cog):
             else:
                 published_at = chron.from_iso(data["snippet"]["publishedAt"][:-1])
             duration = self.get_duration(data["contentDetails"]["duration"])
+            thumbnails = data["snippet"]["thumbnails"]
 
             await ctx.send(
                 embed=discord.Embed.from_dict(
@@ -241,7 +242,11 @@ class YouTube(commands.Cog):
                             "text": f"Requested by {ctx.author.display_name}",
                             "icon_url": f"{ctx.author.avatar_url}",
                         },
-                        "image": {"url": data["snippet"]["thumbnails"]["maxres"]["url"]},
+                        "image": {
+                            "url": thumbnails["maxres"]["url"]
+                            if "maxres" in thumbnails.keys()
+                            else thumbnails["high"]["url"]
+                        },
                         "fields": [
                             {"name": "Duration", "value": duration, "inline": True},
                             {"name": "Views", "value": f"{int(data['statistics']['viewCount']):,}", "inline": True},
