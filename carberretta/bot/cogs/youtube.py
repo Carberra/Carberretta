@@ -246,8 +246,8 @@ class YouTube(commands.Cog):
                             {"name": "Duration", "value": duration, "inline": True},
                             {"name": "Views", "value": f"{int(data['statistics']['viewCount']):,}", "inline": True},
                             {
-                                "name": "Likes / dislikes",
-                                "value": f"{int(data['statistics']['likeCount']):,} / {int(data['statistics']['dislikeCount']):,}",
+                                "name": "Likes",
+                                "value": f"{int(data['statistics']['likeCount']):,}",
                                 "inline": True,
                             },
                             {
