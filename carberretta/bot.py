@@ -102,13 +102,17 @@ async def on_error(event: hikari.ExceptionEvent[FailedEventT]) -> None:
 
 @bot.listen(lightbulb.CommandErrorEvent)
 async def on_command_error(event: lightbulb.CommandErrorEvent) -> None:
-    exc = getattr(event.exception, "__cause__", event.exception)
+    exc = event.exception
 
     if isinstance(exc, lightbulb.NotOwner):
         await event.context.respond("You need to be an owner to do that.")
         return
 
-    # Add more errors when needed.
+    if isinstance(exc, lightbulb.MissingRequiredPermission):
+        await event.context.respond(
+            f"You are missing the following permissions: {exc.missing_perms}"
+        )
+        return
 
     try:
         err_id = helpers.generate_id()
