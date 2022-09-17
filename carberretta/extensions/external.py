@@ -38,12 +38,7 @@ LINKS: t.Final = (
     "Docs",
     "Donate",
     "GitHub",
-    "Instagram",
-    "LBRY",
     "Patreon",
-    "Plans",
-    "Twitch",
-    "Twitter",
     "YouTube",
 )
 

@@ -125,7 +125,7 @@ async def on_member_leave(event: hikari.MemberDeleteEvent) -> None:
             log.info(f"Member '{member.display_name}' left (was pending)")
             return
 
-        log.info(f"Member '{member.display_name}'' left")
+        log.info(f"Member '{member.display_name}' left")
         await plugin.bot.rest.create_message(
             Config.GATEWAY_CHANNEL_ID,
             f"{member.display_name} is no longer in the server. (ID: {member.id})",

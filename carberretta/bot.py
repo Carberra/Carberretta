@@ -72,12 +72,9 @@ async def on_starting(_: hikari.StartingEvent) -> None:
     bot.d.scheduler.add_job(bot.d.db.commit, CronTrigger(second=0))
 
 
-@bot.listen(hikari.StartedEvent)
-async def on_started(_: hikari.StartedEvent) -> None:
-    await bot.rest.create_message(
-        Config.STDOUT_CHANNEL_ID,
-        f"Carberretta is now online! (Version {carberretta.__version__})",
-    )
+# @bot.listen(hikari.StartedEvent)
+# async def on_started(_: hikari.StartedEvent) -> None:
+#     ...
 
 
 @bot.listen(hikari.StoppingEvent)
@@ -86,11 +83,6 @@ async def on_stopping(_: hikari.StoppingEvent) -> None:
     await bot.d.session.close()
     log.info("AIOHTTP session closed")
     bot.d.scheduler.shutdown()
-
-    await bot.rest.create_message(
-        Config.STDOUT_CHANNEL_ID,
-        f"Carberretta is shutting down. (Version {carberretta.__version__})",
-    )
 
 
 @bot.listen(hikari.DMMessageCreateEvent)
