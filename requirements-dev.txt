@@ -2,32 +2,32 @@
 -r requirements.txt
 
 # Sessions
-nox==2022.1.7
+nox==2022.8.7
 
 # Docs
-furo
-sphinx<5,>=4
+# furo
+# sphinx<5,>=4
 
 # Formatting
-black==22.3.0
+black~=22.8.0
 
 # Imports
-flake8~=4.0
-isort~=5.9
+flake8~=5.0.4
+isort~=5.10.1
 
 # Typing
-mypy==0.960
-types-aiofiles~=0.8.6
-types-pytz==2021.3.8
+mypy==0.971
+types-aiofiles~=22.1.0
+types-pytz~=2022.2.1
 
 # Line lengths
 len8~=0.7.3
 
 # Spelling
-codespell~=2.1.0
+codespell~=2.2.1
 
 # Safety
-safety~=1.10.0
+safety~=2.1.1
 
 # Security
 bandit~=1.7.2
