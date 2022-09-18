@@ -51,14 +51,16 @@ def possessive(user: t.Union[Member, User]) -> str:
     return f"{name}'{'s' if not name.endswith('s') else ''}"
 
 
-async def binify(session: ClientSession, text: str, only_codeblocks=False) -> str:
-    async def convert(body, to_replace, ext=""):
-        async with session.post("https://mystb.in/documents", data=body) as response:
+async def binify(session: ClientSession, text: str, only_codeblocks: bool = False) -> str | int:
+    async def convert(body: str, to_replace: str, ext: str = "") -> str | int:
+        payload = {"files": [{"filename": f"support{ext}", "content": body}]}
+
+        async with session.put("https://api.mystb.in/paste", json=payload) as response:
             if not 200 <= response.status <= 299:
                 return response.status
 
             data = await response.json()
-            return text.replace(to_replace, f"https://mystb.in/{data['key']}{ext}")
+            return text.replace(to_replace, f"https://mystb.in/{data['id']}")
 
     if not only_codeblocks:
         return await convert(text, text)
@@ -71,5 +73,6 @@ async def binify(session: ClientSession, text: str, only_codeblocks=False) -> st
             code = match.group(3) or match.group(1) or "None"
             ext = f".{match.group(1)}" or ""
 
-        text = await convert(code, match.group(0), ext)
+        text = await convert(code, match.group(0), ext)  # type: ignore
+
     return text
