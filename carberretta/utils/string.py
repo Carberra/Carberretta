@@ -65,7 +65,7 @@ async def binify(
     *,
     only_codeblocks: bool = False,
     expires_in_days: int = 7,
-    file_extension: str = ""
+    file_extension: str = "",
 ) -> str:
     async def convert(body: str, to_replace: str, ext: str) -> str:
         payload = {
