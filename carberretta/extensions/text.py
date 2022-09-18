@@ -29,12 +29,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import io
 import unicodedata
 
 import hikari
 import lightbulb
 
-from carberretta.utils import helpers
+from carberretta.utils import helpers, string
 
 plugin = lightbulb.Plugin("Text")
 
@@ -72,6 +73,66 @@ async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
         .add_field("Names", "\n".join(names), inline=True)
         .add_field("Code points", "\n".join(points), inline=True)
+    )
+
+
+@plugin.command
+@lightbulb.option(
+    "expires",
+    "The number of days before the bin will expire.",
+    type=int,
+    max_value=180,
+    min_value=1,
+    default=7,
+)
+@lightbulb.option(
+    "snowflake", "The snowflake ID of the message to binify.", type=hikari.Snowflake
+)
+@lightbulb.command("binify", "Binify a message.", auto_defer=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
+    expires: int = ctx.options.expires
+    snowflake: int = ctx.options.snowflake
+    message: hikari.Message = (
+        ctx.bot.cache.get_message(snowflake)
+        or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
+    )
+
+    if message.attachments:
+        data = io.BytesIO(await message.attachments[0].read())
+        file_contents = data.read().decode(encoding="utf-8")
+    else:
+        file_contents = ""
+
+    if message.content:
+        content = await string.binify(
+            ctx.bot.d.session,
+            message.content,
+            only_codeblocks=True,
+            expires_in_days=expires,
+        ) + "\n\n"
+    else:
+        content = ""
+
+    if file_contents:
+        filename = message.attachments[0].filename
+        extension = filename.split(".")[-1]
+
+        if filename == extension:
+            extension = ""
+
+        file = await string.binify(
+            ctx.bot.d.session,
+            file_contents,
+            only_codeblocks=False,
+            expires_in_days=expires,
+            file_extension=f".{extension}",
+        )
+    else:
+        file = ""
+
+    await ctx.respond(
+        f"**{string.possessive(message.author)} message:**\n{content}{file}"
     )
 
 

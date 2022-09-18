@@ -28,7 +28,11 @@
 
 from __future__ import annotations
 
+import re
 import typing as t
+from datetime import datetime, timedelta
+
+from aiohttp import ClientSession
 
 if t.TYPE_CHECKING:
     from hikari import Member, User
@@ -53,3 +57,40 @@ def ordinal(number: int) -> str:
 def possessive(user: Member | User) -> str:
     name = getattr(user, "display_name", user.username)
     return f"{name}'{'s' if not name.endswith('s') else ''}"
+
+
+async def binify(
+    session: ClientSession,
+    text: str,
+    *,
+    only_codeblocks: bool = False,
+    expires_in_days: int = 7,
+    file_extension: str = ""
+) -> str:
+    async def convert(body: str, to_replace: str, ext: str) -> str:
+        payload = {
+            "files": [{"filename": f"support{ext}", "content": body}],
+            "expires": str(datetime.now() + timedelta(expires_in_days)),
+        }
+
+        async with session.put("https://api.mystb.in/paste", json=payload) as response:
+            if not 200 <= response.status <= 299:
+                return f"Failed calling Mystbin. HTTP status code: {response.status}"
+
+            data = await response.json()
+            return text.replace(to_replace, f"<https://mystb.in/{data['id']}>")
+
+    if not only_codeblocks:
+        return await convert(text, text, file_extension)
+
+    while (match := re.search(r"```([a-z]*)(\n?)([\s\S]*?)\n?```", text)) is not None:
+        if not match.group(2):
+            code = match.group(1) + match.group(3)
+        else:
+            code = match.group(3) or match.group(1) or "None"
+            if match.group(1):
+                file_extension = f".{match.group(1)}"
+
+        text = await convert(code, match.group(0), file_extension)
+
+    return text
