@@ -93,10 +93,17 @@ async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
 async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
     expires: int = ctx.options.expires
     snowflake: int = ctx.options.snowflake
-    message: hikari.Message = (
-        ctx.bot.cache.get_message(snowflake)
-        or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
-    )
+
+    try:
+        message: hikari.Message = (
+            ctx.bot.cache.get_message(snowflake)
+            or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
+        )
+    except hikari.NotFoundError:
+        await ctx.respond(
+            f"Could not find message in this channel with ID: {snowflake}"
+        )
+        return
 
     if message.attachments:
         data = io.BytesIO(await message.attachments[0].read())
