@@ -79,7 +79,10 @@ async def cmd_clear(ctx: lightbulb.SlashContext) -> None:
         or dt.datetime.now().astimezone() - dt.timedelta(days=14)
     )
     if ctx.options.member:
-        history = history.filter(lambda m: m.author.id == ctx.options.member.id)
+        # Mypy is literally the worst piece of software ever written, I
+        # swear to God. See python/mypy#9656 for more info.
+        pred = lambda m: m.author.id == ctx.options.member.id
+        history = history.filter(pred)
     messages = list(await history)
 
     for i in range(0, ctx.options.limit, 100):
