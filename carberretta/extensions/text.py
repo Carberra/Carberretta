@@ -95,10 +95,9 @@ async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
     snowflake: int = ctx.options.snowflake
 
     try:
-        message: hikari.Message = (
-            ctx.bot.cache.get_message(snowflake)
-            or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
-        )
+        message: hikari.Message = ctx.bot.cache.get_message(
+            snowflake
+        ) or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
     except hikari.NotFoundError:
         await ctx.respond(
             f"Could not find message in this channel with ID: {snowflake}"
@@ -112,12 +111,15 @@ async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
         file_contents = ""
 
     if message.content:
-        content = await string.binify(
-            ctx.bot.d.session,
-            message.content,
-            only_codeblocks=True,
-            expires_in_days=expires,
-        ) + "\n\n"
+        content = (
+            await string.binify(
+                ctx.bot.d.session,
+                message.content,
+                only_codeblocks=True,
+                expires_in_days=expires,
+            )
+            + "\n\n"
+        )
     else:
         content = ""
 
