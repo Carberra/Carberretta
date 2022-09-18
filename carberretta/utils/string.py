@@ -60,7 +60,7 @@ async def binify(session: ClientSession, text: str, only_codeblocks: bool = Fals
                 return response.status
 
             data = await response.json()
-            return text.replace(to_replace, f"https://mystb.in/{data['id']}")
+            return text.replace(to_replace, f"<https://mystb.in/{data['id']}>")
 
     if not only_codeblocks:
         return await convert(text, text)
