@@ -36,7 +36,7 @@ import lightbulb
 from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from hikari.events.base_events import FailedEventT
+from hikari.events.base_events import EventT
 from pytz import utc
 
 import carberretta
@@ -96,7 +96,7 @@ async def on_dm_message_create(event: hikari.DMMessageCreateEvent) -> None:
 
 
 @bot.listen(hikari.ExceptionEvent)
-async def on_error(event: hikari.ExceptionEvent[FailedEventT]) -> None:
+async def on_error(event: hikari.ExceptionEvent[EventT]) -> None:
     raise event.exception
 
 
