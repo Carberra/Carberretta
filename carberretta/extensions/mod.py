@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 
 import hikari
 import lightbulb
@@ -37,6 +38,12 @@ import lightbulb
 plugin = lightbulb.Plugin("Mod")
 
 log = logging.getLogger(__name__)
+
+_chars = "".join(
+    chr(i) for i in [*range(0x20, 0x30), *range(0x3A, 0x41), *range(0x5B, 0x61)]
+)
+UNHOIST_PATTERN = re.compile(rf"[{_chars}]+")
+del _chars
 
 
 @plugin.command()
@@ -78,6 +85,32 @@ async def cmd_clear(ctx: lightbulb.SlashContext) -> None:
     for i in range(0, ctx.options.limit, 100):
         await channel.delete_messages(messages[i : i + 100])
     await ctx.respond(f"Cleared {min(ctx.options.limit, len(messages))} message(s).")
+
+
+@plugin.command()
+@lightbulb.add_checks(
+    lightbulb.has_guild_permissions(hikari.Permissions.MANAGE_NICKNAMES)
+)
+@lightbulb.command("unhoist", "Unhoist nicknames.", ephemeral=True, auto_defer=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_unhoist(ctx: lightbulb.SlashContext) -> None:
+    if not (guild := ctx.get_guild()):
+        return
+
+    count = 0
+
+    for _, member in guild.get_members().items():
+        if member.is_bot:
+            continue
+
+        match = UNHOIST_PATTERN.match(member.display_name)
+        if not match:
+            continue
+
+        await member.edit(nickname=member.display_name.replace(match.group(), "", 1))
+        count += 1
+
+    await ctx.respond(f"Unhoisted {count:,} nicknames.")
 
 
 def load(bot: lightbulb.BotApp) -> None:
