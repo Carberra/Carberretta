@@ -79,7 +79,7 @@ async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
 @plugin.command
 @lightbulb.option(
     "expires",
-    "The number of days before the bin will expire.",
+    "The number of days before the paste expires.",
     type=int,
     max_value=180,
     min_value=1,
@@ -92,7 +92,7 @@ async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
 @lightbulb.implements(lightbulb.SlashCommand)
 async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
     expires: int = ctx.options.expires
-    snowflake: int = ctx.options.snowflake
+    snowflake: hikari.Snowflake = ctx.options.snowflake
 
     try:
         message: hikari.Message = ctx.bot.cache.get_message(
