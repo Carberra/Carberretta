@@ -74,7 +74,7 @@ async def binify(
         }
 
         async with session.put("https://api.mystb.in/paste", json=payload) as response:
-            if not 200 <= response.status <= 299:
+            if not response.ok:
                 return f"Failed calling Mystbin. HTTP status code: {response.status}"
 
             data = await response.json()
