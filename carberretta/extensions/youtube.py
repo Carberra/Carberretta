@@ -42,20 +42,39 @@ plugin = lightbulb.Plugin("YouTube", include_datastore=True)
 log = logging.getLogger(__name__)
 
 
+def _similarity(s1: str, s2: str, **_: t.Any) -> float:
+    chars = len(s1)
+    if not chars:
+        return 1.0
+
+    s1, s2 = s1.lower(), s2.lower()
+    combo, max_combo = 0, 0
+    word_starts = [0] + [i for i, l in enumerate(s1, start=1) if l == " "]
+
+    for w in word_starts:
+        for char in s2:
+            if s1[w + combo] == char:
+                combo += 1
+                if (w + combo) == chars:
+                    return 1.0
+            else:
+                max_combo = max(combo, max_combo)
+                combo = 0
+
+    return max_combo / chars
+
+
 def _link_options(value: str) -> list[str]:
-    extracted = rf.process.extract(
-        value, plugin.d.directory.keys(), scorer=rf.fuzz.QRatio, limit=15
-    )
-    pure = []
-    partial = []
-
-    for result, _, _ in extracted:
-        if value in result:
-            pure.append(result)
-        else:
-            partial.append(result)
-
-    return pure + partial
+    return [
+        res[0]
+        for res in rf.process.extract(
+            value,
+            plugin.d.directory.keys(),
+            scorer=_similarity,
+            limit=10,
+            score_cutoff=0.5,
+        )
+    ]
 
 
 @plugin.listener(hikari.StartedEvent)
