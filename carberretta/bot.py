@@ -26,14 +26,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import asyncio
 import logging
 import os
 import traceback
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 import hikari
 import lightbulb
-from aiohttp import ClientSession
+from aiohttp import ClientSession, CookieJar
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from hikari.events.base_events import EventT
@@ -63,8 +65,12 @@ bot.load_extensions_from("./carberretta/extensions")
 
 @bot.listen(hikari.StartingEvent)
 async def on_starting(_: hikari.StartingEvent) -> None:
+    cookie_jar = CookieJar(loop=asyncio.get_running_loop())
+    cookie_jar.update_cookies(SimpleCookie("CONSENT=YES+cb; Domain=.youtube.com"))
+    log.info("YouTube cookies set")
+
     bot.d.scheduler.start()
-    bot.d.session = ClientSession(trust_env=True)
+    bot.d.session = ClientSession(trust_env=True, cookie_jar=cookie_jar)
     log.info("AIOHTTP session started")
 
     bot.d.db = Database(bot.d._dynamic, bot.d._static)
