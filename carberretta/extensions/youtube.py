@@ -49,10 +49,12 @@ if t.TYPE_CHECKING:
 plugin = lightbulb.Plugin("YouTube", include_datastore=True)
 log = logging.getLogger(__name__)
 
+BROWSE_ENDPOINT = "https://www.youtube.com/youtubei/v1/browse"
 VIDEO_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
     "?part=contentDetails%2Csnippet%2Cstatistics"
 )
+WATCH_URL = "https://youtube.com/watch?v="
 
 
 def _similarity(s1: str, s2: str, **_: t.Any) -> float:
@@ -95,10 +97,9 @@ def _create_directory(kind: str) -> None:
         f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}/"
         f"{kind}s?view=0&sort=dd&flow=grid"
     )
-    endpoint = "https://www.youtube.com/youtubei/v1/browse"
     key = f"{kind}_directory"
 
-    items = get_videos(url, endpoint, f"grid{kind.title()}Renderer", None, 1)
+    items = get_videos(url, BROWSE_ENDPOINT, f"grid{kind.title()}Renderer", None, 1)
     plugin.d[key] = {x["title"]["runs"][0]["text"]: x[f"{kind}Id"] for x in items}
     log.info(f"Updated {kind} directory ({len(plugin.d[key])} {kind}s)")
 
@@ -137,7 +138,7 @@ async def cmd_youtube_video(_: lightbulb.SlashContext) -> None:
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def cmd_youtube_video_link(ctx: lightbulb.SlashContext) -> None:
     video_id = plugin.d.video_directory[ctx.options.title]
-    await ctx.respond(f"https://youtube.com/watch?v={video_id}")
+    await ctx.respond(WATCH_URL + video_id)
 
 
 @cmd_youtube_video_link.autocomplete("title")
@@ -184,7 +185,7 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         hikari.Embed(
             title=ctx.options.title,
             description=data["snippet"]["description"].split("\n", maxsplit=1)[0],
-            url=f"https://youtube.com/watch?v={video_id}",
+            url=WATCH_URL + video_id,
             colour=helpers.choose_colour(),
             timestamp=dt.datetime.now().astimezone(),
         )
