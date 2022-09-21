@@ -28,6 +28,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import typing as t
 
@@ -81,15 +82,22 @@ def _link_options(value: str) -> list[str]:
 async def on_started(_: hikari.StartedEvent) -> None:
     # There is no way to get all videos directly from the API without
     # either (1) going through OAuth, or (2) brute forcing, with an
-    # eventual cap on 500 results. Scraping isn't exactly ideal, but
-    # it only happens once on startup, and it works, so...get meme'd.
+    # eventual cap on 500 results. This scraping, as its run in an
+    # executor, doesn't block I/O, but does not complete before the bot
+    # is ready.
 
-    log.info("Searching for videos...")
-    videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
+    def _create_directory() -> None:
+        log.info(f"Creating video directory...")
+        log.warning("The bot will be ready to use before this operation completes")
+        videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
+        plugin.d.directory = {
+            v["title"]["runs"][0]["text"]: v["videoId"] for v in videos
+        }
+        log.info(f"Created directory of {len(plugin.d.directory)} videos")
 
-    log.info(f"Creating directory (this could take some time)...")
-    plugin.d.directory = {v["title"]["runs"][0]["text"]: v["videoId"] for v in videos}
-    log.info(f"Created directory of {len(plugin.d.directory)} videos")
+    plugin.d.directory = {}
+    loop = asyncio.get_running_loop()
+    loop.run_in_executor(None, _create_directory)
 
 
 @plugin.command
