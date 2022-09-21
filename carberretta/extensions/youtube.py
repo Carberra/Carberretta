@@ -35,8 +35,8 @@ import typing as t
 import hikari
 import lightbulb
 import rapidfuzz as rf
-import scrapetube
 from apscheduler.triggers.cron import CronTrigger
+from scrapetube.scrapetube import get_videos
 
 from carberretta import Config
 
@@ -79,26 +79,28 @@ def _video_options(value: str) -> list[str]:
     ]
 
 
-def _create_directories() -> None:
-    # There is no way to get all videos directly from the API without
-    # either (1) going through OAuth, or (2) brute forcing, with an
-    # eventual cap on 500 results.
+def _create_directory(kind: str) -> None:
+    url = (
+        f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}/"
+        f"{kind}s?view=0&sort=dd&flow=grid"
+    )
+    endpoint = "https://www.youtube.com/youtubei/v1/browse"
+    key = f"{kind}_directory"
 
-    videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
-    plugin.d.video_directory = {
-        v["title"]["runs"][0]["text"]: v["videoId"] for v in videos
-    }
-    log.info(f"Updated video directory ({len(plugin.d.video_directory)} videos)")
+    items = get_videos(url, endpoint, f"grid{kind.title()}Renderer", None, 1)
+    plugin.d[key] = {x["title"]["runs"][0]["text"]: x[f"{kind}Id"] for x in items}
+    log.info(f"Updated {kind} directory ({len(plugin.d[key])} {kind}s)")
 
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
     log.warning("Video and playlist directories will not be immediately available")
-    plugin.d.video_directory = {}
     loop = asyncio.get_running_loop()
-    loop.run_in_executor(None, _create_directories)
+
+    plugin.d.video_directory = {}
+    loop.run_in_executor(None, _create_directory, "video")
     plugin.app.d.scheduler.add_job(
-        _create_directories, CronTrigger(hour=12, minute=5, second=0)
+        _create_directory, CronTrigger(hour=12, minute=5, second=0), args=("video",)
     )
 
 
