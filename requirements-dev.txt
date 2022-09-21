@@ -27,7 +27,7 @@ len8~=0.7.3
 codespell~=2.2.1
 
 # Safety
-safety~=2.1.1
+safety~=2.2.0
 
 # Security
 bandit~=1.7.2
