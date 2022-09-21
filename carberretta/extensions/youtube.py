@@ -65,12 +65,12 @@ def _similarity(s1: str, s2: str, **_: t.Any) -> float:
     return max_combo / chars
 
 
-def _link_options(value: str) -> list[str]:
+def _video_options(value: str) -> list[str]:
     return [
         res[0]
         for res in rf.process.extract(
             value,
-            plugin.d.directory.keys(),
+            plugin.d.video_directory.keys(),
             scorer=_similarity,
             limit=10,
             score_cutoff=0.5,
@@ -82,20 +82,17 @@ def _link_options(value: str) -> list[str]:
 async def on_started(_: hikari.StartedEvent) -> None:
     # There is no way to get all videos directly from the API without
     # either (1) going through OAuth, or (2) brute forcing, with an
-    # eventual cap on 500 results. This scraping, as its run in an
-    # executor, doesn't block I/O, but does not complete before the bot
-    # is ready.
+    # eventual cap on 500 results.
 
     def _create_directory() -> None:
-        log.info(f"Creating video directory...")
-        log.warning("The bot will be ready to use before this operation completes")
         videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
-        plugin.d.directory = {
+        plugin.d.video_directory = {
             v["title"]["runs"][0]["text"]: v["videoId"] for v in videos
         }
-        log.info(f"Created directory of {len(plugin.d.directory)} videos")
+        log.info(f"Created video directory of {len(plugin.d.video_directory)} videos")
 
-    plugin.d.directory = {}
+    log.warning("Video and playlist directories will not be immediately available")
+    plugin.d.video_directory = {}
     loop = asyncio.get_running_loop()
     loop.run_in_executor(None, _create_directory)
 
@@ -108,11 +105,11 @@ async def cmd_youtube(_: lightbulb.SlashContext) -> None:
 
 
 @cmd_youtube.child
-@lightbulb.option("title", "The title of the video.", autocomplete=True)
-@lightbulb.command("link", "Link a video (use if directing someone to watch a video).")
+@lightbulb.option("title", "The title of the video you want to link.", autocomplete=True)
+@lightbulb.command("link", "Link a video.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def cmd_youtube_link(ctx: lightbulb.SlashContext) -> None:
-    video_id = plugin.d.directory[ctx.options.title]
+    video_id = plugin.d.video_directory[ctx.options.title]
     await ctx.respond(f"https://youtube.com/watch?v={video_id}")
 
 
@@ -121,7 +118,7 @@ async def cmd_youtube_link_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
     assert isinstance(opt.value, str)
-    return _link_options(opt.value)
+    return _video_options(opt.value)
 
 
 def load(bot: lightbulb.BotApp) -> None:
