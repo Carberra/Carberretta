@@ -36,6 +36,7 @@ import hikari
 import lightbulb
 import rapidfuzz as rf
 import scrapetube
+from apscheduler.triggers.cron import CronTrigger
 
 from carberretta import Config
 
@@ -78,23 +79,27 @@ def _video_options(value: str) -> list[str]:
     ]
 
 
-@plugin.listener(hikari.StartedEvent)
-async def on_started(_: hikari.StartedEvent) -> None:
+def _create_directories() -> None:
     # There is no way to get all videos directly from the API without
     # either (1) going through OAuth, or (2) brute forcing, with an
     # eventual cap on 500 results.
 
-    def _create_directory() -> None:
-        videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
-        plugin.d.video_directory = {
-            v["title"]["runs"][0]["text"]: v["videoId"] for v in videos
-        }
-        log.info(f"Created video directory of {len(plugin.d.video_directory)} videos")
+    videos = scrapetube.get_channel(Config.YOUTUBE_CHANNEL_ID)
+    plugin.d.video_directory = {
+        v["title"]["runs"][0]["text"]: v["videoId"] for v in videos
+    }
+    log.info(f"Updated video directory ({len(plugin.d.video_directory)} videos)")
 
+
+@plugin.listener(hikari.StartedEvent)
+async def on_started(_: hikari.StartedEvent) -> None:
     log.warning("Video and playlist directories will not be immediately available")
     plugin.d.video_directory = {}
     loop = asyncio.get_running_loop()
-    loop.run_in_executor(None, _create_directory)
+    loop.run_in_executor(None, _create_directories)
+    plugin.app.d.scheduler.add_job(
+        _create_directories, CronTrigger(hour=12, minute=5, second=0)
+    )
 
 
 @plugin.command
@@ -105,16 +110,25 @@ async def cmd_youtube(_: lightbulb.SlashContext) -> None:
 
 
 @cmd_youtube.child
-@lightbulb.option("title", "The title of the video you want to link.", autocomplete=True)
+@lightbulb.command("video", "YouTube video commands.")
+@lightbulb.implements(lightbulb.SlashSubGroup)
+async def cmd_youtube_video(_: lightbulb.SlashContext) -> None:
+    ...
+
+
+@cmd_youtube_video.child
+@lightbulb.option(
+    "title", "The title of the video you want to link.", autocomplete=True
+)
 @lightbulb.command("link", "Link a video.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def cmd_youtube_link(ctx: lightbulb.SlashContext) -> None:
+async def cmd_youtube_video_link(ctx: lightbulb.SlashContext) -> None:
     video_id = plugin.d.video_directory[ctx.options.title]
     await ctx.respond(f"https://youtube.com/watch?v={video_id}")
 
 
-@cmd_youtube_link.autocomplete("title")
-async def cmd_youtube_link_autocomplete(
+@cmd_youtube_video_link.autocomplete("title")
+async def cmd_youtube_video_link_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
     assert isinstance(opt.value, str)
