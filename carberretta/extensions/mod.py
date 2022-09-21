@@ -29,15 +29,12 @@
 from __future__ import annotations
 
 import datetime as dt
-import logging
 import re
 
 import hikari
 import lightbulb
 
 plugin = lightbulb.Plugin("Mod")
-
-log = logging.getLogger(__name__)
 
 _chars = "".join(
     chr(i) for i in [*range(0x20, 0x30), *range(0x3A, 0x41), *range(0x5B, 0x61)]
