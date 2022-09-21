@@ -29,6 +29,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import logging
 import typing as t
 
@@ -36,12 +37,22 @@ import hikari
 import lightbulb
 import rapidfuzz as rf
 from apscheduler.triggers.cron import CronTrigger
+from dateutil.parser import parse as du_parse
 from scrapetube.scrapetube import get_videos
 
 from carberretta import Config
+from carberretta.utils import helpers
+
+if t.TYPE_CHECKING:
+    from aiohttp import ClientSession
 
 plugin = lightbulb.Plugin("YouTube", include_datastore=True)
 log = logging.getLogger(__name__)
+
+VIDEO_URL = (
+    "https://www.googleapis.com/youtube/v3/videos"
+    "?part=contentDetails%2Csnippet%2Cstatistics"
+)
 
 
 def _similarity(s1: str, s2: str, **_: t.Any) -> float:
@@ -131,6 +142,78 @@ async def cmd_youtube_video_link(ctx: lightbulb.SlashContext) -> None:
 
 @cmd_youtube_video_link.autocomplete("title")
 async def cmd_youtube_video_link_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    assert isinstance(opt.value, str)
+    return _compile_options(opt.value, plugin.d.video_directory)
+
+
+@cmd_youtube_video.child
+@lightbulb.option(
+    "title",
+    "The title of the video you want to view information about.",
+    autocomplete=True,
+)
+@lightbulb.command("information", "View information about an video.")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
+    if not (member := ctx.member):
+        return
+
+    video_id = plugin.d.video_directory[ctx.options.title]
+    session: ClientSession = plugin.app.d.session
+
+    async with session.get(
+        VIDEO_URL + f"&id={video_id}&key={Config.YOUTUBE_API_KEY}"
+    ) as resp:
+        if not resp.ok:
+            await ctx.respond(
+                f"The YouTube Data API returned {resp.status}: {resp.reason}."
+            )
+            return
+
+        data = (await resp.json())["items"][0]
+
+    thumbnails: dict[str, dict[str, str]] = data["snippet"]["thumbnails"]
+    published = int(du_parse(data["snippet"]["publishedAt"]).timestamp())
+
+    def _fmt_duration(dur: str) -> str:
+        return dur.replace("H", "h ").replace("M", "' ").replace("S", '"')[2:]
+
+    await ctx.respond(
+        hikari.Embed(
+            title=ctx.options.title,
+            description=data["snippet"]["description"].split("\n", maxsplit=1)[0],
+            url=f"https://youtube.com/watch?v={video_id}",
+            colour=helpers.choose_colour(),
+            timestamp=dt.datetime.now().astimezone(),
+        )
+        .set_author(name="Video Information")
+        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
+        .set_image(
+            thumbnails["maxres"]["url"]
+            if "maxres" in thumbnails.keys()
+            else thumbnails["high"]["url"]
+        )
+        .add_field("Views", f"{int(data['statistics']['viewCount']):,}", inline=True)
+        .add_field("Likes", f"{int(data['statistics']['likeCount']):,}", inline=True)
+        .add_field(
+            "Comments", f"{int(data['statistics']['commentCount']):,}", inline=True
+        )
+        .add_field("Published", f"<t:{published}:R>", inline=True)
+        .add_field(
+            "Duration", _fmt_duration(data["contentDetails"]["duration"]), inline=True
+        )
+        .add_field(
+            "Subtitles",
+            "Available" if data["contentDetails"]["caption"] else "Unavailable",
+            inline=True,
+        )
+    )
+
+
+@cmd_youtube_video_information.autocomplete("title")
+async def cmd_youtube_video_information_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
     assert isinstance(opt.value, str)
