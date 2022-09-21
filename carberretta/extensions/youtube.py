@@ -66,12 +66,12 @@ def _similarity(s1: str, s2: str, **_: t.Any) -> float:
     return max_combo / chars
 
 
-def _video_options(value: str) -> list[str]:
+def _compile_options(value: str, directory: dict[str, str]) -> list[str]:
     return [
         res[0]
         for res in rf.process.extract(
             value,
-            plugin.d.video_directory.keys(),
+            directory.keys(),
             scorer=_similarity,
             limit=10,
             score_cutoff=0.5,
@@ -134,7 +134,7 @@ async def cmd_youtube_video_link_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
 ) -> list[str]:
     assert isinstance(opt.value, str)
-    return _video_options(opt.value)
+    return _compile_options(opt.value, plugin.d.video_directory)
 
 
 def load(bot: lightbulb.BotApp) -> None:
