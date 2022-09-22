@@ -95,9 +95,11 @@ async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
     snowflake: hikari.Snowflake = ctx.options.snowflake
 
     try:
-        message: hikari.Message = ctx.bot.cache.get_message(
-            snowflake
-        ) or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
+        message: hikari.Message = (
+            # This comment prevents black from reformatting :)
+            ctx.bot.cache.get_message(snowflake)
+            or await ctx.bot.rest.fetch_message(ctx.channel_id, snowflake)
+        )
     except hikari.NotFoundError:
         await ctx.respond(
             f"Could not find message in this channel with ID: {snowflake}"
