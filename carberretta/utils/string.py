@@ -28,14 +28,14 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 import typing as t
-from datetime import datetime, timedelta
 
 from aiohttp import ClientSession
 
 if t.TYPE_CHECKING:
-    from hikari import Member, User
+    from hikari import User
 
 ORDINAL_ENDINGS: t.Final = {"1": "st", "2": "nd", "3": "rd"}
 
@@ -54,7 +54,7 @@ def ordinal(number: int) -> str:
     return f"{number:,}th"
 
 
-def possessive(user: Member | User) -> str:
+def possessive(user: User) -> str:
     name = getattr(user, "display_name", user.username)
     return f"{name}'{'s' if not name.endswith('s') else ''}"
 
@@ -70,14 +70,14 @@ async def binify(
     async def convert(body: str, to_replace: str, ext: str) -> str:
         payload = {
             "files": [{"filename": f"support{ext}", "content": body}],
-            "expires": str(datetime.now() + timedelta(expires_in_days)),
+            "expires": str(dt.datetime.now() + dt.timedelta(expires_in_days)),
         }
 
-        async with session.put("https://api.mystb.in/paste", json=payload) as response:
-            if not response.ok:
-                return f"Failed calling Mystbin. HTTP status code: {response.status}"
+        async with session.put("https://api.mystb.in/paste", json=payload) as resp:
+            if not resp.ok:
+                return f"Failed calling Mystbin. HTTP status code: {resp.status}"
 
-            data = await response.json()
+            data = await resp.json()
             return text.replace(to_replace, f"<https://mystb.in/{data['id']}>")
 
     if not only_codeblocks:
