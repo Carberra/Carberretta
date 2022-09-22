@@ -50,6 +50,10 @@ plugin = lightbulb.Plugin("YouTube", include_datastore=True)
 log = logging.getLogger(__name__)
 
 BROWSE_ENDPOINT = "https://www.youtube.com/youtubei/v1/browse"
+CHANNEL_URL = (
+    "https://www.googleapis.com/youtube/v3/channels"
+    "?part=brandingSettings%2Csnippet%2Cstatistics"
+)
 VIDEO_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
     "?part=contentDetails%2Csnippet%2Cstatistics"
@@ -162,11 +166,10 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         return
 
     video_id = plugin.d.video_directory[ctx.options.title]
+    url = VIDEO_URL + f"&id={video_id}&key={Config.YOUTUBE_API_KEY}"
     session: ClientSession = plugin.app.d.session
 
-    async with session.get(
-        VIDEO_URL + f"&id={video_id}&key={Config.YOUTUBE_API_KEY}"
-    ) as resp:
+    async with session.get(url) as resp:
         if not resp.ok:
             await ctx.respond(
                 f"The YouTube Data API returned {resp.status}: {resp.reason}."
@@ -219,6 +222,55 @@ async def cmd_youtube_video_information_autocomplete(
 ) -> list[str]:
     assert isinstance(opt.value, str)
     return _compile_options(opt.value, plugin.d.video_directory)
+
+
+@cmd_youtube.child
+@lightbulb.command("channel", "View information about the Carberra channel.")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
+    if not (member := ctx.member):
+        return
+
+    url = CHANNEL_URL + f"&id={Config.YOUTUBE_CHANNEL_ID}&key={Config.YOUTUBE_API_KEY}"
+    session: ClientSession = plugin.app.d.session
+
+    async with session.get(url) as resp:
+        if not resp.ok:
+            await ctx.respond(
+                f"The YouTube Data API returned {resp.status}: {resp.reason}."
+            )
+            return
+
+        data = (await resp.json())["items"][0]
+
+    latest_title, latest_id = (
+        next(iter(plugin.d.video_directory.items()))
+        if plugin.d.video_directory
+        else ("Not available", "dQw4w9WgXcQ")
+    )
+    published = int(du_parse(data["snippet"]["publishedAt"]).timestamp())
+    stats = data["statistics"]
+
+    await ctx.respond(
+        hikari.Embed(
+            title="Carberra",
+            description=data["brandingSettings"]["channel"]["description"],
+            url=f"https://youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}",
+            colour=helpers.choose_colour(),
+            timestamp=dt.datetime.now().astimezone(),
+        )
+        .set_author(name="Channel Information")
+        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
+        .set_thumbnail(data["snippet"]["thumbnails"]["high"]["url"])
+        .set_image(data["brandingSettings"]["image"]["bannerExternalUrl"])
+        .add_field(
+            "Subscribers", f"~{int(stats['subscriberCount']):,}", inline=True
+        )
+        .add_field("Views", f"{int(stats['viewCount']):,}", inline=True)
+        .add_field("Videos", f"{int(stats['videoCount']):,}", inline=True)
+        .add_field("Latest video", f"[{latest_title}]({WATCH_URL + latest_id})")
+        .add_field("Created", f"<t:{published}:R>")
+    )
 
 
 def load(bot: lightbulb.BotApp) -> None:
