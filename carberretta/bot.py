@@ -26,16 +26,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import asyncio
 import logging
 import os
 import traceback
-from http.cookies import SimpleCookie
 from pathlib import Path
 
 import hikari
 import lightbulb
-from aiohttp import ClientSession, CookieJar
+from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from hikari.events.base_events import EventT

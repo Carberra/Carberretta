@@ -263,9 +263,7 @@ async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
         .set_thumbnail(data["snippet"]["thumbnails"]["high"]["url"])
         .set_image(data["brandingSettings"]["image"]["bannerExternalUrl"])
-        .add_field(
-            "Subscribers", f"~{int(stats['subscriberCount']):,}", inline=True
-        )
+        .add_field("Subscribers", f"~{int(stats['subscriberCount']):,}", inline=True)
         .add_field("Views", f"{int(stats['viewCount']):,}", inline=True)
         .add_field("Videos", f"{int(stats['videoCount']):,}", inline=True)
         .add_field("Latest video", f"[{latest_title}]({WATCH_URL + latest_id})")
