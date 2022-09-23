@@ -1,6 +1,8 @@
 ### Custom ###
 dynamic/
 .env
+.oldenv
+.serverenv
 .idea/
 
 ### Database ###
