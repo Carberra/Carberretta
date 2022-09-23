@@ -36,7 +36,7 @@ from .config import Config
 from .db import Database
 
 __productname__ = "Carberretta"
-__version__ = "2.0.0.dev0"
+__version__ = "2.0.0α"
 __description__ = "A Discord bot designed for the Carberra Discord server."
 __url__ = "https://github.com/Carberra/Carberretta"
 __authors__ = ("Ethan Henderson", "Max Shaughnessy")
@@ -48,3 +48,4 @@ ROOT_DIR: t.Final = Path(__file__).parent
 
 logging.getLogger("apscheduler.executors.default").setLevel(logging.WARNING)
 logging.getLogger("py.warnings").setLevel(logging.ERROR)
+logging.getLogger("pygount").setLevel(logging.WARNING)
