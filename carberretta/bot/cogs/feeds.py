@@ -82,7 +82,7 @@ class Feeds(commands.Cog):
                 self.bot.scheduler.add_job(self.get_new_videos, CronTrigger(minute="*/3", second=0))
                 self.bot.scheduler.add_job(self.get_new_vods, CronTrigger(minute="*/3", second=15))
                 self.bot.scheduler.add_job(self.get_new_premieres, CronTrigger(minute="*/3", second=30))
-                self.bot.scheduler.add_job(self.get_new_streams, CronTrigger(minute="*/3", second=45))
+                # self.bot.scheduler.add_job(self.get_new_streams, CronTrigger(minute="*/3", second=45))
 
             self.bot.ready.up(self)
 
