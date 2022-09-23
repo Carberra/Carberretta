@@ -50,18 +50,22 @@ plugin = lightbulb.Plugin("YouTube", include_datastore=True)
 log = logging.getLogger(__name__)
 
 BROWSE_ENDPOINT = "https://www.youtube.com/youtubei/v1/browse"
-CHANNEL_URL = (
+CHANNELS_URL = (
     "https://www.googleapis.com/youtube/v3/channels"
     "?part=brandingSettings%2Csnippet%2Cstatistics"
 )
-VIDEO_URL = (
+MINE_URL = f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}"
+VIDEOS_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
     "?part=contentDetails%2Csnippet%2Cstatistics"
 )
-WATCH_URL = "https://youtube.com/watch?v="
+WATCH_URL = "https://www.youtube.com/watch?v="
 
 
 def _similarity(s1: str, s2: str, **_: t.Any) -> float:
+    # Rapidfuzz passes kwargs to this function which we don't need, so
+    # we just consume them.
+
     chars = len(s1)
     if not chars:
         return 1.0
@@ -97,10 +101,7 @@ def _compile_options(value: str, directory: dict[str, str]) -> list[str]:
 
 
 def _create_directory(kind: str) -> None:
-    url = (
-        f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}/"
-        f"{kind}s?view=0&sort=dd&flow=grid"
-    )
+    url = f"{MINE_URL}/{kind}s?view=0&sort=dd&flow=grid"
     key = f"{kind}_directory"
 
     items = get_videos(url, BROWSE_ENDPOINT, f"grid{kind.title()}Renderer", None, 1)
@@ -159,14 +160,14 @@ async def cmd_youtube_video_link_autocomplete(
     "The title of the video you want to view information about.",
     autocomplete=True,
 )
-@lightbulb.command("information", "View information about an video.")
+@lightbulb.command("information", "View information about a video.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
     if not (member := ctx.member):
         return
 
     video_id = plugin.d.video_directory[ctx.options.title]
-    url = VIDEO_URL + f"&id={video_id}&key={Config.YOUTUBE_API_KEY}"
+    url = VIDEOS_URL + f"&id={video_id}&key={Config.YOUTUBE_API_KEY}"
     session: ClientSession = plugin.app.d.session
 
     async with session.get(url) as resp:
@@ -180,9 +181,6 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
 
     thumbnails: dict[str, dict[str, str]] = data["snippet"]["thumbnails"]
     published = int(du_parse(data["snippet"]["publishedAt"]).timestamp())
-
-    def _fmt_duration(dur: str) -> str:
-        return dur.replace("H", "h ").replace("M", "' ").replace("S", '"')[2:]
 
     await ctx.respond(
         hikari.Embed(
@@ -206,7 +204,14 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         )
         .add_field("Published", f"<t:{published}:R>", inline=True)
         .add_field(
-            "Duration", _fmt_duration(data["contentDetails"]["duration"]), inline=True
+            "Duration",
+            (
+                data["contentDetails"]["duration"]
+                .replace("H", "h ")
+                .replace("M", "' ")
+                .replace("S", '"')[2:]
+            ),
+            inline=True,
         )
         .add_field(
             "Subtitles",
@@ -231,7 +236,7 @@ async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
     if not (member := ctx.member):
         return
 
-    url = CHANNEL_URL + f"&id={Config.YOUTUBE_CHANNEL_ID}&key={Config.YOUTUBE_API_KEY}"
+    url = CHANNELS_URL + f"&id={Config.YOUTUBE_CHANNEL_ID}&key={Config.YOUTUBE_API_KEY}"
     session: ClientSession = plugin.app.d.session
 
     async with session.get(url) as resp:
@@ -255,7 +260,7 @@ async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
         hikari.Embed(
             title="Carberra",
             description=data["brandingSettings"]["channel"]["description"],
-            url=f"https://youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}",
+            url=MINE_URL,
             colour=helpers.choose_colour(),
             timestamp=dt.datetime.now().astimezone(),
         )
