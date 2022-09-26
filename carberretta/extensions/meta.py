@@ -28,7 +28,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
+import logging
 import platform
 import time
 from dataclasses import dataclass
@@ -42,7 +44,8 @@ import carberretta
 from carberretta import Config
 from carberretta.utils import chron, helpers
 
-plugin = lightbulb.Plugin("Meta")
+plugin = lightbulb.Plugin("Meta", include_datastore=True)
+log = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -50,15 +53,24 @@ class CodeCounter:
     code: int = 0
     docs: int = 0
     empty: int = 0
+    files: int = 0
 
-    def count(self) -> CodeCounter:
-        for file in carberretta.ROOT_DIR.rglob("*.py"):
+    def count(self) -> None:
+        for i, file in enumerate(carberretta.ROOT_DIR.rglob("*.py"), start=1):
             analysis = SourceAnalysis.from_file(file, "pygount", encoding="utf-8")
             self.code += analysis.code_count
             self.docs += analysis.documentation_count
             self.empty += analysis.empty_count
 
-        return self
+        self.files = i
+        plugin.d.loc = self
+        log.info(f"counted loc in {self.files:,} files")
+
+
+@plugin.listener(hikari.StartedEvent)
+async def on_started(_: hikari.StartedEvent) -> None:
+    loop = asyncio.get_running_loop()
+    loop.run_in_executor(None, CodeCounter().count)
 
 
 @plugin.command()
@@ -130,9 +142,6 @@ async def cmd_about(ctx: lightbulb.SlashContext) -> None:
 
 
 def load(bot: lightbulb.BotApp) -> None:
-    if not bot.d.loc:
-        bot.d.loc = CodeCounter().count()
-
     bot.add_plugin(plugin)
 
 
