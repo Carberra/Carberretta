@@ -36,7 +36,7 @@ from .config import Config
 from .db import Database
 
 __productname__ = "Carberretta"
-__version__ = "2.0.0a"
+__version__ = "2.0.0a2"
 __description__ = "A Discord bot designed for the Carberra Discord server."
 __url__ = "https://github.com/Carberra/Carberretta"
 __authors__ = ("Ethan Henderson", "Max Shaughnessy")
