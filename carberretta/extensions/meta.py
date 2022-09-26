@@ -131,9 +131,9 @@ async def cmd_about(ctx: lightbulb.SlashContext) -> None:
             f"{mem_usage:,.3f}/{mem_total:,.0f} MiB ({mem_of_total:,.0f}%)",
             inline=True,
         )
-        .add_field("Code lines", f"{ctx.bot.d.loc.code:,}", inline=True)
-        .add_field("Docs lines", f"{ctx.bot.d.loc.docs:,}", inline=True)
-        .add_field("Blank lines", f"{ctx.bot.d.loc.empty:,}", inline=True)
+        .add_field("Code lines", f"{plugin.d.loc.code:,}", inline=True)
+        .add_field("Docs lines", f"{plugin.d.loc.docs:,}", inline=True)
+        .add_field("Blank lines", f"{plugin.d.loc.empty:,}", inline=True)
         .add_field(
             "Database calls",
             f"{(c := ctx.bot.d.db.calls):,} ({c/uptime:,.3f} per second)",
