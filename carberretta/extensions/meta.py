@@ -45,7 +45,7 @@ from carberretta.utils import chron, helpers
 plugin = lightbulb.Plugin("Meta")
 
 
-@dataclass
+@dataclass(slots=True)
 class CodeCounter:
     code: int = 0
     docs: int = 0
@@ -61,7 +61,7 @@ class CodeCounter:
         return self
 
 
-@plugin.command
+@plugin.command()
 @lightbulb.command("ping", "Get the average DWSP latency for the bot.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def cmd_ping(ctx: lightbulb.SlashContext) -> None:
@@ -70,46 +70,10 @@ async def cmd_ping(ctx: lightbulb.SlashContext) -> None:
     )
 
 
-@plugin.command
+@plugin.command()
 @lightbulb.command("about", "View information about Carberretta.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def cmd_about(ctx: lightbulb.SlashContext) -> None:
-    if not (guild := ctx.get_guild()):
-        return
-
-    if not (me := guild.get_my_member()):
-        return
-
-    if not (member := ctx.member):
-        return
-
-    await ctx.respond(
-        hikari.Embed(
-            title="About Carberretta",
-            description="Type `/stats` for bot runtime stats.",
-            colour=helpers.choose_colour(),
-            timestamp=dt.datetime.now().astimezone(),
-        )
-        .set_thumbnail(me.avatar_url)
-        .set_author(name="Information")
-        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
-        .add_field("Authors", "\n".join(f"<@{i}>" for i in Config.OWNER_IDS))
-        .add_field(
-            "Contributors",
-            f"View on [GitHub]({carberretta.__url__}/graphs/contributors)",
-        )
-        .add_field(
-            "License",
-            '[BSD 3-Clause "New" or "Revised" License]'
-            f"({carberretta.__url__}/blob/main/LICENSE)",
-        )
-    )
-
-
-@plugin.command
-@lightbulb.command("stats", "View runtime stats for Carberretta.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
     if not (guild := ctx.get_guild()):
         return
 
@@ -132,13 +96,18 @@ async def cmd_stats(ctx: lightbulb.SlashContext) -> None:
 
     await ctx.respond(
         hikari.Embed(
-            title="Runtime statistics for Carberretta",
-            description="Type `/about` for general bot information.",
+            title="About Carberretta",
+            description=(
+                f"Authored by <@{Config.OWNER_ID}>. See all contributors on "
+                f"[GitHub]({carberretta.__url__}/graphs/contributors). Licensed under "
+                f"the [BSD 3-Clause]({carberretta.__url__}/blob/main/LICENSE) license."
+            ),
+            url="https://github.com/Carberra/Carberretta",
             colour=helpers.choose_colour(),
             timestamp=dt.datetime.now().astimezone(),
         )
         .set_thumbnail(me.avatar_url)
-        .set_author(name="Information")
+        .set_author(name="Bot Information")
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
         .add_field("Bot version", carberretta.__version__, inline=True)
         .add_field("Python version", platform.python_version(), inline=True)
