@@ -48,7 +48,7 @@ log = logging.getLogger(__name__)
 bot = lightbulb.BotApp(
     Config.TOKEN,
     default_enabled_guilds=Config.GUILD_ID,
-    case_insensitive_prefix_commands=True,
+    help_slash_command=True,
     intents=hikari.Intents.ALL,
     banner=None,
 )
