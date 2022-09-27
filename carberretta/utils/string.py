@@ -62,6 +62,7 @@ def possessive(user: User) -> str:
 async def binify(
     session: ClientSession,
     text: str,
+    filename: str,
     *,
     only_codeblocks: bool = False,
     expires_in_days: int = 7,
@@ -69,7 +70,7 @@ async def binify(
 ) -> str:
     async def convert(body: str, to_replace: str, ext: str) -> str:
         payload = {
-            "files": [{"filename": f"support{ext}", "content": body}],
+            "files": [{"filename": f"{filename}{ext}", "content": body}],
             "expires": str(dt.datetime.now() + dt.timedelta(expires_in_days)),
         }
 

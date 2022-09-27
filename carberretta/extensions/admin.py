@@ -29,17 +29,17 @@
 from __future__ import annotations
 
 import logging
-from io import BytesIO
 
-import hikari
 import lightbulb
+
+from carberretta.utils import string
 
 log = logging.getLogger(__name__)
 
 plugin = lightbulb.Plugin("Admin")
 
 
-@plugin.command
+@plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.command("shutdown", "Shut Carberretta down.", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
@@ -49,7 +49,7 @@ async def cmd_shutdown(ctx: lightbulb.SlashContext) -> None:
     await ctx.bot.close()
 
 
-@plugin.command
+@plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.option("id", "The error reference ID.")
 @lightbulb.command("error", "View an error.")
@@ -71,12 +71,13 @@ async def cmd_error(ctx: lightbulb.SlashContext) -> None:
         await ctx.respond("No errors matching that reference were found.")
         return
 
-    message = await ctx.respond("Error found. Standby...")
-    b = BytesIO(
-        f"Command: /{row.err_cmd}\nAt: {row.err_time}\n\n{row.err_text}".encode()
+    await ctx.respond(
+        await string.binify(
+            plugin.app.d.session,
+            f"Command: /{row.err_cmd}\nAt: {row.err_time}\n\n{row.err_text}",
+            row.err_id,
+        )
     )
-    b.seek(0)
-    await message.edit(content=None, attachment=hikari.Bytes(b, f"err{row.err_id}.txt"))
 
 
 def load(bot: lightbulb.BotApp) -> None:

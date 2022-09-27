@@ -116,6 +116,7 @@ async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
             await string.binify(
                 ctx.bot.d.session,
                 message.content,
+                "support",
                 only_codeblocks=True,
                 expires_in_days=expires,
             )
@@ -134,6 +135,7 @@ async def cmd_binify(ctx: lightbulb.SlashContext) -> None:
         file = await string.binify(
             ctx.bot.d.session,
             file_contents,
+            "support",
             only_codeblocks=False,
             expires_in_days=expires,
             file_extension=f".{extension}",
