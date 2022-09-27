@@ -34,14 +34,14 @@ import logging
 import typing as t
 
 import hikari
+import isodate
 import lightbulb
 import rapidfuzz as rf
 from apscheduler.triggers.cron import CronTrigger
-from dateutil.parser import parse as du_parse
 from scrapetube.scrapetube import get_videos
 
 from carberretta import Config
-from carberretta.utils import helpers
+from carberretta.utils import chron, helpers
 
 if t.TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -180,7 +180,7 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         data = (await resp.json())["items"][0]
 
     thumbnails: dict[str, dict[str, str]] = data["snippet"]["thumbnails"]
-    published = int(du_parse(data["snippet"]["publishedAt"]).timestamp())
+    published = int(isodate.parse_datetime(data["snippet"]["publishedAt"]).timestamp())
 
     await ctx.respond(
         hikari.Embed(
@@ -205,11 +205,8 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         .add_field("Published", f"<t:{published}:R>", inline=True)
         .add_field(
             "Duration",
-            (
-                data["contentDetails"]["duration"]
-                .replace("H", "h ")
-                .replace("M", "' ")
-                .replace("S", '"')[2:]
+            chron.short_delta(
+                isodate.parse_duration(data["contentDetails"]["duration"])
             ),
             inline=True,
         )
@@ -253,7 +250,7 @@ async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
         if plugin.d.video_directory
         else ("Not available", "dQw4w9WgXcQ")
     )
-    published = int(du_parse(data["snippet"]["publishedAt"]).timestamp())
+    published = int(isodate.parse_datetime(data["snippet"]["publishedAt"]).timestamp())
     stats = data["statistics"]
 
     await ctx.respond(
