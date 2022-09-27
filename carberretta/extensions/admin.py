@@ -34,9 +34,8 @@ import lightbulb
 
 from carberretta.utils import string
 
-log = logging.getLogger(__name__)
-
 plugin = lightbulb.Plugin("Admin")
+log = logging.getLogger(__name__)
 
 
 @plugin.command()
@@ -77,7 +76,7 @@ async def cmd_logs(ctx: lightbulb.SlashContext) -> None:
 @plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.option("id", "The error reference ID.")
-@lightbulb.command("error", "View an error.")
+@lightbulb.command("error", "View an error.", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def cmd_error(ctx: lightbulb.SlashContext) -> None:
     if len(search_id := ctx.options.id) < 5:
