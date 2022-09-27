@@ -86,6 +86,9 @@ class Database:
     async def connect(self) -> None:
         os.makedirs(self.db_path.parent, exist_ok=True)
         self.cxn = await aiosqlite.connect(self.db_path)
+
+        if not self.db_path.exists():
+            log.info("Creating new database")
         log.info(f"Connected to database at {self.db_path}")
 
         self.cxn.row_factory = t.cast(t.Any, RowData.from_selection)
