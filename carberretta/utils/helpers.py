@@ -27,8 +27,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import hashlib
+import logging
 import random
 import time
+import warnings
+from io import StringIO
 
 
 def choose_colour() -> int:
@@ -60,3 +63,48 @@ def choose_colour() -> int:
 
 def generate_id() -> str:
     return hashlib.md5(f"{time.time()}".encode(), usedforsecurity=False).hexdigest()
+
+
+def configure_logging(level: int = logging.INFO) -> StringIO:
+    # Hikari doesn't allow for the adding of additional handlers, so
+    # we'll just do it ourselves.
+
+    FMT = "{asctime} [{levelname:^9}] {name}: {message}"
+    COLOURS = {
+        logging.DEBUG: "\33[38;5;244m",
+        logging.INFO: "\33[38;5;248m",
+        logging.WARNING: "\33[1m\33[38;5;178m",
+        logging.ERROR: "\33[1m\33[38;5;196m",
+        logging.CRITICAL: "\33[1m\33[48;5;196m",
+    }
+
+    class ConsoleFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:
+            log_fmt = f"{COLOURS[record.levelno]}{FMT}\33[0m"
+            formatter = logging.Formatter(log_fmt, style="{")
+            return formatter.format(record)
+
+    class StringIOFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:
+            formatter = logging.Formatter(FMT, style="{")
+            return formatter.format(record)
+
+    console = logging.StreamHandler()
+    console.setFormatter(ConsoleFormatter())
+
+    string_io = logging.StreamHandler(stream=(stream := StringIO()))
+    string_io.setFormatter(StringIOFormatter())
+
+    logging.basicConfig(
+        level=level,
+        handlers=[console, string_io],
+    )
+
+    # Optimise and set extra options.
+    logging.logThreads = False
+    logging.logProcesses = False
+    warnings.simplefilter("always", DeprecationWarning)
+    logging.captureWarnings(True)
+
+    # Return the stream to be accessed later.
+    return stream

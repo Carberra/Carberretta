@@ -51,6 +51,7 @@ bot = lightbulb.BotApp(
     help_slash_command=True,
     intents=hikari.Intents.ALL,
     banner=None,
+    logs=None,
 )
 bot.d._dynamic = Path("./data/dynamic")
 bot.d._static = bot.d._dynamic.parent / "static"

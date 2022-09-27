@@ -51,6 +51,16 @@ async def cmd_shutdown(ctx: lightbulb.SlashContext) -> None:
 
 @plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.command("logs", "View Carberretta's logs.", ephemeral=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_logs(ctx: lightbulb.SlashContext) -> None:
+    await ctx.respond(
+        await string.binify(plugin.app.d.session, plugin.app.d.logs.getvalue(), "logs")
+    )
+
+
+@plugin.command()
+@lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.option("id", "The error reference ID.")
 @lightbulb.command("error", "View an error.")
 @lightbulb.implements(lightbulb.SlashCommand)

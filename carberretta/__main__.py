@@ -27,6 +27,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from carberretta import bot
+from carberretta.utils import helpers
+
 
 if __name__ == "__main__":
+    bot.bot.d.logs = helpers.configure_logging()
     bot.run()
