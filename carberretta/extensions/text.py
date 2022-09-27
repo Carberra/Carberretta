@@ -28,14 +28,13 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import io
 import unicodedata
 
 import hikari
 import lightbulb
 
-from carberretta.utils import helpers, string
+from carberretta.utils import chron, helpers, string
 
 plugin = lightbulb.Plugin("Text")
 
@@ -67,7 +66,7 @@ async def cmd_charinfo(ctx: lightbulb.SlashContext) -> None:
             title="Character information",
             description=f"Displaying information on {len(characters)} character(s).",
             colour=helpers.choose_colour(),
-            timestamp=dt.datetime.now().astimezone(),
+            timestamp=chron.aware_now(),
         )
         .set_author(name="Query")
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)

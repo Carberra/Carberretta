@@ -34,6 +34,8 @@ import re
 import hikari
 import lightbulb
 
+from carberretta.utils import chron
+
 plugin = lightbulb.Plugin("Mod")
 
 _chars = "".join(
@@ -72,8 +74,7 @@ async def cmd_clear(ctx: lightbulb.SlashContext) -> None:
         return
 
     history = channel.fetch_history(
-        after=ctx.options.after
-        or dt.datetime.now().astimezone() - dt.timedelta(days=14)
+        after=ctx.options.after or chron.aware_now() - dt.timedelta(days=14)
     )
     if ctx.options.member:
         # Mypy is literally the worst piece of software ever written, I

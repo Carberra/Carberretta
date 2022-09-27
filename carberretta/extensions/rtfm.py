@@ -28,7 +28,6 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import io
 import re
 import typing as t
@@ -39,7 +38,7 @@ import hikari
 import lightbulb
 from rapidfuzz import fuzz, process
 
-from carberretta.utils import helpers
+from carberretta.utils import chron, helpers
 
 
 @dataclass
@@ -99,7 +98,7 @@ async def build_rtfm_output(query: str, cache: CachedObjT, url: str) -> hikari.E
         title="RTFM",
         description="\n".join(description),
         color=helpers.choose_colour(),
-        timestamp=dt.datetime.now().astimezone(),
+        timestamp=chron.aware_now(),
     )
 
 

@@ -29,7 +29,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import logging
 import typing as t
 
@@ -188,7 +187,7 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
             description=data["snippet"]["description"].split("\n", maxsplit=1)[0],
             url=WATCH_URL + video_id,
             colour=helpers.choose_colour(),
-            timestamp=dt.datetime.now().astimezone(),
+            timestamp=chron.aware_now(),
         )
         .set_author(name="Video Information")
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
@@ -204,11 +203,7 @@ async def cmd_youtube_video_information(ctx: lightbulb.SlashContext) -> None:
         )
         .add_field("Published", f"<t:{published}:R>", inline=True)
         .add_field(
-            "Duration",
-            chron.short_delta(
-                isodate.parse_duration(data["contentDetails"]["duration"])
-            ),
-            inline=True,
+            "Duration", chron.nat_delta(data["contentDetails"]["duration"]), inline=True
         )
         .add_field(
             "Subtitles",
@@ -259,7 +254,7 @@ async def cmd_youtube_channel(ctx: lightbulb.SlashContext) -> None:
             description=data["brandingSettings"]["channel"]["description"],
             url=MINE_URL,
             colour=helpers.choose_colour(),
-            timestamp=dt.datetime.now().astimezone(),
+            timestamp=chron.aware_now(),
         )
         .set_author(name="Channel Information")
         .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)

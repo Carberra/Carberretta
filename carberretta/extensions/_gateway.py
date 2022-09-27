@@ -35,6 +35,7 @@ import hikari
 import lightbulb
 
 from carberretta import Config
+from carberretta.utils import chron
 
 TIMEOUT = 600
 
@@ -78,10 +79,8 @@ async def schedule_action(member: hikari.Member, secs: int = TIMEOUT) -> None:
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
-    now = dt.datetime.now().astimezone()
-
     async for m in plugin.bot.rest.fetch_members(Config.GUILD_ID):
-        if (secs := (now - m.joined_at).seconds) <= TIMEOUT:
+        if (secs := (chron.aware_now() - m.joined_at).seconds) <= TIMEOUT:
             log.info(
                 f"Member '{m.display_name}' joined while offline, scheduling action "
                 f"in {TIMEOUT-secs} seconds..."

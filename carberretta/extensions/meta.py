@@ -29,7 +29,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import logging
 import platform
 import time
@@ -96,12 +95,8 @@ async def cmd_about(ctx: lightbulb.SlashContext) -> None:
         return
 
     with (proc := Process()).oneshot():
-        uptime = time.time() - proc.create_time()
-        uptime_str = chron.short_delta(dt.timedelta(seconds=uptime))
-        cpu_time = chron.short_delta(
-            dt.timedelta(seconds=(cpu := proc.cpu_times()).system + cpu.user),
-            ms=True,
-        )
+        uptime_delta = chron.nat_delta(uptime := time.time() - proc.create_time())
+        cpu_time = chron.nat_delta((cpu := proc.cpu_times()).system + cpu.user, ms=True)
         mem_total = virtual_memory().total / (1024**2)
         mem_of_total = proc.memory_percent()
         mem_usage = mem_total * (mem_of_total / 100)
@@ -116,7 +111,7 @@ async def cmd_about(ctx: lightbulb.SlashContext) -> None:
             ),
             url="https://github.com/Carberra/Carberretta",
             colour=helpers.choose_colour(),
-            timestamp=dt.datetime.now().astimezone(),
+            timestamp=chron.aware_now(),
         )
         .set_thumbnail(me.avatar_url)
         .set_author(name="Bot Information")
@@ -124,7 +119,7 @@ async def cmd_about(ctx: lightbulb.SlashContext) -> None:
         .add_field("Bot version", carberretta.__version__, inline=True)
         .add_field("Python version", platform.python_version(), inline=True)
         .add_field("Hikari version", hikari.__version__, inline=True)
-        .add_field("Uptime", uptime_str, inline=True)
+        .add_field("Uptime", uptime_delta, inline=True)
         .add_field("CPU time", cpu_time, inline=True)
         .add_field(
             "Memory usage",
