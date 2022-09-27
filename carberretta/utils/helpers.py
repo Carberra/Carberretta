@@ -33,6 +33,8 @@ import time
 import warnings
 from io import StringIO
 
+from hikari.internal.ux import TRACE
+
 
 def choose_colour() -> int:
     return random.choice(  # nosec B311
@@ -69,10 +71,10 @@ def configure_logging(level: int = logging.INFO) -> StringIO:
     # Hikari doesn't allow for the adding of additional handlers, so
     # we'll just do it ourselves.
 
-    FMT = "{asctime} [{levelname:^9}] {name}: {message}"
+    FMT = "{asctime} [ {levelname[0]} ] {name}: {message}"
     COLOURS = {
         logging.DEBUG: "\33[38;5;244m",
-        logging.INFO: "\33[38;5;248m",
+        logging.INFO: "\33[1m\33[38;5;248m",
         logging.WARNING: "\33[1m\33[38;5;178m",
         logging.ERROR: "\33[1m\33[38;5;196m",
         logging.CRITICAL: "\33[1m\33[48;5;196m",
@@ -96,9 +98,10 @@ def configure_logging(level: int = logging.INFO) -> StringIO:
     string_io.setFormatter(StringIOFormatter())
 
     logging.basicConfig(
-        level=level,
+        level=TRACE,
         handlers=[console, string_io],
     )
+    console.setLevel(level)
 
     # Optimise and set extra options.
     logging.logThreads = False

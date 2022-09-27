@@ -51,12 +51,27 @@ async def cmd_shutdown(ctx: lightbulb.SlashContext) -> None:
 
 @plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.option(
+    "level", "The minimum logging level to view logs for.", choices="CEWIDT"
+)
 @lightbulb.command("logs", "View Carberretta's logs.", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def cmd_logs(ctx: lightbulb.SlashContext) -> None:
-    await ctx.respond(
-        await string.binify(plugin.app.d.session, plugin.app.d.logs.getvalue(), "logs")
-    )
+    if ctx.options.level == "T":
+        # TRACE data runs across multiple lines. There's no point in
+        # processing anyways, so just return the raw data.
+        records = plugin.app.d.logs.getvalue()
+    else:
+        levels = "CEWID"
+        idx = levels.index(ctx.options.level)
+        records = "\n".join(
+            filter(
+                lambda x: any(f"[ {l} ]" in x for l in levels[: idx + 1]),
+                plugin.app.d.logs.getvalue().strip().split("\n"),
+            )
+        )
+
+    await ctx.respond(await string.binify(plugin.app.d.session, records, "logs"))
 
 
 @plugin.command()
