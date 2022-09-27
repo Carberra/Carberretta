@@ -70,15 +70,17 @@ def _similarity(s1: str, s2: str, **_: t.Any) -> float:
         return 1.0
 
     s1, s2 = s1.lower(), s2.lower()
-    combo, max_combo = 0, 0
-    word_starts = [0] + [i for i, l in enumerate(s1, start=1) if l == " "]
 
-    for w in word_starts:
-        for char in s2:
-            if s1[w + combo] == char:
+    if s1 in s2:
+        return 1.0
+
+    combo, max_combo = 0, 0
+    words = s1.split()
+
+    for word in words:
+        for i in range(len(word)):
+            if word[combo] == s2[i]:
                 combo += 1
-                if (w + combo) == chars:
-                    return 1.0
             else:
                 max_combo = max(combo, max_combo)
                 combo = 0
