@@ -56,8 +56,7 @@ CHANNELS_URL = (
 LIST_URL = "https://www.youtube.com/playlist?list="
 MINE_URL = f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}"
 PLAYLISTS_URL = (
-    "https://www.googleapis.com/youtube/v3/playlists"
-    "?part=contentDetails%2Csnippet"
+    "https://www.googleapis.com/youtube/v3/playlists" "?part=contentDetails%2Csnippet"
 )
 VIDEOS_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
