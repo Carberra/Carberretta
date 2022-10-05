@@ -62,30 +62,27 @@ WATCH_URL = "https://www.youtube.com/watch?v="
 
 
 def _similarity(s1: str, s2: str, **_: t.Any) -> float:
-    # Rapidfuzz passes kwargs to this function which we don't need, so
-    # we just consume them.
-
-    chars = len(s1)
-    if not chars:
+    if not s1:
+        # This will always be empty before the user types any input, so
+        # we should just display everything.
         return 1.0
 
     s1, s2 = s1.lower(), s2.lower()
 
-    if s1 in s2:
-        return 1.0
+    combo = 0
+    max_combo = 0
 
-    combo, max_combo = 0, 0
-    words = s1.split()
+    for char in s2:
+        if char == s1[combo]:
+            combo += 1
+            if combo == len(s1):
+                return 1.0
 
-    for word in words:
-        for i in range(len(word)):
-            if word[combo] == s2[i]:
-                combo += 1
-            else:
-                max_combo = max(combo, max_combo)
-                combo = 0
+        else:
+            combo = 0
+            max_combo = max(combo, max_combo)
 
-    return max_combo / chars
+    return max_combo / len(s1)
 
 
 def _compile_options(value: str, directory: dict[str, str]) -> list[str]:
@@ -95,7 +92,8 @@ def _compile_options(value: str, directory: dict[str, str]) -> list[str]:
             value,
             directory.keys(),
             scorer=_similarity,
-            limit=10,
+            processor=None,
+            limit=25,
             score_cutoff=0.5,
         )
     ]
