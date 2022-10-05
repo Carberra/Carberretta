@@ -53,7 +53,12 @@ CHANNELS_URL = (
     "https://www.googleapis.com/youtube/v3/channels"
     "?part=brandingSettings%2Csnippet%2Cstatistics"
 )
+LIST_URL = "https://www.youtube.com/playlist?list="
 MINE_URL = f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}"
+PLAYLISTS_URL = (
+    "https://www.googleapis.com/youtube/v3/playlists"
+    "?part=contentDetails%2Csnippet"
+)
 VIDEOS_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
     "?part=contentDetails%2Csnippet%2Cstatistics"
@@ -119,12 +124,21 @@ async def on_started(_: hikari.StartedEvent) -> None:
         _create_directory, CronTrigger(hour=12, minute=5, second=0), args=("video",)
     )
 
+    plugin.d.playlist_directory = {}
+    loop.run_in_executor(None, _create_directory, "playlist")
+    plugin.app.d.scheduler.add_job(
+        _create_directory, CronTrigger(hour=0, minute=0, second=0), args=("playlist",)
+    )
+
 
 @plugin.command
 @lightbulb.command("youtube", "YouTube commands.")
 @lightbulb.implements(lightbulb.SlashCommandGroup)
 async def cmd_youtube(_: lightbulb.SlashContext) -> None:
     ...
+
+
+# VIDEO COMMANDS -------------------------------------------------------
 
 
 @cmd_youtube.child
@@ -219,6 +233,94 @@ async def cmd_youtube_video_information_autocomplete(
 ) -> list[str]:
     assert isinstance(opt.value, str)
     return _compile_options(opt.value, plugin.d.video_directory)
+
+
+# PLAYLIST COMMANDS ----------------------------------------------------
+
+
+@cmd_youtube.child
+@lightbulb.command("playlist", "YouTube playlist commands.")
+@lightbulb.implements(lightbulb.SlashSubGroup)
+async def cmd_youtube_playlist(_: lightbulb.SlashContext) -> None:
+    ...
+
+
+@cmd_youtube_playlist.child
+@lightbulb.option(
+    "title", "The title of the playlist you want to link.", autocomplete=True
+)
+@lightbulb.command("link", "Link a playlist.")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def cmd_youtube_playlist_link(ctx: lightbulb.SlashContext) -> None:
+    playlist_id = plugin.d.playlist_directory[ctx.options.title]
+    await ctx.respond(LIST_URL + playlist_id)
+
+
+@cmd_youtube_playlist_link.autocomplete("title")
+async def cmd_youtube_playlist_link_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    assert isinstance(opt.value, str)
+    return _compile_options(opt.value, plugin.d.playlist_directory)
+
+
+@cmd_youtube_playlist.child
+@lightbulb.option(
+    "title",
+    "The title of the playlist you want to view information about.",
+    autocomplete=True,
+)
+@lightbulb.command("information", "View information about a playlist.")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def cmd_youtube_playlist_information(ctx: lightbulb.SlashContext) -> None:
+    if not (member := ctx.member):
+        return
+
+    playlist_id = plugin.d.playlist_directory[ctx.options.title]
+    url = PLAYLISTS_URL + f"&id={playlist_id}&key={Config.YOUTUBE_API_KEY}"
+    session: ClientSession = plugin.app.d.session
+
+    async with session.get(url) as resp:
+        if not resp.ok:
+            await ctx.respond(
+                f"The YouTube Data API returned {resp.status}: {resp.reason}."
+            )
+            return
+
+        data = (await resp.json())["items"][0]
+
+    thumbnails: dict[str, dict[str, str]] = data["snippet"]["thumbnails"]
+    published = int(isodate.parse_datetime(data["snippet"]["publishedAt"]).timestamp())
+
+    await ctx.respond(
+        hikari.Embed(
+            title=ctx.options.title,
+            description=data["snippet"]["description"],
+            url=LIST_URL + playlist_id,
+            colour=helpers.choose_colour(),
+            timestamp=chron.aware_now(),
+        )
+        .set_author(name="Playlist Information")
+        .set_footer(f"Requested by {member.display_name}", icon=member.avatar_url)
+        .set_image(
+            thumbnails["maxres"]["url"]
+            if "maxres" in thumbnails.keys()
+            else thumbnails["high"]["url"]
+        )
+        .add_field("Videos", f"{data['contentDetails']['itemCount']:,}", inline=True)
+        .add_field("Published", f"<t:{published}:R>", inline=True)
+    )
+
+
+@cmd_youtube_playlist_information.autocomplete("title")
+async def cmd_youtube_playlist_information_autocomplete(
+    opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
+) -> list[str]:
+    assert isinstance(opt.value, str)
+    return _compile_options(opt.value, plugin.d.playlist_directory)
+
+
+# CHANNEL COMMANDS -----------------------------------------------------
 
 
 @cmd_youtube.child
