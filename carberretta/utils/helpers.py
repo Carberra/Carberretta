@@ -33,8 +33,6 @@ import time
 import warnings
 from io import StringIO
 
-from hikari.internal.ux import TRACE
-
 
 def choose_colour() -> int:
     return random.choice(  # nosec B311
@@ -98,7 +96,7 @@ def configure_logging(level: int = logging.INFO) -> StringIO:
     string_io.setFormatter(StringIOFormatter())
 
     logging.basicConfig(
-        level=TRACE,
+        level=logging.DEBUG,
         handlers=[console, string_io],
     )
     console.setLevel(level)
