@@ -151,6 +151,7 @@ async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
 
 
 @rtfm_group.child
+@lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.command(
     "refresh", description="Refreshes the rtfm caches.", auto_defer=True
 )
