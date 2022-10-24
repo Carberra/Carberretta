@@ -150,6 +150,24 @@ async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
     await ctx.respond(embed=embed)
 
 
+@rtfm_group.child
+@lightbulb.command(
+    "refresh", description="Refreshes the rtfm caches.", auto_defer=True
+)
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def refresh_rtfm(ctx: lightbulb.SlashContext) -> None:
+    hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
+    plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
+
+    lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
+    plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
+
+    py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
+    plugin.bot.d.python_cache = decode_object_inv(await py.read())
+
+    await ctx.respond("All RTFM caches has been refreshed.")
+
+
 @hikari_rtfm.autocomplete("query")
 async def hikari_autocomplete(
     opt: hikari.AutocompleteInteractionOption, _: hikari.AutocompleteInteraction
