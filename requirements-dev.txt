@@ -1,38 +1,37 @@
 # Meta
 -r requirements.txt
 
-# Security
-bandit==1.7.4
-
-# Formatting
-black==22.10.0
-
-# Spelling
-codespell==2.2.2
-
-# Dependencies
-deputil==0.2.0
-
-# Imports
-flake8==5.0.4
-isort==5.10.1
-
-# Line lengths
-len8==0.7.3.post0
-
-mccabe==0.7.0
-multidict==6.0.2
-
 # Sessions
 nox==2022.8.7
 
-# Safety
-safety==2.3.1
+# Docs
+# furo
+# sphinx<5,>=4
+
+# Formatting
+black~=22.10.0
+
+# Imports
+flake8~=5.0.4
+isort~=5.10.1
 
 # Typing
 mypy==0.982
-mypy-extensions==0.4.3
-types-aiofiles==22.1.0
-types-python-dateutil==2.8.19.2
-types-pytz==2022.5.0.0
-typing_extensions==4.4.0
+types-aiofiles~=22.1.0
+types-python-dateutil>=2.8.19,<3
+types-pytz~=2022.5.0.0
+
+# Line lengths
+len8~=0.7.3
+
+# Spelling
+codespell~=2.2.1
+
+# Safety
+safety~=2.3.1
+
+# Security
+bandit~=1.7.2
+
+# Dependencies
+deputil~=0.2.0
