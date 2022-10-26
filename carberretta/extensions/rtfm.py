@@ -32,11 +32,13 @@ import io
 import re
 import typing as t
 import zlib
+import logging
 from dataclasses import dataclass
 
 import hikari
 import lightbulb
 from rapidfuzz import fuzz, process
+from apscheduler.triggers.cron import CronTrigger
 
 from carberretta.utils import chron, helpers
 
@@ -57,6 +59,20 @@ HIKARI_DOCS_URL: t.Final = "https://www.hikari-py.dev/"
 LIGHTBULB_DOCS_URL: t.Final = "https://hikari-lightbulb.readthedocs.io/en/latest/"
 PYTHON_DOCS_URL: t.Final = "https://docs.python.org/3/"
 
+log = logging.getLogger(__name__)
+
+async def refresh_rtfm_cache() -> None:
+    hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
+    plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
+
+    lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
+    plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
+
+    py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
+    plugin.bot.d.python_cache = decode_object_inv(await py.read())
+
+    log.info(f"Refreshed all RTFM caches.")
+
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
@@ -68,6 +84,10 @@ async def on_started(_: hikari.StartedEvent) -> None:
 
     py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
     plugin.bot.d.python_cache = decode_object_inv(await py.read())
+
+    plugin.app.d.scheduler.add_job(
+        refresh_rtfm_cache, CronTrigger(hour=6, minute=0, second=0)
+    )
 
 
 async def get_rtfm(value: str, cache: CachedObjT) -> list[str]:
