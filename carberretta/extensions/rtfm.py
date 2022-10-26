@@ -29,16 +29,16 @@
 from __future__ import annotations
 
 import io
+import logging
 import re
 import typing as t
 import zlib
-import logging
 from dataclasses import dataclass
 
 import hikari
 import lightbulb
-from rapidfuzz import fuzz, process
 from apscheduler.triggers.cron import CronTrigger
+from rapidfuzz import fuzz, process
 
 from carberretta.utils import chron, helpers
 
@@ -60,6 +60,7 @@ LIGHTBULB_DOCS_URL: t.Final = "https://hikari-lightbulb.readthedocs.io/en/latest
 PYTHON_DOCS_URL: t.Final = "https://docs.python.org/3/"
 
 log = logging.getLogger(__name__)
+
 
 async def refresh_rtfm_cache() -> None:
     hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
