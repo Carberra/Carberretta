@@ -83,11 +83,8 @@ async def on_started(_: hikari.StartedEvent) -> None:
     lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
     plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
 
-    py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
-    plugin.bot.d.python_cache = decode_object_inv(await py.read())
-
     plugin.app.d.scheduler.add_job(
-        refresh_rtfm_cache, CronTrigger(hour=6, minute=0, second=0)
+        refresh_rtfm_cache, CronTrigger(hour="0,6,12,18", minute=0, second=0)
     )
 
 
@@ -169,25 +166,6 @@ async def python_rtfm(ctx: lightbulb.SlashContext) -> None:
         ctx.options.query, plugin.bot.d.python_cache, PYTHON_DOCS_URL
     )
     await ctx.respond(embed=embed)
-
-
-@rtfm_group.child
-@lightbulb.add_checks(lightbulb.owner_only)
-@lightbulb.command(
-    "refresh", description="Refreshes the rtfm caches.", auto_defer=True, ephemeral=True
-)
-@lightbulb.implements(lightbulb.SlashSubCommand)
-async def refresh_rtfm(ctx: lightbulb.SlashContext) -> None:
-    hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
-    plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
-
-    lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
-    plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
-
-    py = await plugin.bot.d.session.get(PYTHON_DOCS_URL + "objects.inv")
-    plugin.bot.d.python_cache = decode_object_inv(await py.read())
-
-    await ctx.respond("All RTFM caches has been refreshed.")
 
 
 @hikari_rtfm.autocomplete("query")
