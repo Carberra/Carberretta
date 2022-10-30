@@ -77,11 +77,7 @@ async def refresh_rtfm_cache() -> None:
 
 @plugin.listener(hikari.StartedEvent)
 async def on_started(_: hikari.StartedEvent) -> None:
-    hk = await plugin.bot.d.session.get(HIKARI_DOCS_URL + "objects.inv")
-    plugin.bot.d.hikari_cache = decode_object_inv(await hk.read())
-
-    lb = await plugin.bot.d.session.get(LIGHTBULB_DOCS_URL + "objects.inv")
-    plugin.bot.d.lightbulb_cache = decode_object_inv(await lb.read())
+    await refresh_rtfm_cache()
 
     plugin.app.d.scheduler.add_job(
         refresh_rtfm_cache, CronTrigger(hour="0,6,12,18", minute=0, second=0)
