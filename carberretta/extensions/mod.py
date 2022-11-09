@@ -81,7 +81,7 @@ async def cmd_clear(ctx: lightbulb.SlashContext) -> None:
         # swear to God. See python/mypy#9656 for more info.
         pred = lambda m: m.author.id == ctx.options.member.id
         history = history.filter(pred)
-    messages = list(await history)
+    messages = list(reversed(await history))
 
     for i in range(0, ctx.options.limit, 100):
         await channel.delete_messages(messages[i : min(i + 100, ctx.options.limit)])
