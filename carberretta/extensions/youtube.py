@@ -56,7 +56,7 @@ CHANNELS_URL = (
 LIST_URL = "https://www.youtube.com/playlist?list="
 MINE_URL = f"https://www.youtube.com/channel/{Config.YOUTUBE_CHANNEL_ID}"
 PLAYLISTS_URL = (
-    "https://www.googleapis.com/youtube/v3/playlists" "?part=contentDetails%2Csnippet"
+    "https://www.googleapis.com/youtube/v3/playlists?part=contentDetails%2Csnippet"
 )
 VIDEOS_URL = (
     "https://www.googleapis.com/youtube/v3/videos"
@@ -103,13 +103,29 @@ def _compile_options(value: str, directory: dict[str, str]) -> list[str]:
     ]
 
 
-def _create_directory(kind: str) -> None:
-    url = f"{MINE_URL}/{kind}s?view=0&sort=dd&flow=grid"
-    key = f"{kind}_directory"
+def _create_video_directory() -> None:
+    url = f"{MINE_URL}/videos?view=0&sort=dd&flow=grid"
+    items = get_videos(url, BROWSE_ENDPOINT, f"richItemRenderer", None, 1)
 
-    items = get_videos(url, BROWSE_ENDPOINT, f"grid{kind.title()}Renderer", None, 1)
-    plugin.d[key] = {x["title"]["runs"][0]["text"]: x[f"{kind}Id"] for x in items}
-    log.info(f"Updated {kind} directory ({len(plugin.d[key])} {kind}s)")
+    plugin.d["video_directory"] = {
+        (v := x["content"]["videoRenderer"])["title"]["runs"][0]["text"]: v["videoId"]
+        for x in items
+    }
+
+    log.info(f"Updated video directory ({len(plugin.d['video_directory'])} videos)")
+
+
+def _create_playlist_directory() -> None:
+    url = f"{MINE_URL}/playlists?view=0&sort=dd&flow=grid"
+    items = get_videos(url, BROWSE_ENDPOINT, f"gridPlaylistRenderer", None, 1)
+
+    plugin.d["playlist_directory"] = {
+        x["title"]["runs"][0]["text"]: x[f"playlistId"] for x in items
+    }
+
+    log.info(
+        f"Updated playlist directory ({len(plugin.d['playlist_directory'])} playlists)"
+    )
 
 
 @plugin.listener(hikari.StartedEvent)
@@ -118,15 +134,15 @@ async def on_started(_: hikari.StartedEvent) -> None:
     loop = asyncio.get_running_loop()
 
     plugin.d.video_directory = {}
-    loop.run_in_executor(None, _create_directory, "video")
+    loop.run_in_executor(None, _create_video_directory)
     plugin.app.d.scheduler.add_job(
-        _create_directory, CronTrigger(hour=12, minute=5, second=0), args=("video",)
+        _create_video_directory, CronTrigger(hour=12, minute=5, second=0)
     )
 
     plugin.d.playlist_directory = {}
-    loop.run_in_executor(None, _create_directory, "playlist")
+    loop.run_in_executor(None, _create_playlist_directory)
     plugin.app.d.scheduler.add_job(
-        _create_directory, CronTrigger(hour=0, minute=0, second=0), args=("playlist",)
+        _create_playlist_directory, CronTrigger(hour=0, minute=0, second=0)
     )
 
 
