@@ -84,7 +84,7 @@ async def cmd_clear(ctx: lightbulb.SlashContext) -> None:
     messages = list(await history)
 
     for i in range(0, ctx.options.limit, 100):
-        await channel.delete_messages(messages[i : i + 100])
+        await channel.delete_messages(messages[i : min(i + 100, ctx.options.limit)])
     await ctx.respond(f"Cleared {min(ctx.options.limit, len(messages))} message(s).")
 
 
