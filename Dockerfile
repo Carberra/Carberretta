@@ -11,4 +11,4 @@ RUN pip install -Ur requirements.txt
 
 COPY . .
 
-CMD ["python3", "-m", "carberretta"]
+CMD ["python3", "-OO", "-m", "carberretta"]
