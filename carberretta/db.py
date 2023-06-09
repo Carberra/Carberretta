@@ -100,6 +100,7 @@ class Database:
 
     async def commit(self) -> None:
         await self.cxn.commit()
+        log.debug("Committed all database changes")
 
     async def close(self) -> None:
         await self.cxn.commit()

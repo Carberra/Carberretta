@@ -104,6 +104,14 @@ async def cmd_error(ctx: lightbulb.SlashContext) -> None:
     )
 
 
+@plugin.command()
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.command("crash", "Intentionally cause an error.", ephemeral=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def cmd_crash(ctx: lightbulb.SlashContext) -> None:
+    1 / 0
+
+
 def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(plugin)
 
