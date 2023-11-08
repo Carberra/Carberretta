@@ -82,10 +82,6 @@ class Bot(commands.Bot):
                 "Carberretta is not ready to receive commands. Try again in a few seconds.", delete_after=5
             )
 
-        support = self.get_cog("Support")
-        if ctx.channel in [sc.channel for sc in support.available_channels] and ctx.command.name != "reopen":
-            return await ctx.message.delete()
-
         await self.invoke(ctx)
 
     async def on_error(self, err, *args, **kwargs):
@@ -119,7 +115,7 @@ class Bot(commands.Bot):
             await ctx.send(f"One or more arguments are invalid.")
 
         elif isinstance(exc, commands.TooManyArguments):
-            await ctx.send(f"Too many arguments have been passed.",)
+            await ctx.send(f"Too many arguments have been passed.")
 
         elif isinstance(exc, commands.MissingPermissions):
             mp = utils.string.list_of([str(perm.replace("_", " ")).title() for perm in exc.missing_perms], sep="or")
